@@ -24,6 +24,13 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+      # auros-base is NOT optional here: tools/gate.mjs reads the matrix definition from
+      # auros-base/matrix/{checks,profiles}.yaml, and its own tests assert there is no drift between
+      # what the gate enforces and what the matrix declares. Without this checkout the gate sees a
+      # half-present matrix and refuses — correctly, but for the wrong reason, which makes the CI
+      # signal useless. A gate that fails because its inputs are missing teaches people to ignore it.
+      - uses: actions/checkout@v4
+        with: { repository: aarohkandy/auros-base, path: auros-base }
       - uses: actions/checkout@v4
         continue-on-error: true
         with: { repository: aarohkandy/auros-web, path: auros-web }
@@ -40,7 +47,7 @@ jobs:
       - run: corepack enable
       - name: What was checked out
         run: |
-          for d in auros-web auros-recipes auros-installer; do
+          for d in auros-base auros-web auros-recipes auros-installer; do
             printf '%-18s %s\n' "$d" "$([ -d "$d" ] && echo present || echo ABSENT)"
           done
       - name: Run every gate
