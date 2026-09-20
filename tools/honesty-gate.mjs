@@ -58,6 +58,33 @@ const RULES = [
     re: /\b(?:guarantee[ds]?|100% (?:safe|reliable|secure)|never fails?|zero downtime|bulletproof)\b/gi },
   { id: 'multi-rollback', why: 'D10: bootc retains booted + exactly ONE rollback. Anything implying a history of images is false.',
     re: /\broll ?back to any\b|\b(?:previous|last) \d+ (?:images?|versions?|deployments?)\b/gi },
+
+  // ── Added after the 2026-09-20 honesty audit. Each of these is a claim class that was PUBLISHED
+  //    and that this gate reported a clean pass over, which is the specific way a gate becomes
+  //    decoration: it keeps checking what it always checked while the prose moves somewhere else.
+  { id: 'competitor-absolute', why: 'An absolute claim about every competitor is a claim about a market we have surveyed none of. Say what WE do; leave the comparison to the reader.',
+    re: /\b(?:nobody else|no ?one else|no other (?:vendor|company|supplier)|(?:we are|we're) the only|the only (?:vendor|company|supplier|product) (?:who|that|to)|unlike (?:everyone|everybody|every other)|first (?:vendor|company) to)\b/gi,
+    notNegated: true },
+  { id: 'comparative-superiority', why: 'A "stronger/better/safer than X" claim needs a measurement against X. We have not run one. Narrow it to the property you can actually defend.',
+    re: /\b(?:stronger|better|safer|faster|more secure|more reliable|harder to break)\s+than\b/gi,
+    notNegated: true },
+  // Scoped to RANKED frequency — a superlative or a stated proportion — not to ordinary hedging.
+  // An earlier draft of this rule also matched bare "usually" and "typically" and produced eight
+  // findings, every one of them a hedge rather than a claim. A gate whose findings are mostly noise
+  // is a gate people annotate past without reading, which is worse than the rule not existing.
+  { id: 'worded-frequency', why: 'A ranked frequency claim is a measurement claim in words. hardware/compat.tsv has no rows and no image has booted on a physical machine, so we have nothing to rank.',
+    re: /\b(?:the )?most (?:common|frequent|likely|often)(?: cause| reason| problem| failure)?\b|\b(?:in most cases|nine times out of ten|almost always|the majority of (?:machines|schools|cases|customers))\b/gi,
+    notNegated: true,
+    needsNear: /(we (?:have not|haven't) measured|not (?:yet )?measured|we expect|which we have not|auros-allow)/i, nearWindow: 300 },
+  { id: 'implied-track-record', why: 'We have built no machines and have no customers. Any phrasing that implies accumulated experience is fabricated social proof under SPEC §4.4.',
+    re: /\b(?:in our (?:experience|testing|deployments?)|machines we(?:'ve| have) built|schools we(?:'ve| have) (?:worked|migrated)|we(?:'ve| have) (?:seen|found|migrated|deployed|tested)\b(?!\s+(?:nothing|none|no ))|from what we(?:'ve| have) seen|every time we)\b/gi,
+    notNegated: true },
+  { id: 'time-estimate', why: 'An unmeasured duration is a number with no source, and the reader budgets from it. Say the SHAPE of the work (a per-machine visit) or measure it.',
+    re: /\b(?:takes?|in|about|roughly|around|under|only|just|budget)\s+(?:an?\s+)?(?:\d+|one|two|three|four|five|ten|fifteen|twenty|thirty|sixty|a few|couple of)[- ]?(?:second|minute|hour|day|week|afternoon|morning)s?\b/gi,
+    notNegated: true },
+  { id: 'perpetual-commitment', why: 'Duration of service is a commercial term and §9-reserved. An open-ended commitment attached to a one-time price is decided by publishing it, which is not an agent\'s decision to make.',
+    re: /\b(?:for as long as we (?:are|exist)|in perpetuity|for life|lifetime (?:updates?|support|access)|always be (?:free|supported|maintained)|never stop(?:s|ping)? (?:updating|supporting))\b|\b(?:updates?|support(?:ed)?|maintained|rebuild(?:s|ing|t)?|included|free)\b[^.\n]{0,24}\bfor ?ever\b|\bfor ?ever\b[^.\n]{0,24}\b(?:free|supported|maintained|updates?)\b/gi,
+    notNegated: true },
 ]
 
 const findings = []

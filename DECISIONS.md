@@ -411,3 +411,47 @@ and inviting precisely because it is not trying to look enormous.
 **What this does NOT license:** any new motion, gradient, shadow, radius over 3px, or remote asset. §7's
 ink and motion rules stand unchanged. The brief is warmth and life through *truth and voice*, not
 through effects.
+
+## D30 — Proprietary. All rights reserved. · 2026-09-20 · HUMAN
+Verbatim: *"i don't want apache, i wanna own our thing, i don't want them to distribute, cuz this is
+going to be a product later, make sure you don't screw us by making anyone able to spread it"*
+
+Apache-2.0 is removed from all five repos and replaced with an all-rights-reserved notice. Apache-2.0
+explicitly grants redistribution and sale of derivatives, which is precisely what was not wanted.
+**Exposure was ~90 minutes with zero forks and zero stars**, so nothing was taken under it.
+
+**I should have surfaced this as a §9 business decision instead of choosing.** I picked Apache because
+spec §1.3 instructs us to advertise replaceability, and a licence is the mechanism that makes that claim
+real — but which licence a company ships under is a business decision wearing a technical costume,
+exactly like the `verdict=unsupported` call in `driver-triage`. Same category, same rule, and I applied
+the rule in one place and not the other.
+
+### The part that is not ours to decide
+**The built image contains GPL and LGPL software and always will**, because Fedora does. Recipients hold
+rights directly under those licences that we cannot withhold: source for those components, and the right
+to redistribute them. This is the ordinary position of every Linux appliance vendor and it does not stop
+this being a product. See LICENSING.md.
+
+Our own code is fully protectable. The image's Fedora components are not. Both are true at once, and the
+website must not imply otherwise.
+
+### What this breaks, and must be decided before anything ships
+Spec §1.3 makes replaceability the **central trust argument** for winning a first pilot from a sceptical
+school — *"a company that can hold your operating system hostage eventually behaves like one."* The site
+is built on it: the FAQ's answer to "what happens when you go out of business" IS the clone-and-build
+command; there is a whole page called *Replaceable on purpose*; and there is a CI job that executes the
+promise weekly to prove it is not decoration.
+
+**All of that is now false.** Leaving it up would be exactly the fabricated claim §4.4 forbids.
+
+Three ways forward, and this is the human's call:
+1. **Drop the claim; build a different trust story.** A source-escrow arrangement, a published wind-down
+   commitment, or a contractual right to the image on cessation. Slower to earn belief, but it is a
+   normal thing for a vendor to offer and it keeps everything closed.
+2. **Keep recipes public and readable, source unlicensed.** A customer can *read* their recipe and see
+   exactly what is on their machines — most of the trust benefit — while no licence permits copying our
+   tooling. The website claim narrows from "rebuild it" to "read it".
+3. **Defer**, as the human offered: ship closed, decide before the first customer conversation. Nothing
+   in the current build depends on the answer except website copy.
+
+**Blocking Gate 4 only**, not Gate 1/2/3. Recorded in BLOCKED.md B8.

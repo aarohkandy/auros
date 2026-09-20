@@ -61,3 +61,15 @@ delayed under load, sometimes by a lot**, so the poll satisfies Gate 2's "within
 GitHub is not busy. The `repository_dispatch` path is instant and needs the credential B2 describes.
 *Not solvable without the credential.* Recorded so that a slow Gate 2 run is read as infrastructure
 latency rather than as a broken propagation design.
+
+## B8 — The site advertises replaceability, which proprietary licensing makes false · OPEN · blocks Gate 4
+D30 made everything all-rights-reserved. Four places on the site now claim the opposite: the FAQ's
+"what happens when you go out of business" answer (clone-and-build instructions), the entire
+*Replaceable on purpose* page, the landing page's closing section, and
+`auros-recipes/.github/workflows/replaceable.yml`, a CI job that executes the promise weekly.
+
+Publishing any of it now would be the fabricated claim §4.4 forbids.
+
+**Needs the human to pick a trust story** (DECISIONS.md D30 lists three). Gate 4's exit condition — a
+stranger configures a build and a PR appears — does not depend on the answer, so the mechanism can be
+finished while the copy waits. **No site content ships until this is resolved.**
