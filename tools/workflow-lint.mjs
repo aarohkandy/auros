@@ -107,7 +107,13 @@ const check = (file) => {
 
   // D19: a step that cannot fail is not a check.
   const topLevel = lines.filter(l => /^[A-Za-z]/.test(l)).map(l => l.split(':')[0])
-  if (!topLevel.includes('defaults') && !/shell:\s*bash -[a-z]*e[a-z]*o pipefail/.test(text) && !/shell:\s*pwsh/.test(text)) {
+  // The check used to begin `!topLevel.includes('defaults') && …`, so ANY top-level `defaults:`
+  // block exempted the file — including one that only set a working-directory, or a shell with no
+  // pipefail in it. That is a false negative in the one rule whose whole point is that a step must
+  // be able to fail. What matters is whether a pipefail shell is actually declared, not whether a
+  // key named `defaults` exists. Caught by tools/workflow-lint.test.mjs; no shipped workflow relied
+  // on the hole (checked across all 25 before tightening).
+  if (!/shell:\s*bash -[a-z]*e[a-z]*o pipefail/.test(text) && !/shell:\s*pwsh/.test(text)) {
     problems.push({ file, line: 1, why:
       'no pipefail default. A step that pipes through `tail`, `head` or `tee` takes the LAST command\'s ' +
       'exit status, so a failing build scores as a passing step — which happened here (D19). Add ' +

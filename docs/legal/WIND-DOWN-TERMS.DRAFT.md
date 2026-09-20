@@ -1,7 +1,7 @@
 # Continuity commitment — DRAFT
 
 > **DRAFT. NOT LEGAL ADVICE. NOT IN EFFECT. NOT PUBLISHED.**
-> Written by the build agent to turn BLOCKED.md B11 from a blank page into something a human and a
+> Written by the build agent to turn BLOCKED.md B12 from a blank page into something a human and a
 > lawyer can review. It is a contractual undertaking, which is §9-reserved. **A lawyer must review this
 > before any version of it is offered to a customer**, and the website's four references to it must not
 > ship until one exists.

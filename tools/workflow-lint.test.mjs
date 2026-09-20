@@ -180,31 +180,23 @@ jobs:
     clean(one(pwsh), 'a pwsh workflow')
   })
 
-  test('KNOWN GAP: a bare `defaults:` key satisfies the pipefail check without setting pipefail', () => {
-    // The check is `!topLevel.includes('defaults') && !/shell: bash …pipefail/`, so ANY top-level
-    // `defaults:` block short-circuits it — including one that only sets a working-directory. That is
-    // a false NEGATIVE, and the only thing worse than a gate that fires wrongly is one that stays
-    // quiet wrongly.
-    //
-    // This test asserts the CURRENT behaviour deliberately rather than asserting the behaviour we
-    // want, because writing the aspiration here would make this file red and the gap would get
-    // "fixed" by deleting the test. It is recorded so the gap is known, with the exact fixture that
-    // demonstrates it. When the check is tightened, this test is what tells you it changed.
+  test('FIRES on a `defaults:` block that sets no pipefail — the key existing is not enough', () => {
+    // This was a false negative until 2026-09-20: the check short-circuited on the mere presence of
+    // a top-level `defaults:` key, so a block that only set a working-directory exempted the whole
+    // file from the D19 rule. The linter now asks whether a pipefail shell is actually declared.
     const hollow = OK.replace('defaults:\n  run:\n    shell: bash -euo pipefail {0}',
       'defaults:\n  run:\n    working-directory: ./src')
-    const r = one(hollow)
-    assert.equal(r.exit, 0,
-      'GOOD NEWS: the pipefail check no longer accepts a bare `defaults:` block. Tighten this test to ' +
-      'assert the finding, and delete this comment.')
+    const r = flags(one(hollow), 'a defaults block with no shell at all')
+    assert.match(r.out, /no pipefail default/)
   })
 
-  test('the pipefail rule can still go red on a workflow that has a defaults block with the WRONG shell', () => {
-    // The half of the gap that IS caught: `defaults.run.shell` naming a shell with no pipefail in it
-    // is still only caught when there is no `defaults:` key at all. Pinned here so the boundary of
-    // the gap is explicit rather than inferred from reading the regex.
-    const sh = OK.replace('shell: bash -euo pipefail {0}', 'shell: sh {0}')
-    const r = one(sh)
-    assert.equal(r.exit, 0, 'behaviour changed — the linter now inspects the shell inside defaults. Update this test.')
+  test('FIRES on a `defaults:` block whose shell has no pipefail in it', () => {
+    flags(one(OK.replace('shell: bash -euo pipefail {0}', 'shell: sh {0}')), 'shell: sh')
+    flags(one(OK.replace('shell: bash -euo pipefail {0}', 'shell: bash -e {0}')), 'errexit without pipefail')
+  })
+
+  test('QUIET on the control once more, so the two tests above are not a linter that now fires on every defaults block', () => {
+    clean(one(OK), 'the baseline, whose defaults block DOES set pipefail')
   })
 })
 

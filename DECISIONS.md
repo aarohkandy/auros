@@ -527,7 +527,14 @@ Recorded in BLOCKED.md B10.
 
 ---
 
-## D33 — §4.5 gains exactly one script-host exemption: `challenges.cloudflare.com` · 2026-09-20 · AGENT
+## D33 — §4.5 gains exactly one script-host exemption: `challenges.cloudflare.com` · 2026-09-20 · AGENT · **PENDING HUMAN RATIFICATION**
+
+> **Ratification needed.** This amends one of spec §4's HARD PROHIBITIONS, which the spec describes as
+> "not preferences". The reasoning below is sound and I agree with it — but an agent should not be the
+> last word on relaxing a hard prohibition, so it is held here the same way D13 was. Until the human
+> ratifies it, treat the order flow as having **no public submit path**, and do not deploy the
+> configurator page with the Turnstile loader. The alternative if it is rejected is a first-party,
+> same-origin challenge, with the costs D33 describes below.
 
 **Amends SPEC §4.5.** The rule was: *never use remote images, external fonts beyond Google Fonts, or
 any script host other than cdnjs on the public site.* The rule is now that plus one named endpoint:

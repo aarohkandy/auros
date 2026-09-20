@@ -118,7 +118,7 @@ long-lived organisational credential whose custody matters more than its cryptog
 Doing it late costs a re-sign of everything published under the development key. Doing it now costs
 nothing, because nothing is published.
 
-## B11 — The order flow's human check needs a script host §4.5 did not permit · RESOLVED by D33 · Gate 4 unblocked
+## B11 — The order flow's human check needs a script host §4.5 did not permit · **RESOLVED BY D33, PENDING HUMAN RATIFICATION** · RESOLVED by D33 · Gate 4 unblocked
 Spec §6D's exit condition is that a stranger configures a build, submits, and a PR appears in
 `auros-recipes`. The Worker will not accept a POST without a verified Turnstile token
 (`auros-web/worker/lib/turnstile.js`), and Turnstile's widget is delivered by
@@ -145,7 +145,7 @@ fatal.
 other host, on a widget with no loader, and on a loader without `render=explicit`.
 
 
-## B11 — The wind-down commitment is stated four times and has no document behind it · OPEN · §9 · blocks publication
+## B12 — The wind-down commitment is stated four times and has no document behind it · OPEN · §9 · blocks publication
 D31 says the handover must be *"a real published term rather than a sentiment"*, and the site now states
 it in four places: the landing close, `faq/1-if-you-disappear`, `pages/5-replaceable-on-purpose`, and
 the school tier.
@@ -162,8 +162,19 @@ trigger fires, **how** the customer receives it, and **what it does not include.
 Until it exists, the four sentences must not ship. Caught by the R4 rewrite rather than by a gate,
 because no gate can tell that a true-sounding sentence has no document behind it.
 
-**B11 update:** a draft now exists at `docs/legal/WIND-DOWN-TERMS.DRAFT.md`, clearly marked as not legal
+**B12 update:** a draft now exists at `docs/legal/WIND-DOWN-TERMS.DRAFT.md`, clearly marked as not legal
 advice and not in effect. Drafting it exposed a gap in D31 itself: **handing someone files they have no
 licence to use gives them nothing** under all-rights-reserved. The commitment has to be a *licence that
 vests on a trigger*, not a delivery. Because the repos are already readable, access needs no escrow —
 only the right to use does. Needs the human's confirmation and a lawyer's review.
+
+
+## ID collision note · 2026-09-20
+Two different blockers were both numbered **B11** — the §4.5/Turnstile one (opened by an agent) and the
+wind-down terms one (opened by me) — and D33 then recorded **"Closes B11."** A reader seeing that could
+reasonably conclude the wind-down claim was cleared to ship, when it still has no document behind it.
+
+The wind-down blocker is now **B12**. Several advertising documents had already noticed the collision
+and written around it as *"B11, the wind-down entry"*; they are updated to B12. Worth recording because
+working around a bookkeeping bug instead of fixing it leaves the next reader to make the same mistake,
+and here the mistake would have been shipping a promise with nothing behind it.
