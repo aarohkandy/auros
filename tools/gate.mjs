@@ -346,6 +346,23 @@ export function assertPublishable (query, paths = DEFAULT_PATHS) {
 // The ledger path is deliberately NOT an argument. `--image` and `--recipe` can only narrow, never widen.
 // Any argument this parser does not recognise is fatal: a flag we ignore is a flag someone will try.
 export function main (argv) {
+  // ── THERE ARE NO SUBCOMMANDS, AND THIS IS THE CHECK THAT SAYS SO OUT LOUD ──────────────────────
+  // A call written as `gate.mjs record --results …` used to swallow "record" as the digest and then
+  // die on the NEXT token, so the error read like a flag problem rather than like a call to a
+  // program that does not exist. A CI step written that way never reaches the gate at all, and the
+  // workflow around it looks gated. A leading bare word followed by further arguments is therefore
+  // fatal in its own right, and the message names the program the caller actually wanted.
+  // A lone bare word still falls through to `decide`, which has a better answer for it: a tag.
+  if (argv.length > 1 && !argv[0].startsWith('-') && !DIGEST_RE.test(argv[0])) {
+    console.error(
+      `gate: "${argv[0]}" is not a content digest, and this CLI has no subcommands. It has exactly one form:\n` +
+      '  gate.mjs <sha256:…> [--image REF] [--recipe NAME]\n' +
+      'Writing a pass INTO the ledger is a different program, run from a different job, on purpose: ' +
+      'auros-base/matrix/run/record-pass.mjs. The job that manufactures the evidence must not be the ' +
+      'job that reads it. (spec §4.3)')
+    return 2
+  }
+
   const args = { digest: null, image: null, recipe: null }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]

@@ -37,6 +37,9 @@ if command -v go >/dev/null 2>&1 && [ -f auros-installer/go.mod ]; then
   run "installer safety core (spec §6C)" bash -c 'cd auros-installer && go vet ./... && go test ./... -count=1'
 else skip "installer safety core (spec §6C)" "go not installed locally — this runs in CI"; fi
 
+# ── CI workflows must actually parse, and must be able to fail ──────────────────────────────────────
+run "workflow lint" node tools/workflow-lint.mjs auros-base auros-recipes auros-installer auros-web .
+
 # ── Image hardening self-checks must be able to go BOTH red and green ───────────────────────────────
 if [ -x auros-base/tests/kargs-check.test.sh ]; then
   run "hardening karg check (both directions)" auros-base/tests/kargs-check.test.sh
