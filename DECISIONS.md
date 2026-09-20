@@ -625,3 +625,26 @@ have.
 Runs in seconds on a laptop with no podman and no QEMU (`.github/workflows/unit-tests.yml`). It does
 not replace the check matrix and cannot: U1–U5 and B1–B12 in QEMU remain the only proof that a real
 machine does the real thing.
+
+## D35 — Installer CI moves to Go 1.25.14, because the vulnerability scan had never run · 2026-09-20 · AGENT
+`govulncheck` was in `ci.yml` from the start and **had never actually executed**. The action installs
+the latest govulncheck, which requires Go 1.26, while the workflow pinned Go 1.23 — so the step failed
+before scanning anything, inside a job that was already red for other reasons, and nobody saw it.
+
+Once it ran, it found two real vulnerabilities in reachable code paths:
+- **GO-2026-4602** — a path escape in `os`, **reached through the phase-1 folder walk.** Phase 1 is the
+  inventory of a user's files. A path escape there is a data-safety issue, not a hygiene one.
+- **GO-2026-4971** — in `net`, reached through the test harness only.
+
+Fixed by building with **Go 1.25.14**. `go.mod` stays at `go 1.23` as the minimum language version, and
+Windows 10/11 support on both amd64 and 386 is unchanged.
+
+**The lesson matches D19 and D34:** a security check that cannot run is indistinguishable from one that
+passes, unless something asserts that it actually executed. The govulncheck step now needs a positive
+signal — its "No vulnerabilities found" line — rather than the absence of an error.
+
+**Also found in that pass, none causing data loss:** the wall's CrossWall/DryRunWall checked phase
+before proof, so an unverified archive got the wrong refusal message; an integer-to-pointer conversion
+in `KnownFolders` that `go vet` rejects for Windows; a test (`TestSteps_IsPure`) that had been quietly
+narrowed to three fields and now compares the whole value again; and a locked-file test that could
+never have passed and had never run, because it skips itself under root.
