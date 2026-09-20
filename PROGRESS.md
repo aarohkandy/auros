@@ -4,6 +4,68 @@ Newest first. One entry per meaningful step, with evidence. Re-read at session s
 
 ---
 
+### 2026-09-20 (late) · Licensing reversed · testing campaign · Gate 1 close
+
+**The licence changed, on the owner's instruction (D30/D31).** Apache-2.0 removed from all five repos;
+everything is now **all rights reserved**. Apache explicitly grants redistribution and sale of
+derivatives, which is precisely what was not wanted. Exposure was ~90 minutes with **zero forks and zero
+stars**, so nothing was taken under it. Repos stay **public** — readable, not licensed — because
+unlimited Actions minutes on public repos is what has allowed ~50 build/boot experiments today, and
+2,000 minutes/month would have stopped the work.
+
+I should have surfaced the licence as a §9 business decision rather than choosing it. I picked Apache
+because the spec instructs us to advertise replaceability and a licence is what makes that claim real,
+but which licence a company ships under is a business decision wearing a technical costume — the same
+category as the `verdict=unsupported` call I correctly refused to make.
+
+**What is not ours to decide:** the built image contains GPL/LGPL software because Fedora does, and
+recipients hold rights we cannot withhold. Ordinary for every Linux appliance vendor. Our code is fully
+protectable; the image's Fedora components are not; both are true at once and the site must not imply
+otherwise (LICENSING.md).
+
+**The new trust story (D31)**, which came out of the owner's question *"they get the image as soon as
+we're done with it wdym"*: the customer **always** had the image — it is on their laptops and keeps
+booting whatever happens to us. What dies with us is the **maintenance**, which spec §1.1 says is the
+actual product. So the commitment is: **if we cease operating, each customer gets the build files for
+their own image.** Not a licence to our tooling, not redistribution rights. Costs nothing while we
+exist; grants a competitor nothing.
+
+**Testing campaign** (owner: *"make sure you're testing A LOT"*). 400 recipe tests · 229 installer test
+functions · 59 gate tests · shell suites for the base build scripts · mutation testing in flight.
+
+Defects it found **in my own work**, none of which re-reading had caught:
+1. **Self-certification** — the recipe publish step gated an image on a `results.json` *the same job
+   wrote*. Now gates on the ledger fetched from origin, because a checkout is something a workflow can
+   edit before reading it.
+2. **Injection ×16** — the recipe name arrives in a PR from the internet and was interpolated into
+   sixteen shell command lines. `${{ }}` in a `run:` block substitutes before bash sees it.
+3. **A permanently-green security check** — `tr -d '[:space:]'` deleted the newlines, so `^selinux=0$`
+   could never match. Nine-case test in both directions now.
+4. **A silently-invalid workflow** — `${{ }}` inside a YAML flow mapping; GitHub rejected the file and
+   showed the run named by its *file path*, with no jobs and no error.
+5. **Nine greenboot units named, three exist** — six from an older release. Each cost a twelve-minute
+   image build to learn one name.
+
+**Three guards added, each verified able to go red:** `tools/workflow-lint.mjs` (flow-mapping
+interpolation, missing pipefail, missing name), `auros-base/tests/units.test.sh` (every unit we enable
+must be one the image ships, checked against `units.known` in one second on a laptop), and two
+licence-grant rules in the honesty gate that found **25 places** where the site still offers a right we
+withdrew. Those sentences were *true when written* — which is the lesson: a claims ledger is only as
+good as the last time something re-read it against reality.
+
+**Gate 1 status:** the base now gets through digest pinning, hardening, all four policy modes, greenboot
+install, health checks and signature enforcement. A **development signing key** (D32) lets it build and
+boot while being refused at publish, so Gate 1 is not blocked on a human minting a long-lived
+credential. The key kind is written *into* the image and read back *out of it* at publish, because a
+workflow variable can be set by whoever edits the workflow.
+
+**Verified personally, not delegated:** the policy assertions genuinely attempt forbidden operations as
+an unprivileged user (`runuser`/`setpriv`), and the same attempt runs in `open` mode expecting
+**success** — so a green in `locked` cannot be an attempt that could never have succeeded. That is B5's
+"configured but not effective" properly closed.
+
+---
+
 ### 2026-09-20 · Gate 1 in progress · four repos live · gates are mechanical
 
 **Decisions closed by the human:** Auros (D1) · flatten at publish (D2) · Aurora/KDE (D3) · the
