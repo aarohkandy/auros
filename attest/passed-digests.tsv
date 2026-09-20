@@ -1,0 +1,51 @@
+# AUROS ATTESTATION LEDGER — the record of which image digests passed the full VM check matrix.
+#
+# THIS FILE IS THE GATE'S ONLY SOURCE OF TRUTH. `tools/gate.mjs` reads it and refuses to let any
+# digest that is not recorded here — completely, currently and unambiguously — be published, signed
+# or copied. Spec §4.3: never publish an image that has not booted in a VM and passed the full check
+# matrix; enforce with a CI gate that cannot be overridden by a flag.
+#
+# It starts with zero data rows, and that is not an oversight. An example row here would be a
+# fabricated pass, and a fabricated pass in the ledger is indistinguishable from a real one to every
+# consumer of this file. Nothing is written here by hand. The only procedure permitted to append is
+# `.claude/skills/vm-check-matrix` running to completion with a full pass.
+#
+# ── FORMAT ───────────────────────────────────────────────────────────────────────────────────────
+# Tab-separated. Lines beginning with `#` are comments. The first non-comment line is the header and
+# must match exactly. Fields may not contain tabs or leading/trailing whitespace.
+#
+#   digest           The exact OCI content digest, `sha256:` + 64 lowercase hex. NEVER a tag: a tag
+#                    can be moved after the test passed, which would let untested bytes inherit a
+#                    passing record. The gate compares the whole string, exactly.
+#   image            Image reference with no tag and no digest, e.g. ghcr.io/aarohkandy/auros-base.
+#                    Must sit under the namespace declared in auros.config.json — the gate reads that
+#                    file rather than carrying a copy of the org name.
+#   recipe           Customer recipe name, or `-` when the image is the base itself.
+#   matrix_version   From auros-base/matrix/checks.yaml. A pass recorded under an older or newer
+#                    matrix is not evidence of a pass under the current one. The gate requires an
+#                    exact match, so bumping matrix_version invalidates every row in this file and
+#                    every image must re-qualify. That cost is the point.
+#   profiles_passed  `<id>,<id>,…/<N>` — the hardware profiles that passed EVERY check bound to them,
+#                    followed by N, the number of profiles bound to this image. The count exists so
+#                    that a partial pass cannot hide as a short list: the gate requires
+#                    listed == N. For the base image N must be every profile in profiles.yaml.
+#                    A profile that passed 11 of 12 boot checks is NOT listed here.
+#   checks_passed    `<id>,<id>,…/<M>` — the check IDs that passed on every profile they ran on
+#                    (the INTERSECTION across profiles, never the union — a union is how a partial
+#                    pass disguises itself), followed by M, the number of checks the matrix requires.
+#                    The gate requires this set to equal the matrix's required set exactly.
+#   run_url          The CI run anyone can reopen. A result nobody can audit is not evidence.
+#   recorded_at      UTC, `YYYY-MM-DDTHH:MM:SSZ`. A row dated in the future is refused.
+#   recorded_by      The identity that appended the row (e.g. `github-actions[bot]`). See the honesty
+#                    note in attest/README.md: the gate can tell you this field is well-formed. It
+#                    cannot tell you it is true.
+#
+# ── RULES THAT ARE ENFORCED MECHANICALLY, NOT BY CONVENTION ──────────────────────────────────────
+#   * One row per digest. Re-testing a digest REPLACES its row; it never appends a second one. Two
+#     current rows making claims about the same bytes is exactly the situation in which the gate
+#     should stop, so it does.
+#   * A malformed row anywhere in this file refuses every digest, not just that row's. A ledger we
+#     cannot fully parse is a ledger we cannot trust the absence of a row in.
+#   * Rows are append-only in practice and their history is in git. Deleting a row is how a digest is
+#     revoked; the gate then refuses it again immediately.
+digest	image	recipe	matrix_version	profiles_passed	checks_passed	run_url	recorded_at	recorded_by
