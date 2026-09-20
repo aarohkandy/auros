@@ -288,3 +288,21 @@ did.**
   (not Pages). Turnstile test keys `1x00000000000000000000AA` / `1x0000000000000000000000000000000AA`.
 - **Instrument Serif ships 400 normal and 400 italic only — there is no bold.** Any design calling for a
   bold display weight has to be redrawn, not faked with synthetic bold.
+
+## D26 — The image needs a ≥20 GiB root filesystem · 2026-09-20 · AGENT (measured)
+`bootc-image-builder` failed with `min-free-space-percent '3%' would be exceeded` building a qcow2 from a
+plain Aurora derivative. **The image is 8.4 GB across 257 layers**, and bib's default root filesystem is
+too small for it — ostree refuses the write rather than filling the disk.
+
+Fixed in the build config with an explicit `[[customizations.filesystem]] mountpoint = "/", minsize =
+"20 GiB"`.
+
+**This is a product fact, not a CI detail.** It puts a measured floor under assumption 2.10 ("minimum
+viable machine: 64 GB disk"). The arithmetic that matters for a customer: ~8.4 GB image, **two** bootc
+deployments retained so rollback is possible (U2), plus Flatpaks, plus user data, plus ostree's 3%
+reserve. The `small-disk` test profile (64 GB) is therefore not a comfortable margin — it is close to the
+real floor, and it is the profile most likely to fail on a genuinely old machine.
+
+A 32 GB eMMC ultrabook is almost certainly **out of scope**, which matters because that describes a large
+part of the 2014–2016 cheap-laptop cohort. Declaring a model unsupported is a §9 decision, so this is
+recorded as evidence for the human rather than acted on.
