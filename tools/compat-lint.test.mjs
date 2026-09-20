@@ -1,0 +1,292 @@
+#!/usr/bin/env node --test
+// compat-lint — the honesty rule for hardware/compat.tsv, tested in both directions.
+//
+//   node --test tools/compat-lint.test.mjs
+//
+// WHAT THIS FILE IS DEFENDING. compat.tsv is the one asset in this company that compounds: after
+// fifty rows it is the thing a competitor cannot copy quickly, and before then it is how we quote a
+// school without guessing. Its value is entirely a function of every row being true. One `vm` row
+// with a wifi verdict invented from a QEMU profile turns the table from evidence into a spreadsheet,
+// and we would then quote a real school from it.
+//
+// compat-lint takes no arguments and reads `hardware/compat.tsv` relative to the working directory —
+// deliberately, so there is no way to point it at a friendlier file. Every test here therefore runs
+// the real program as a real process with `cwd` set to a fixture tree. Choosing which tree the
+// process starts in is not the same as overriding a verdict: the same bytes always decide the same.
+//
+// EVERY ASSERTION HERE IS PAIRED. A test that asserts a rejection is followed by, or contains, the
+// same fixture with the one defect removed, asserting acceptance. Without the pair, a lint that
+// rejected every file on earth would satisfy the whole suite.
+
+import { test, describe } from 'node:test'
+import assert from 'node:assert/strict'
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { execFileSync } from 'node:child_process'
+
+const HERE = dirname(fileURLToPath(import.meta.url))
+const REPO = join(HERE, '..')
+const LINT = join(HERE, 'compat-lint.mjs')
+
+// The header is read from the real file rather than copied, so a column added to compat.tsv without
+// a thought for this lint shows up here as a failure instead of as a silently divergent fixture.
+const REAL = readFileSync(join(REPO, 'hardware', 'compat.tsv'), 'utf8')
+const HEADER = REAL.split('\n')[0]
+const COLS = HEADER.split('\t')
+const PHYSICAL_ONLY = ['wifi', 'trackpad', 'suspend', 'brightness', 'webcam']
+
+let ROOT
+const root = () => (ROOT ??= mkdtempSync(join(tmpdir(), 'auros-compat-')))
+let seq = 0
+
+/** @returns {{exit:number, out:string}} the real lint, run in a tree whose only content is `text`. */
+function lint (text, { omitFile = false } = {}) {
+  const dir = join(root(), `t-${seq++}`)
+  mkdirSync(join(dir, 'hardware'), { recursive: true })
+  if (!omitFile) writeFileSync(join(dir, 'hardware', 'compat.tsv'), text)
+  try {
+    const out = execFileSync(process.execPath, [LINT], { cwd: dir, encoding: 'utf8', stdio: 'pipe' })
+    return { exit: 0, out }
+  } catch (e) {
+    return { exit: e.status ?? -1, out: String(e.stdout ?? '') + String(e.stderr ?? '') }
+  }
+}
+
+/** Build one row from a field map. Anything unnamed is empty, which is the honest default. */
+function row (fields = {}) {
+  return COLS.map((c) => fields[c] ?? '').join('\t')
+}
+const file = (...rows) => `${HEADER}\n${rows.join('\n')}\n`
+
+/** A physical row may claim anything; it is the control that proves the lint is not simply strict. */
+const PHYSICAL_FULL = row({
+  model: 'ThinkPad-T440s', year: '2014', source: 'physical', cpu: 'i5-4300U', ram_gb: '8',
+  firmware: 'uefi', wifi: 'ok', trackpad: 'ok', suspend: 'ok', brightness: 'ok', gpu: 'ok',
+  audio: 'ok', webcam: 'ok', verdict: 'supported', notes: '-', tested_on: '2026-09-21', tester: 'aaroh',
+})
+/** A vm row with every physical column left empty. Empty is the truth: we did not observe them. */
+const VM_HONEST = row({
+  model: 'qemu-uefi-modern', year: '-', source: 'vm', cpu: 'host', ram_gb: '4',
+  firmware: 'uefi', gpu: 'virtio', audio: 'none', verdict: 'boots', notes: 'profile uefi-modern',
+  tested_on: '2026-09-21', tester: 'ci',
+})
+
+const rejects = (res, why) => {
+  assert.notEqual(res.exit, 0, `expected a REJECTION (${why}) but compat-lint exited 0:\n${res.out}`)
+  return res
+}
+const accepts = (res, why) =>
+  (assert.equal(res.exit, 0, `expected ACCEPTANCE (${why}) but compat-lint exited ${res.exit}:\n${res.out}`), res)
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+describe('the controls — without these, every rejection below could come from a lint that says no to everything', () => {
+  test('ACCEPTS a physical row that claims every physical-only column', () => {
+    const r = accepts(lint(file(PHYSICAL_FULL)), 'a physical row may claim what a physical machine can show')
+    assert.match(r.out, /1 physical/)
+  })
+
+  test('ACCEPTS a vm row that leaves every physical-only column empty', () => {
+    const r = accepts(lint(file(VM_HONEST)), 'empty is the honest value for something a VM cannot observe')
+    assert.match(r.out, /1 vm/)
+  })
+
+  test('ACCEPTS a header-only file — zero rows is a true state, not a broken one', () => {
+    // This is the repository's ACTUAL state (B5: the laptops are not here yet). A lint that treated
+    // "no evidence" as "a problem" would push somebody to invent a row to make it quiet.
+    const r = accepts(lint(`${HEADER}\n`), 'no rows yet')
+    assert.match(r.out, /0 row/)
+  })
+
+  test('ACCEPTS a mixed file of honest vm and physical rows', () => {
+    accepts(lint(file(PHYSICAL_FULL, VM_HONEST)), 'both kinds, both honest')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+describe('a vm row may not claim a physical-only column — one column at a time', () => {
+  // Exhaustive rather than representative. The rule is a five-element loop in the lint; a refactor
+  // that dropped one element from the list would leave four tests green and one column unguarded,
+  // and the unguarded column is the one that ends up in a quote.
+  for (const col of PHYSICAL_ONLY) {
+    test(`REJECTS a vm row claiming ${col}`, () => {
+      // Control first, in the same test, so the rejection is attributable to this column alone.
+      accepts(lint(file(VM_HONEST)), `control for ${col}`)
+
+      const claimed = row({
+        model: 'qemu-uefi-modern', year: '-', source: 'vm', cpu: 'host', ram_gb: '4',
+        firmware: 'uefi', gpu: 'virtio', audio: 'none', verdict: 'boots',
+        tested_on: '2026-09-21', tester: 'ci', [col]: 'ok',
+      })
+      const r = rejects(lint(file(claimed)), `vm row claiming ${col}`)
+      assert.equal(r.exit, 1, 'a dishonest row is a finding (exit 1), not a crash (exit 2)')
+      assert.match(r.out, new RegExp(`vm row claims ${col}`),
+        `the message must name the column, or the person fixing it guesses. Got:\n${r.out}`)
+      assert.match(r.out, /empty is the honest value/i,
+        'the message must say what to do instead, or somebody deletes the row rather than the claim')
+    })
+  }
+
+  test('REJECTS a vm row claiming ALL FIVE at once, and reports all five', () => {
+    const greedy = row({
+      model: 'qemu-uefi-modern', source: 'vm', verdict: 'boots',
+      wifi: 'ok', trackpad: 'ok', suspend: 'ok', brightness: 'ok', webcam: 'ok',
+    })
+    const r = rejects(lint(file(greedy)), 'a vm row claiming everything')
+    for (const col of PHYSICAL_ONLY) {
+      assert.match(r.out, new RegExp(`vm row claims ${col}`), `${col} was not reported`)
+    }
+    assert.match(r.out, /5 problem/, 'it must report all five, not stop at the first')
+  })
+
+  test('REJECTS a vm row whose physical claim is the single character "-"', () => {
+    // "-" looks like "not applicable" and is not empty. The lint compares against empty, so this is
+    // a claim. Asserting it here makes the convention explicit rather than folklore.
+    rejects(lint(file(row({ model: 'qemu', source: 'vm', verdict: 'boots', wifi: '-' }))), 'a dash is not empty')
+  })
+
+  test('a vm row MAY claim the columns a VM can genuinely observe', () => {
+    // gpu, audio, cpu, ram_gb, firmware are not on the physical-only list, and a lint that rejected
+    // them would make the vm rows useless and push people to stop writing them.
+    accepts(lint(file(row({
+      model: 'qemu-low-ram', source: 'vm', cpu: 'host', ram_gb: '2', firmware: 'bios',
+      gpu: 'virtio', audio: 'none', verdict: 'boots', tested_on: '2026-09-21', tester: 'ci',
+    }))), 'a vm row claiming only what QEMU can show')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+describe('unsupported is a §9 decision, and a VM may not make it', () => {
+  test('REJECTS a vm row declaring a model unsupported', () => {
+    const r = rejects(lint(file(row({ model: 'qemu-old-cpu', source: 'vm', verdict: 'unsupported' }))),
+      'a vm row calling a model unsupported')
+    assert.match(r.out, /§9|reserved for a human/i,
+      'the message must say WHY this is refused — it is not a data-quality rule, it is a decision boundary')
+  })
+
+  test('ACCEPTS a PHYSICAL row declaring a model unsupported — the control for the rule above', () => {
+    accepts(lint(file(row({
+      model: 'Latitude-E6420', year: '2011', source: 'physical', verdict: 'unsupported',
+      notes: '32 GB eMMC, below the 20 GiB root + two deployments floor (D26)',
+      tested_on: '2026-09-21', tester: 'aaroh',
+    }))), 'a human on a real machine may declare a model unsupported')
+  })
+
+  test('a vm row may carry any OTHER verdict', () => {
+    for (const v of ['boots', 'partial', 'ok', 'fails']) {
+      accepts(lint(file(row({ model: 'qemu', source: 'vm', verdict: v }))), `verdict=${v} on a vm row`)
+    }
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+describe('the source column is what makes every other rule enforceable', () => {
+  test('REJECTS a row whose source is neither vm nor physical', () => {
+    for (const bad of ['VM', 'Physical', 'qemu', 'hardware', 'real', 'unknown', 'vm ', ' vm', '']) {
+      const r = rejects(lint(file(row({ model: 'x', source: bad, verdict: 'ok' }))), `source="${bad}"`)
+      assert.match(r.out, /must be exactly "vm" or "physical"/,
+        `source="${bad}" was rejected, but not for the reason a reader needs. Got:\n${r.out}`)
+    }
+  })
+
+  test('the case-sensitivity above is deliberate — "VM" is rejected, "vm" is accepted', () => {
+    // Stated as its own test because "it should probably be case-insensitive" is a change somebody
+    // will propose, and this is where the argument gets had rather than quietly applied.
+    rejects(lint(file(row({ model: 'x', source: 'VM', verdict: 'ok' }))), 'uppercase VM')
+    accepts(lint(file(row({ model: 'x', source: 'vm', verdict: 'ok' }))), 'lowercase vm')
+  })
+
+  test('an unlabelled row does NOT get its physical columns checked, and is rejected outright', () => {
+    // The dangerous shape: source garbage AND a wifi claim. The lint must not "skip to the next row"
+    // in a way that lets the claim through — it rejects the row, so the claim never counts.
+    const r = rejects(lint(file(row({ model: 'x', source: '?', verdict: 'ok', wifi: 'ok' }))), 'unlabelled row with a claim')
+    assert.match(r.out, /cannot be trusted or filtered/)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+describe('malformed files fail CLOSED — exit 2, never a quiet pass', () => {
+  test('REFUSES a completely empty file', () => {
+    const r = lint('')
+    assert.equal(r.exit, 2, `an empty compat.tsv exited ${r.exit}; it must fail closed`)
+    assert.match(r.out, /not even a header/)
+  })
+
+  test('REFUSES a file of only whitespace', () => {
+    assert.equal(lint('\n\n   \n').exit, 2)
+  })
+
+  test('REFUSES an absent file', () => {
+    const r = lint('', { omitFile: true })
+    assert.equal(r.exit, 2, 'a missing compat.tsv must fail closed, not report zero honest rows')
+    assert.match(r.out, /failing closed/)
+  })
+
+  test('REFUSES a file missing a required column, one column at a time', () => {
+    for (const drop of ['model', 'year', 'source', 'verdict', ...PHYSICAL_ONLY]) {
+      const kept = COLS.filter((c) => c !== drop)
+      const text = `${kept.join('\t')}\n`
+      const r = lint(text)
+      assert.equal(r.exit, 2, `dropping "${drop}" from the header exited ${r.exit}; it must fail closed`)
+      assert.match(r.out, new RegExp(`missing required column "${drop}"`),
+        `the message must name the missing column. Got:\n${r.out}`)
+    }
+  })
+
+  test('REFUSES a CRLF file — and this documents real, current behaviour rather than an aspiration', () => {
+    // A CRLF header makes the LAST column "tester\r", so `header.includes('tester')` is false and the
+    // lint fails closed complaining about a missing column. That is the right OUTCOME by luck rather
+    // than by design, and the message is confusing. It is asserted here so that if somebody ever
+    // adds explicit CRLF handling, this test tells them a behaviour changed instead of staying silent.
+    const crlf = `${HEADER}\r\n${VM_HONEST}\r\n`
+    const r = lint(crlf)
+    assert.equal(r.exit, 2, 'a CRLF compat.tsv must not be read as clean')
+    assert.match(r.out, /missing required column/,
+      'CRLF currently surfaces as a missing-column error. If that changed, update this test AND the comment above it.')
+  })
+
+  test('a CRLF file whose last column is NOT required still gets its rows checked', () => {
+    // The gap the test above implies: the CR lands on the last column, and if the last column is not
+    // one the header check requires, the file parses and the ROWS carry a stray CR. Here the vm row
+    // is honest so the file passes — which is correct, and is recorded so the limitation is known
+    // rather than discovered. A CR cannot manufacture a physical claim: it lands on `tester`.
+    const r = lint(`${HEADER}\r\n${VM_HONEST}\r\n`.replace('tester\r', 'tester'))
+    assert.equal(r.exit, 0, `expected the row-level rules still to run; got exit ${r.exit}:\n${r.out}`)
+  })
+
+  test('a CRLF vm row claiming wifi is STILL caught', () => {
+    // The one thing that must not happen: a line ending letting a dishonest claim through. The CR is
+    // on the last field, so `wifi` is unaffected and the claim is caught.
+    const bad = row({ model: 'qemu', source: 'vm', verdict: 'boots', wifi: 'ok' })
+    const r = lint(`${HEADER.replace(/\t?tester$/, '')}\ttester\n${bad}\r\n`)
+    assert.notEqual(r.exit, 0, 'a CRLF row smuggled a vm wifi claim past the lint')
+  })
+
+  test('REFUSES a row with fewer fields than the header, without crashing', () => {
+    const r = lint(`${HEADER}\nqemu\tvm\n`)
+    assert.notEqual(r.exit, 0, 'a short row was accepted')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+describe('the file as it actually stands in this repository', () => {
+  test('the real hardware/compat.tsv passes the real lint', () => {
+    const out = execFileSync(process.execPath, [LINT], { cwd: REPO, encoding: 'utf8' })
+    assert.match(out, /all honest/)
+  })
+
+  test('the real compat.tsv has ZERO physical rows, because no laptop has been touched', () => {
+    // BLOCKED.md B5 and GATE.md both say no physical machine exists yet. If this ever goes red
+    // without a Gate 5 run behind it, a row was written from a VM or from imagination, and the one
+    // asset in this company that compounds has been poisoned at row one.
+    const rows = REAL.split('\n').slice(1).filter((l) => l.trim() !== '')
+    const idx = COLS.indexOf('source')
+    const physical = rows.filter((r) => r.split('\t')[idx] === 'physical')
+    assert.equal(physical.length, 0,
+      `hardware/compat.tsv claims ${physical.length} physical row(s). No laptop has been imaged ` +
+      '(BLOCKED.md B5), so every one of them is fabricated evidence:\n' + physical.join('\n'))
+  })
+})
+
+test.after(() => { if (ROOT) rmSync(ROOT, { recursive: true, force: true }) })

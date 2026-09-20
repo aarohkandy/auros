@@ -50,4 +50,15 @@ if (problems.length) {
   console.error('')
   process.exit(1)
 }
-console.log(`compat-lint: ${rows.length} row(s), all honest. (${rows.filter(r => r.split('\t')[idx.source] === 'physical').length} physical, ${rows.filter(r => r.split('\t')[idx.source] === 'vm').length} vm)`)
+// The per-row checks above read `source` TRIMMED, so the summary has to as well. It did not, and a
+// row whose source field carried a trailing space was counted as neither vm nor physical — printing
+// "1 row(s), all honest. (0 physical, 0 vm)". The summary line is the only thing anybody reads when
+// this is green, so a summary that does not add up is the one place a quiet inconsistency survives.
+const sourceOf = (r) => (r.split('\t')[idx.source] ?? '').trim()
+const nPhysical = rows.filter(r => sourceOf(r) === 'physical').length
+const nVm = rows.filter(r => sourceOf(r) === 'vm').length
+if (nPhysical + nVm !== rows.length) {
+  console.error(`compat-lint: internal inconsistency — ${rows.length} row(s) but ${nPhysical} physical + ${nVm} vm. Failing closed rather than printing a summary that does not add up.`)
+  process.exit(2)
+}
+console.log(`compat-lint: ${rows.length} row(s), all honest. (${nPhysical} physical, ${nVm} vm)`)

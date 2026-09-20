@@ -61,6 +61,21 @@ const RULES = [
     re: /\b(?:microsoft office|office 365|photoshop|adobe (?:creative|acrobat|photoshop))\b[^.\n]{0,60}\b(?:works?|runs?|supported|compatible|available)\b/gi },
   { id: 'winapps', why: 'D16: needs a Windows licence per device and a 4 GB floor for the VM alone, on laptops with 4 GB total. Not honest to offer.',
     re: /\b(?:winboat|winapps)\b/gi },
+  // Added after D30/D31. The site was written when the product was Apache-2.0 and replaceability was
+  // the headline feature, so several pages PRINT A LICENCE GRANT — "every recipe is a public git
+  // repository, including yours; if we disappear you rebuild the same operating system". Those were
+  // true when written, which is exactly why no existing rule caught them: a claims ledger is only as
+  // good as the last time somebody re-read it against reality.
+  //
+  // What we may now say is narrower and true: you have the image, and if we cease operating you are
+  // given the build files needed to keep patching it. Not a licence to our tooling, not permission to
+  // redistribute. See DECISIONS.md D31.
+  { id: 'licence-grant', why: 'D30/D31: proprietary, all rights reserved. Offering a right we withdrew is a claim we cannot honour, and it is the one the owner explicitly asked us not to make.',
+    re: /\b(?:you (?:can|may) (?:fork|copy|redistribute|rebuild (?:it|the same|your own))|fork (?:it|this|our|the) (?:repo|repository|recipes?)?|open[- ]source|free to (?:use|copy|modify|redistribute)|MIT licen[cs]e|Apache[- ]2)\b/gi,
+    notNegated: true },
+  { id: 'public-recipes', why: 'The repositories are readable, not licensed. "Public git repo" invites a reader to conclude they may copy it, which is the inference D30 exists to prevent.',
+    re: /\b(?:public (?:git )?repositor(?:y|ies)|in a public repo|publicly available (?:recipes?|source))\b/gi,
+    notNegated: true },
   { id: 'guarantee', why: 'We do not have the operating history to guarantee anything. Say what the system does, not what we promise.',
     re: /\b(?:guarantee[ds]?|100% (?:safe|reliable|secure)|never fails?|zero downtime|bulletproof)\b/gi },
   { id: 'multi-rollback', why: 'D10: bootc retains booted + exactly ONE rollback. Anything implying a history of images is false.',
