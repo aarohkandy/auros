@@ -35,16 +35,33 @@ const check = (file) => {
   const lines = text.split('\n')
 
   lines.forEach((line, i) => {
-    // A flow mapping on this line that also carries an UNQUOTED ${{ }}.
-    const flow = line.match(/:\s*\{[^}]*$|:\s*\{.*\}\s*$/)
-    if (flow && /\$\{\{/.test(line)) {
-      // Quoted is legal — the braces sit inside a scalar. Unquoted is not.
-      const unquoted = line.replace(/"[^"]*"|'[^']*'/g, '')
-      if (/\$\{\{/.test(unquoted)) {
+    // Strip what cannot be structural before looking at braces at all:
+    //   * quoted scalars — a `${{ }}` inside quotes is legal, the braces sit inside a string;
+    //   * a trailing `# comment`, which YAML does not parse and which would otherwise fire falsely.
+    // Quotes come off FIRST so that a `#` inside a quoted scalar is not mistaken for a comment.
+    const bare = line.replace(/"[^"]*"|'[^']*'/g, '').replace(/\s#.*$/, '')
+
+    // Where does a flow mapping OPEN on this line? `key: {` — the brace after a colon.
+    //
+    // The earlier version of this test asked whether the line looked like a COMPLETE flow mapping
+    // (`:\s*\{[^}]*$` or `:\s*\{.*\}\s*$`) and missed the one shape that matters most: a mapping
+    // that opens on this line and continues on the next —
+    //     with: { name: art-${{ matrix.profile }},
+    //             path: out/ }
+    // Neither alternative matched, because the `}}` of the expression defeated `[^}]*$` while the
+    // trailing comma defeated `\}\s*$`. So the exact bug this linter was written for went
+    // undetected whenever somebody wrapped the line. Caught by tools/workflow-lint.test.mjs.
+    //
+    // The question to ask is simply: does a flow mapping open here, and is there an unquoted
+    // expression after it? That is true of every broken shape and false of every legal one.
+    const open = bare.search(/:\s*\{/)
+    if (open !== -1) {
+      const after = bare.slice(open)
+      if (/\$\{\{/.test(after)) {
         problems.push({ file, line: i + 1, why:
           'a ${{ }} expression sits unquoted inside a YAML flow mapping { }. The braces are structural, ' +
           'so GitHub rejects the whole workflow — and the symptom is a run named by its file path with ' +
-          'no jobs and no log, not an error. Use block style.', text: line.trim().slice(0, 120) })
+          'no jobs and no log, not an error. Quote the value, or use block style.', text: line.trim().slice(0, 120) })
       }
     }
   })

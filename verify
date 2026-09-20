@@ -58,13 +58,35 @@ if [ -x auros-base/tests/kargs-check.test.sh ]; then
   run "hardening karg check (both directions)" auros-base/tests/kargs-check.test.sh
 else skip "hardening karg check" "auros-base not checked out here"; fi
 
-# ── §7 — the design system is fixed ─────────────────────────────────────────────────────────────────
-if [ -f tools/contrast.mjs ]; then run "WCAG AA contrast, measured (spec §7)" node tools/contrast.mjs
-else skip "contrast (spec §7)" "tools/contrast.mjs not present yet"; fi
+# Three base builds were lost to systemd unit names from a version we do not run. This costs a second.
+if [ -x auros-base/tests/units.test.sh ]; then
+  run "systemd units exist (vs units.known)" auros-base/tests/units.test.sh
+else skip "systemd units" "auros-base not checked out here"; fi
 
 if [ -f auros-web/package.json ]; then
   run "site builds (spec §6D)" bash -euo pipefail -c 'cd auros-web && (pnpm build 2>&1 | tail -20)'
 else skip "site build (spec §6D)" "auros-web not scaffolded yet"; fi
+
+# ── §7 — the design system is fixed ─────────────────────────────────────────────────────────────────
+# AFTER the build, and never before it. The tool measures the BUILT pages: it resolves the real
+# cascade over the real DOM, and in that mode the custom properties come from the built CSS. Run
+# against a stale dist/ it would report last build's tokens as a pass — so it now refuses to, and
+# running it here rather than above is what keeps that refusal from being the normal outcome.
+#
+# The guard used to read `[ -f tools/contrast.mjs ]`, which is a path in THIS repo and has never
+# existed: the tool lives in auros-web. So this line printed a skip on every run, locally and in CI,
+# while claiming the §7 gate had been considered. Real coverage survived only because `pnpm build`
+# happens to end in `verify:built`.
+if [ -f auros-web/tools/contrast.mjs ]; then
+  run "WCAG AA contrast, measured (spec §7)" bash -euo pipefail -c 'cd auros-web && node tools/contrast.mjs'
+else skip "contrast (spec §7)" "auros-web/tools/contrast.mjs not present yet"; fi
+
+# ── §6D — the configurator's accessibility and honesty claims, as permanent assertions ──────────────
+# The 2026-09-20 §7/a11y audit, one named test per fatal and major finding. Reads the BUILT pages,
+# so it runs after the build for the same reason contrast does.
+if [ -f auros-web/tools/configurator-a11y.test.mjs ]; then
+  run "configurator a11y + honesty regressions (spec §6D)" bash -euo pipefail -c 'cd auros-web && node --test tools/configurator-a11y.test.mjs'
+else skip "configurator a11y regressions (spec §6D)" "auros-web/tools/configurator-a11y.test.mjs not present yet"; fi
 
 # ── The honesty check on our own state files ────────────────────────────────────────────────────────
 run "compat.tsv honesty (no vm row claims a physical column)" node tools/compat-lint.mjs

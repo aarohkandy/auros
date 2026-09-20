@@ -110,3 +110,32 @@ long-lived organisational credential whose custody matters more than its cryptog
 
 Doing it late costs a re-sign of everything published under the development key. Doing it now costs
 nothing, because nothing is published.
+
+## B11 — The order flow's human check needs a script host §4.5 does not permit · OPEN · blocks Gate 4 exit
+Spec §6D's exit condition is that a stranger configures a build, submits, and a PR appears in
+`auros-recipes`. The Worker will not accept a POST without a verified Turnstile token
+(`auros-web/worker/lib/turnstile.js`), and Turnstile's widget is delivered by
+`https://challenges.cloudflare.com/turnstile/v0/api.js`. **Spec §4.5 permits no script host on the
+public site other than cdnjs.** Turnstile is not on cdnjs and cannot be: the challenge is served
+from Cloudflare's own origin by design.
+
+This is not a one-line fix and it is not mine to make. It needs one of:
+1. **An explicit, recorded §4.5 exemption for `challenges.cloudflare.com`** — narrowly, for that one
+   endpoint. It is the same origin the Worker already calls for `siteverify`, so the trust decision
+   is arguably already taken on the server side; §4.5 is about the *browser* though, and the two are
+   not the same question.
+2. **A different human check** for the order flow — one that is same-origin, or one the Worker can
+   run without a third-party widget.
+3. **No human check, and a different abuse control on the Worker** (rate limit, proof of work,
+   a review queue). This is a §9 question about what an open PR-opening endpoint may cost.
+
+*What the site does while this is open:* nothing pretends. `auros-web/src/components/configurator/human-check.ts`
+holds `HUMAN_CHECK_DEPLOYED = false`; the empty `<div class="cf-turnstile">` is not rendered at all,
+the submit button is disabled with the reason printed beside it, and the copy says the email path is
+the only path from the site today. Before this was found, the widget div shipped with nothing loading
+it, so every visitor — JS on or off — was told the check "has not completed", which described an
+exceptional state that was in fact the only state.
+
+*Turning it on is one constant plus the loader*, in the same commit that records the decision.
+`auros-web/tools/configurator-a11y.test.mjs` asserts the two halves cannot drift apart again: no
+widget without a loader, and no loader from a host §4.5 does not name.

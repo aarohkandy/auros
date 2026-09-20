@@ -183,11 +183,32 @@ describe('unsupported is a §9 decision, and a VM may not make it', () => {
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
 describe('the source column is what makes every other rule enforceable', () => {
   test('REJECTS a row whose source is neither vm nor physical', () => {
-    for (const bad of ['VM', 'Physical', 'qemu', 'hardware', 'real', 'unknown', 'vm ', ' vm', '']) {
+    for (const bad of ['VM', 'Physical', 'qemu', 'hardware', 'real', 'unknown', '']) {
       const r = rejects(lint(file(row({ model: 'x', source: bad, verdict: 'ok' }))), `source="${bad}"`)
       assert.match(r.out, /must be exactly "vm" or "physical"/,
         `source="${bad}" was rejected, but not for the reason a reader needs. Got:\n${r.out}`)
     }
+  })
+
+  test('a PADDED source is trimmed, applied, AND counted — the summary has to add up', () => {
+    // Padding is tolerated on purpose: compat.tsv is typed by a human with a laptop open in front of
+    // them, and being strict about an invisible space costs more than it buys. But the per-row rules
+    // read the TRIMMED value while the summary line read the raw one, so `source="vm "` was linted
+    // as a vm row and then counted as neither — printing "1 row(s), all honest. (0 physical, 0 vm)".
+    // The summary is the only line anybody reads when this is green, so it has to add up. Fixed
+    // 2026-09-20; compat-lint now fails closed if the counts do not reconcile with the row count.
+    for (const padded of ['vm ', ' vm', 'physical ', ' physical']) {
+      const kind = padded.trim()
+      const r = accepts(lint(file(row({ model: 'x', source: padded, verdict: 'ok' }))), `source="${padded}"`)
+      assert.match(r.out, new RegExp(`1 ${kind}`),
+        `source="${padded}" was accepted but counted as something else:\n${r.out}`)
+    }
+  })
+
+  test('a padded vm source still gets the physical-column rules applied to it', () => {
+    // Tolerance must not become a bypass: `source="vm "` is still a vm row.
+    rejects(lint(file(row({ model: 'x', source: 'vm ', verdict: 'ok', wifi: 'ok' }))),
+      'a padded vm source smuggling a wifi claim')
   })
 
   test('the case-sensitivity above is deliberate — "VM" is rejected, "vm" is accepted', () => {
@@ -234,33 +255,33 @@ describe('malformed files fail CLOSED — exit 2, never a quiet pass', () => {
     }
   })
 
-  test('REFUSES a CRLF file — and this documents real, current behaviour rather than an aspiration', () => {
-    // A CRLF header makes the LAST column "tester\r", so `header.includes('tester')` is false and the
-    // lint fails closed complaining about a missing column. That is the right OUTCOME by luck rather
-    // than by design, and the message is confusing. It is asserted here so that if somebody ever
-    // adds explicit CRLF handling, this test tells them a behaviour changed instead of staying silent.
-    const crlf = `${HEADER}\r\n${VM_HONEST}\r\n`
-    const r = lint(crlf)
-    assert.equal(r.exit, 2, 'a CRLF compat.tsv must not be read as clean')
-    assert.match(r.out, /missing required column/,
-      'CRLF currently surfaces as a missing-column error. If that changed, update this test AND the comment above it.')
+  // ── CRLF: what actually happens, and why it is safe rather than merely untested ────────────────
+  // A CR always lands on the LAST field of a line. In this header that field is `tester`, which is
+  // not a required column and is not physical-only — so a CRLF file is read cleanly and every
+  // row-level rule still runs. These assert the property that matters (a line ending cannot smuggle
+  // a claim past the lint) rather than a line-ending policy this tool does not have.
+  test('a CRLF file is accepted, and its rows are still checked', () => {
+    const r = lint(`${HEADER}\r\n${VM_HONEST}\r\n`)
+    assert.equal(r.exit, 0, `a CRLF file with an honest vm row should pass; got exit ${r.exit}:\n${r.out}`)
+    assert.match(r.out, /1 vm/, 'the CR must not break the summary count')
   })
 
-  test('a CRLF file whose last column is NOT required still gets its rows checked', () => {
-    // The gap the test above implies: the CR lands on the last column, and if the last column is not
-    // one the header check requires, the file parses and the ROWS carry a stray CR. Here the vm row
-    // is honest so the file passes — which is correct, and is recorded so the limitation is known
-    // rather than discovered. A CR cannot manufacture a physical claim: it lands on `tester`.
-    const r = lint(`${HEADER}\r\n${VM_HONEST}\r\n`.replace('tester\r', 'tester'))
-    assert.equal(r.exit, 0, `expected the row-level rules still to run; got exit ${r.exit}:\n${r.out}`)
-  })
-
-  test('a CRLF vm row claiming wifi is STILL caught', () => {
-    // The one thing that must not happen: a line ending letting a dishonest claim through. The CR is
-    // on the last field, so `wifi` is unaffected and the claim is caught.
+  test('a CRLF vm row claiming wifi is STILL caught — a line ending cannot smuggle a claim', () => {
+    // This is the assertion the CRLF case exists for. Every field is read with .trim(), so a CR at
+    // the end of a line cannot turn a claim into an empty cell or an empty cell into a claim.
     const bad = row({ model: 'qemu', source: 'vm', verdict: 'boots', wifi: 'ok' })
-    const r = lint(`${HEADER.replace(/\t?tester$/, '')}\ttester\n${bad}\r\n`)
-    assert.notEqual(r.exit, 0, 'a CRLF row smuggled a vm wifi claim past the lint')
+    const r = rejects(lint(`${HEADER}\r\n${bad}\r\n`), 'a CRLF vm row claiming wifi')
+    assert.match(r.out, /vm row claims wifi/)
+  })
+
+  test('REFUSES a CRLF file when a REQUIRED column is last in the header', () => {
+    // The one CRLF shape that does break parsing: the CR lands on a column the header check
+    // requires, so `includes()` misses it and the lint fails closed. Right outcome, confusing
+    // message — recorded so that if somebody adds explicit CRLF handling, this says what changed.
+    const reordered = [...COLS.filter((c) => c !== 'verdict'), 'verdict'].join('\t')
+    const r = lint(`${reordered}\r\n`)
+    assert.equal(r.exit, 2, 'a CRLF header ending in a required column must fail closed')
+    assert.match(r.out, /missing required column "verdict"/)
   })
 
   test('REFUSES a row with fewer fields than the header, without crashing', () => {
