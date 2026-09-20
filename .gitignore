@@ -1,0 +1,11 @@
+# The four product repos are their own git repos with their own lifetimes (DECISIONS.md D6).
+auros-base/
+auros-recipes/
+auros-installer/
+auros-web/
+
+node_modules/
+.DS_Store
+*.log
+.wrangler/
+dist/

@@ -1,0 +1,21 @@
+{
+  "$comment": "SINGLE SOURCE OF TRUTH for the namespace. Every image reference, CI workflow, recipe FROM line and website URL derives from this file. Renaming the company is a change to this file plus a registry re-tag, and nothing else. See PLAN.md 5.1.",
+  "org": "aarohkandy",
+  "product": "auros",
+  "registry": "ghcr.io",
+  "baseImage": "ghcr.io/aarohkandy/auros-base",
+  "baseTag": "hardened",
+  "repos": {
+    "meta": "aarohkandy/auros",
+    "base": "aarohkandy/auros-base",
+    "recipes": "aarohkandy/auros-recipes",
+    "installer": "aarohkandy/auros-installer",
+    "web": "aarohkandy/auros-web"
+  },
+  "upstream": {
+    "$comment": "Pinned by tools/pin-upstream.sh, never edited by hand. Digest is resolved and recorded in auros-base/base.lock.",
+    "image": "ghcr.io/ublue-os/aurora",
+    "tag": "stable"
+  },
+  "arch": "x86_64"
+}
