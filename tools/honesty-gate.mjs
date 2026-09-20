@@ -19,6 +19,19 @@ import { join, extname, relative } from 'node:path'
 const SCAN_EXT = new Set(['.md', '.mdx', '.astro', '.ts', '.tsx', '.js', '.jsx', '.html', '.json', '.yaml', '.yml'])
 const SKIP_DIR = new Set(['node_modules', '.git', 'dist', '.astro', 'coverage', '.wrangler', 'fonts'])
 
+// Test files ship to nobody. A claim has to reach a customer to be a claim.
+const IS_TEST = /\.(test|spec)\.[jt]sx?$/
+
+// In CODE, only a string literal or JSX/markup text can reach a customer. A pure comment line cannot,
+// and three separate engineering comments using "guarantees" in its ordinary technical sense had
+// already tripped this gate. Annotating each one would have taught people to reach for the escape
+// hatch reflexively, and an escape hatch people reach for reflexively is not a gate.
+//
+// This closes no real hole: to SHIP a claim you must put it in content or in a string, and both are
+// still scanned in full. Markdown and MDX are content, so every line of them counts.
+const CODE_EXT = new Set(['.ts', '.tsx', '.js', '.jsx', '.astro'])
+const PURE_COMMENT = /^\s*(\/\/|\*|\/\*|<!--)/
+
 // Each rule: what it catches, and WHY it is forbidden — the why is printed, because a developer who
 // understands the rule routes around the letter of it far less often than one who does not.
 const RULES = [
@@ -60,6 +73,7 @@ function walk (dir, root) {
     try { st = statSync(p) } catch { continue }
     if (st.isDirectory()) { walk(p, root); continue }
     if (!SCAN_EXT.has(extname(p))) continue
+    if (IS_TEST.test(e.name)) continue
     scanned++
     scan(p, root)
   }
@@ -88,6 +102,8 @@ function scan (file, root) {
       }
       const lineNo = text.slice(0, m.index).split('\n').length
       const line = lines[lineNo - 1] ?? ''
+      // In a code file, a pure comment line cannot reach a customer, so it is not a claim.
+      if (CODE_EXT.has(extname(file)) && PURE_COMMENT.test(line)) continue
       // Escape hatch, deliberately visible in the diff and requiring a stated reason.
       if (/auros-allow:\s*\S+/.test(line) || /auros-allow:\s*\S+/.test(lines[lineNo - 2] ?? '')) continue
       // The rules file describes the forbidden patterns; it is not itself a claim.
