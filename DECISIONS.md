@@ -306,3 +306,35 @@ real floor, and it is the profile most likely to fail on a genuinely old machine
 A 32 GB eMMC ultrabook is almost certainly **out of scope**, which matters because that describes a large
 part of the 2014–2016 cheap-laptop cohort. Declaring a model unsupported is a §9 decision, so this is
 recorded as evidence for the human rather than acted on.
+
+## D27 — Gate 3 runs on ephemeral Windows runners, not a VM farm · **unblocks B1 without spending money**
+`homebase` re-checked at 17 GB free of 247 GB, 22 running containers belonging to other work (Playwright,
+ollama, open-webui, an nmlive stack) and a tmux session from 2026-09-18. QEMU is not even installed.
+**None of that is mine to move**, so the Windows VM farm has no host.
+
+The better answer was available the whole time: **GitHub's `windows-latest` runner IS a throwaway Windows
+machine.** Spec §4.7 requires "Windows in a VM, with synthetic files, destroyed repeatedly" — a hosted
+runner is destroyed after every job by construction, and our own probe measured ~110 GB free on one. A
+public repo gets unmetered minutes and 20 concurrent jobs, so 100 runs is a matrix, not a farm.
+
+What this **does** test, which is the overwhelming majority of the exit condition and specifically the
+half the spec says to test harder: inventory, disclosure, destination selection and refusal, the copy,
+verification, per-file quarantine, 18,000 synthetic files, and every induced failure — process killed
+mid-copy, destination removed, disk filled, source mutated, manifest truncated, hash mismatch.
+
+What it **cannot** test: BitLocker suspension (runners are not encrypted), firmware boot order, and
+literally rebooting into Windows afterwards.
+
+**And here the constraint improved the design.** The spec's exit condition is *"Windows still boots
+normally every time"* — that is the **consequence**. The property that actually guarantees it is
+*"nothing was written to the system disk"* — the **invariant**. We now assert the invariant directly, by
+snapshotting C: before and after every run and diffing it, which is strictly stronger evidence than
+watching a machine boot: a boot test passes even if we wrote something harmless-looking, and it passes
+only once per run where the diff covers every path.
+
+So the harness asserts the invariant on all 120 runs, and the handful of checks that genuinely need
+firmware (BitLocker, `BootNext`, ARM) are deferred to the physical machines at Gate 5, where they are the
+only place they could ever have been honestly tested anyway.
+
+**This also removes a money request.** B1's options were "expand the Azure disk (spends money, §9)" or
+"the human frees space". Neither is needed now.

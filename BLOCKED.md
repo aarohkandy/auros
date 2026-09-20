@@ -6,13 +6,16 @@ that crosses a prohibition.
 
 ---
 
-## B1 — Gate 3 needs a Windows VM host with ~100 GB free · OPEN · blocks Gate 3
-120 Windows VM runs (100 clean + 20 fault-injected). `homebase` is the only x86_64 KVM box available and
-was last observed at **17 GB free of 247 GB**, running 13 containers and a tmux session belonging to other
-work. **I will not delete another workload's data.**
-Options: (a) expand the Azure disk — spends money, §9; (b) human frees space; (c) serialize the farm on a
-single ~40 GB working set with aggressive overlay reclaim between runs — slower but free.
-*Leaning (c), and building the harness so it works either way.* Not blocking until Gate 3.
+## B1 — Gate 3 needs a Windows VM host with ~100 GB free · **RESOLVED 2026-09-20** → D27
+`homebase` re-checked: still 17 GB free of 247 GB, 22 running containers of other people's work, QEMU not
+installed. Not mine to move.
+
+**Resolved without spending money or touching anyone's workload:** Gate 3 runs on GitHub
+`windows-latest` runners, which are ephemeral Windows machines destroyed after every job — exactly what
+spec §4.7 asks for — with ~110 GB free and 20 concurrent jobs on a public repo. See DECISIONS.md D27,
+including why asserting *"the system disk was not written"* is stronger evidence than the spec's
+*"Windows still boots"*. The firmware-dependent checks (BitLocker, `BootNext`, ARM) move to Gate 5's
+physical machines, which is the only place they could have been honestly tested anyway.
 
 ## B2 — Cross-repo `repository_dispatch` needs a credential · OPEN · blocks Gate 2 exit
 A workflow's default `GITHUB_TOKEN` cannot trigger a workflow in a different repo (GitHub suppresses this
