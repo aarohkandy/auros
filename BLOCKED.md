@@ -74,7 +74,7 @@ Publishing any of it now would be the fabricated claim §4.4 forbids.
 files needed to keep patching it."* Weaker than the original and true. The four sections need rewriting
 before anything ships; the mechanism (configurator, order PR) never depended on the answer.
 
-## B9 — The $0 self-serve tier has no product any more · OPEN · §9 (pricing) · blocks Gate 4 copy
+## B9 — The $0 self-serve tier has no product any more · OPEN · §9 (pricing) · no longer blocks copy
 D30/D31 made everything all-rights-reserved. The self-serve tier existed **because** the recipes were
 public and forkable — that was the entire product at that price. `tiers/5-self-serve.md` currently says:
 
@@ -98,6 +98,13 @@ Three options:
 Note for whoever decides: spec §6D requires the school tier to show a replacement-cost comparison
 because *"our real competitor is doing nothing, which is free."* The $0 tier was the other half of that
 argument. Removing it strengthens "doing nothing" as the alternative.
+
+**Holding pattern, 2026-09-20 — this decides nothing.** The rest of the site copy was rewritten for
+D31 and this tier could not be left saying what it said. So `tiers/5-self-serve.md` now carries
+`blocked: true` in its frontmatter, `tiers()` in `auros-web/src/components/content.ts` filters blocked
+tiers out of every page that renders them, and `pages/3-pricing.mdx` states in words that a fifth tier
+exists and is being held back and why. The file is intact, the price is untouched, and all three options
+above are still open. **Unblocking it is clearing that flag, which is the human's act, not an agent's.**
 
 ## B10 — A production signing key is a human action · OPEN · blocks publishing, not building
 D32 created a development key so Gate 1 is not blocked. It builds, boots and passes the matrix; the

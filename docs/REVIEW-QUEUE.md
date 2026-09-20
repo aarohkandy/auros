@@ -57,11 +57,10 @@ because "they are the same instructions we use" — which is only a reason to be
 runs the published commands verbatim, and asserts an image comes out. If they do not work, the page is
 wrong and the page is the trust asset.
 
-## R4 — Site content still claims replaceability · OPEN · blocks Gate 4 copy, not mechanism
+## R4 — Site content still claims replaceability · **CLOSED 2026-09-20**
 D31 settled the new claim: *"you have the image; if we cease operating you get the build files needed to
-keep patching it."* Thirteen content files still make the old, now-false claim. They need rewriting
-together, in one pass, by whoever owns the voice — not patched one at a time, because the argument runs
-through all of them.
+keep patching it."* Thirteen content files made the old, now-false claim. They were rewritten together,
+in one pass — not patched one at a time, because the argument runs through all of them.
 
 | File | What is now false |
 |---|---|
@@ -76,9 +75,24 @@ through all of them.
 | `faq/5-do-you-see-my-data.md` | Incidental |
 | `copy.ts`, `CLAIMS.md` | Strings and the claims ledger |
 
-**Nothing is deployed**, so no false claim is public. The honesty gate does not catch these because they
-were true when written — which is worth noting: a claims ledger is only as good as the last time someone
-re-read it against reality. `CLAIMS.md` needs a "verified on" date per row.
+**Nothing was deployed**, so no false claim ever went public.
+
+**Done.** Every file in the table is rewritten around D31: the machines keep booting because the image is
+already on them, what dies with us is the patching, and the written term is that a customer receives the
+build files for their own image. `node tools/honesty-gate.mjs auros-web/src` reports a clean scan and
+`pnpm build` passes.
+
+Three things came out of it that outlive this pass:
+
+- `tiers/5-self-serve.md` is **not** decided. It carries `blocked: true`, the `tiers()` lookup filters
+  blocked tiers out of every page, and `pages/3-pricing.mdx` says in words that a fifth tier exists and
+  is being held back. B9 is still the open question and still §9.
+- `CLAIMS.md` now carries a **`verified_on`** date on every row and a **Reviewed against DECISIONS.md**
+  marker at the top, which `honesty-gate` fails the build on when it falls behind the newest decision.
+  That is the actual fix: the copy did not change, reality did, and nothing was watching for that.
+- The published rebuild command lost its `cd` when these pages were rewritten, and
+  `tools/content-commands.mjs` caught it the same minute. A gate that reads the filesystem earns its
+  keep the first time somebody edits prose around a command.
 
 ## R5 — "Derived is safer than hardcoded" is not a rule · CLOSED as a lesson · 2026-09-20
 Two bugs an hour apart, in the same function, in opposite directions.
