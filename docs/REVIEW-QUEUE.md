@@ -45,3 +45,14 @@ unless everything verified. But it implies a mechanism we do not have.
 **Proposed:** make the page describe the actual mechanism, which is more reassuring anyway — *"every file
 is checked twice; anything we cannot verify is listed for you by name, and nothing is written to the old
 disk until that list is empty."* Overclaiming safety is still overclaiming.
+
+## R3 — Verify the rebuild command end to end before Gate 4 · OPEN
+D28 fixes the missing Containerfile. The remaining risk is that the *rest* of the instructions on the
+`replaceable-on-purpose` page have never been run.
+
+Spec §1.3 makes replaceability something **we advertise**, and the FAQ says the instructions work
+because "they are the same instructions we use" — which is only a reason to believe them if it is true.
+
+**Before Gate 4:** a CI job clones `auros-recipes` from scratch into a container with nothing but podman,
+runs the published commands verbatim, and asserts an image comes out. If they do not work, the page is
+wrong and the page is the trust asset.
