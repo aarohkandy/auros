@@ -37,6 +37,11 @@ if command -v go >/dev/null 2>&1 && [ -f auros-installer/go.mod ]; then
   run "installer safety core (spec §6C)" bash -c 'cd auros-installer && go vet ./... && go test ./... -count=1'
 else skip "installer safety core (spec §6C)" "go not installed locally — this runs in CI"; fi
 
+# ── Image hardening self-checks must be able to go BOTH red and green ───────────────────────────────
+if [ -x auros-base/tests/kargs-check.test.sh ]; then
+  run "hardening karg check (both directions)" auros-base/tests/kargs-check.test.sh
+else skip "hardening karg check" "auros-base not checked out here"; fi
+
 # ── §7 — the design system is fixed ─────────────────────────────────────────────────────────────────
 if [ -f tools/contrast.mjs ]; then run "WCAG AA contrast, measured (spec §7)" node tools/contrast.mjs
 else skip "contrast (spec §7)" "tools/contrast.mjs not present yet"; fi
