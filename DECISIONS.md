@@ -217,3 +217,74 @@ not applicable to a modern bootc image derived from `ghcr.io/ublue-os/aurora`.
 **The base `Containerfile` must not call it.** `bootc container lint` (check S2) is the validation step.
 Recorded because every tutorial written before ~2024 ends with that line, and an agent or a human copying
 one would break the build in a way whose error message does not obviously point at the cause.
+
+---
+
+# Amendments from the full research synthesis · 2026-09-20 · AGENT
+Full sheet: `docs/DECISION-SHEET.md` (225 facts, 37 blockers, 8 dossiers). Only the items that change the
+build are repeated here.
+
+## D21 — Upstream deletes the digest we pin. We mirror it. · **architectural, would have broken us silently**
+`ublue-os/aurora` runs `dataaxiom/ghcr-cleanup-action` **weekly, Sunday 00:15 UTC**, with
+`older-than: 90 days`, `keep-n-tagged: 7`, `keep-n-untagged: 7`, `delete-orphaned-images: true`.
+
+So the digest in `base.lock` is **garbage-collected by upstream** — after roughly 90 days, or after seven
+newer stable tags, whichever comes first. Pinning by digest protects us from upstream *moving* a tag. It
+does not protect us from upstream *deleting the blob*. The failure mode is the worst kind: everything
+works for weeks, then one morning every build fails with a manifest-unknown on an image nobody changed,
+and a customer who forked our recipe to rebuild without us — the thing we advertise — cannot.
+
+**Fix, and it is not optional:** on every successful base build we **mirror the pinned upstream digest
+into our own namespace** (`ghcr.io/aarohkandy/auros-upstream-mirror`) with `skopeo copy --all`, and the
+`FROM` resolves against the mirror. Upstream remains the source of truth for *what to pin*; our mirror is
+what guarantees the pin is still *pullable*. This costs nothing — GHCR public storage is free — and it is
+what makes spec §1.3's "if we vanish, you rebuild your exact OS from the file" survive contact with
+upstream's retention policy.
+
+This also protects the customer, not just us. A recipe that references a deleted base is a recipe that
+cannot be rebuilt by anyone, which would quietly convert our main trust asset into a broken promise.
+
+## D22 — `uupd`, not `bootc-fetch-apply-updates`, is the real update driver on this base
+Aurora ships **`uupd.timer` / `uupd.service`** (`OnCalendar=*-*-* 04:00:00`, `Persistent=true`,
+`RandomizedDelaySec=15m`), configured by `/etc/uupd/config.json`. `/etc/rpm-ostreed.conf`'s
+`AutomaticUpdatePolicy=stage` is a decoy — present, but not what drives updates here.
+
+PLAN.md A4 named the wrong unit. Health checks, the update-timer-is-still-enabled assertion, and check U1
+all bind to `uupd`. Getting this wrong would have produced an agent that looked configured and never ran.
+
+## D23 — Pin the runner to `ubuntu-24.04`, not `ubuntu-latest`
+`ubuntu-latest` migrates to 26.04 between 2026-10-19 and 2026-11-19. An OS migration under a build that
+boots VMs is a week we do not have. Pin the runner and move it deliberately. Same reasoning as pinning
+the base by digest, applied to CI.
+
+## D24 — Where research and our own probe disagree about the runner, the probe wins
+The synthesis reports ~25–29 GB free before cleanup and ~51 GB after. **Our own probe measured 145 GB
+total, 87 GB free before cleanup and 110 GB after**, on `ubuntu-latest`, today
+(`docs/evidence/2026-09-20-runner-probe.md`).
+
+We use our measurement. Research reports what upstream *documents*; a probe reports what the runner
+*actually did*. Recorded as a standing precedence rule, because this will happen again: **when a document
+and a measurement disagree about our own infrastructure, the measurement wins, and we write down that it
+did.**
+
+## D25 — Assorted pins now fixed rather than discovered at 2am
+- **Aurora is x86_64 only** — a single OCI manifest, not an index; aarch64 is commented out of their
+  build matrix. Confirms assumption 2.2 as a fact rather than a guess.
+- Fedora **44**, kernel 7.1.8, Plasma **6.7.5**, bootc **1.16.10**, flatpak 1.18.2, ostree 2026.4.
+- Streams that exist: `stable`, `latest`, `testing`. **There is no `lts` and no `gts`** — they 404.
+  Stable rebuilds `cron: 0 1 * * TUE` off branch `stable-f44`.
+- `bootc status --json`: the booted digest is at **`.status.booted.image.imageDigest`**, and
+  `.status.booted.image.image.signature` must read **`containerPolicy`** — that field is how CI proves
+  D8's enforcement is real rather than nominal. `.status.rollback` is singular, confirming D10.
+  A rollback emits journal `MESSAGE_ID=26f3b1eb24464d12aa5e7b544a6b5468`.
+- Our cosign public key goes in **`/usr/lib/pki/containers/`**, not `/etc/pki` — `/usr` is image-lifecycled.
+- KDE Control Module restrictions live in **`/etc/kde5rc`** — the literal KF5 filename, still hardcoded
+  in KF6. A file named `kde6rc` is ignored.
+- greenboot: `GREENBOOT_MAX_BOOT_ATTEMPTS=3` in `/etc/greenboot/greenboot.conf`; checks in
+  `/etc/greenboot/check/required.d/*.sh`, mode 0755.
+- `bootc-image-builder` wants **`--rootfs xfs`** for this base.
+- Cosign pinned to **v3.1.3** exactly (D17's time-boxed risk).
+- Web: Astro **7.3.3**, `@astrojs/cloudflare` **14.3.2**, wrangler **4.135.0**, Cloudflare **Workers**
+  (not Pages). Turnstile test keys `1x00000000000000000000AA` / `1x0000000000000000000000000000000AA`.
+- **Instrument Serif ships 400 normal and 400 italic only — there is no bold.** Any design calling for a
+  bold display weight has to be redrawn, not faked with synthetic bold.

@@ -51,3 +51,10 @@ a 3.5 GB pull *per machine*; a 180-machine site on one uplink is a ~630 GB event
 night" to a large site without qualification. §9 reserves website claims we cannot evidence.
 *Action:* `results.json` carries `pull_size_delta_bytes` as a measured field. The claim waits for the
 measurement. Staged rollout and an on-site cache belong to the fleet console (§6E, deferred).
+
+## B7 — Gate 2's 20-minute window depends on GitHub honouring a cron · OPEN · risks Gate 2 timing only
+The propagation fallback (BLOCKED.md B2) polls on `*/10`. **Scheduled workflows on free public repos are
+delayed under load, sometimes by a lot**, so the poll satisfies Gate 2's "within 20 minutes" only when
+GitHub is not busy. The `repository_dispatch` path is instant and needs the credential B2 describes.
+*Not solvable without the credential.* Recorded so that a slow Gate 2 run is read as infrastructure
+latency rather than as a broken propagation design.
