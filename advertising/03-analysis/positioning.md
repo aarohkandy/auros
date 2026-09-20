@@ -41,7 +41,7 @@ The word *Linux* does not appear. See
 | **Only what you asked for** | Designed, built, unproven at Gate 1 | The configurator's live `recipe.yaml` and the removal report — artifacts the buyer inspects rather than claims they evaluate |
 | **Your files are safe** | Installer does not compile yet | Spec §4.1's ordering, and that the abort path is tested more than the happy path |
 | **Still patched in four years** | Pipeline built, not observed end to end | Nightly rebuild, one base, CVE response is one rebuild |
-| **If we vanish, you are not stranded** | Decided (D31), **not yet written as a term** | The wind-down handover. Weaker than the licence it replaced, and it is what we have |
+| **If we vanish, you are not stranded** | **Draft terms only**, not in effect, needs a lawyer (`BLOCKED.md` B11, wind-down) | A licence that vests if we close *or simply stop publishing*. Weaker than the licence it replaced, and it is what we have |
 
 **Three of the four are amber.** Positioning that leads with any of them in the present tense is the
 untruth `CLAIMS.md` warns about. Which leads to the thing we actually have.

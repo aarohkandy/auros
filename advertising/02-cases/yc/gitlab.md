@@ -58,6 +58,7 @@ We are all rights reserved (D30) and building on open-source. The radical-transp
 proprietary vendor invites the question *"if you are so open, where is the licence?"*
 
 The answer has to be ready and it has to be the real one: **the code is ours, the image's GPL and LGPL
-components carry rights we cannot withhold and do not claim to, and if we cease operating you get your
-build files.** `LICENSING.md` already says all of this, plainly, including the part where we do not
+components carry rights we cannot withhold and do not claim to, and if we close or stop publishing your
+builds, the right to build and patch your own image vests in you** — once those terms exist and have
+been reviewed (`docs/legal/WIND-DOWN-TERMS.DRAFT.md`, not yet in effect). `LICENSING.md` already says all of this, plainly, including the part where we do not
 control the image's components. That document is itself part of the asset.

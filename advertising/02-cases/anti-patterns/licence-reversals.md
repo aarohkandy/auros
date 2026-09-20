@@ -51,10 +51,14 @@ the 25 was true when written. `CLAIMS.md` has a *"Last reviewed"* date; nothing 
 **2. Never build the central trust argument on something revocable.** Replaceability was the answer to
 *"what if you disappear"*, and it evaporated with one commercial decision.
 
-D31's replacement — *if we cease operating you receive your build files* — is a **term**, which is only
-as good as the entity offering it. That is weaker than a licence and it is what we have. It must be
-written and published as an actual term, not a sentiment on a page, or the next honesty audit finds it
-the same way it found these.
+D31's replacement was *"if we cease operating you receive your build files"* — and drafting the terms
+(`docs/legal/WIND-DOWN-TERMS.DRAFT.md`) showed that as worded it grants **nothing**: files you have no
+licence to use give you nothing under all rights reserved. The real shape is **a narrow licence that
+vests on a trigger** — including *we simply stop publishing your builds*, not only a formal closure.
+That is a contractual term, only as good as the entity offering it, and weaker than the licence we
+withdrew. It is what we have. It must exist as a reviewed document before a word of it is published,
+or the next honesty audit finds it the same way it found these — which is exactly what `BLOCKED.md`
+B11 (the wind-down entry) now records: four statements on the site with no document behind them.
 
 **3. If we ever open anything, assume it is permanent.** Whatever is permissively licensed cannot be
 taken back without paying this cost with an audience that actually exists next time.

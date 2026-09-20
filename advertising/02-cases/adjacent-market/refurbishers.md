@@ -67,7 +67,7 @@ existing reason to be in the conversation.
 | Per-customer configuration at volume | The recipe schema and compiler | Built, unproven at Gate 2 |
 | Something that does not create support calls | Spec §11: Windows-shaped, zero-terminal | Built, untested on a human |
 | A migration that does not lose donor data | The installer | **Does not compile yet.** Gate 3 |
-| Not to be locked to a vendor who might vanish | D31 wind-down handover | Decided, **not written as a term** |
+| Not to be locked to a vendor who might vanish | The wind-down commitment, as a licence that vests if we close or stop publishing | **Draft terms only**, not in effect, needs a lawyer |
 
 **Every row is a gate.** That is the honest read: the best channel we have is unreachable until Gates
 1, 3 and 5 close, and pretending otherwise would put an unfinished product in front of the most

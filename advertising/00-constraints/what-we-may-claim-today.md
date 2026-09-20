@@ -88,7 +88,7 @@ Every forbidden row above has a permitted neighbour that is usually *more* persu
 | "Trusted by schools" | "We have no customers. Here is what we have measured." |
 | "Save $X per device" | Both published price ladders, sourced and dated |
 | "Runs your Windows apps" | The named list of what does not come across, above the fold |
-| "Clone it and rebuild it yourself" | "If we cease operating you receive your build files" |
+| "Clone it and rebuild it yourself" | "If we close or stop publishing your builds, the right to build your own image vests in you" — **only once the terms exist** |
 | "Better than the alternatives" | What we do, in specifics, and their documentation next to it |
 | "Proven on hundreds of machines" | `compat.tsv`, with the ✗ rows visible |
 

@@ -1,7 +1,11 @@
 # MESSAGING
 
-Every line here is drafted to pass `tools/honesty-gate.mjs`. **Drafted, not verified** — run the gate
-before any of it ships. Where a line needs a §9 sign-off it says so.
+Every proposed line of customer-facing copy here **passes `tools/honesty-gate.mjs`** — checked
+2026-09-20 by extracting the blockquotes and running the gate over them (exit 0, no findings; the one
+hit was the old Version A text, quoted here so it can be replaced). **Passing the gate is the floor, not
+the bar.** It cannot see a claim that stopped being true, and it already missed one instance of the
+licence claim ([details](../00-constraints/honesty-gate-for-marketing.md)). Where a line needs a §9
+sign-off it says so, and several need the wind-down terms to exist before they are true at all.
 
 ---
 
@@ -21,22 +25,36 @@ the `licence-grant` rule lists. Verified, with the regexes tested directly:
 [`../00-constraints/honesty-gate-for-marketing.md`](../00-constraints/honesty-gate-for-marketing.md).
 So all three must be rewritten by hand. **This is §9 decision A3 and it blocks every channel.**
 
-**Proposed replacement**, from D31, needing sign-off before use:
+**Do not use D31's original wording.** *"If we cease operating, you receive the build files"* sounds
+like a promise and is not one. Drafting the terms (`docs/legal/WIND-DOWN-TERMS.DRAFT.md`) exposed why:
+**under all rights reserved, files you have no licence to use give you nothing.** The repos are already
+readable; what a customer lacks is the *right to use* them. So the commitment has to be **a licence that
+vests on a trigger**, not a delivery of files.
+
+**Proposed replacement**, aligned to that draft. Needs the draft terms finalised and reviewed by a
+lawyer first (`BLOCKED.md` B11, the wind-down entry). Then it needs sign-off (A3):
 
 > *I am new and I have no customers to point you at. What I can tell you is what happens if I stop.
 > The image is on your machines and it keeps booting whether or not I exist — that was never the real
-> risk. What would stop is the patching. So the commitment is written down: **if Auros ceases
-> operating, you receive the build files for your own image** — your recipe, the base Containerfile and
-> the build scripts — and you or anybody you hire can keep it patched. Not a licence to my tooling.
-> Not permission to redistribute. The specific files that keep your machines alive.*
+> risk. What would stop is the patching. So it is written into the contract: **if Auros closes, or
+> simply stops publishing builds for your fleet for 90 days, you automatically get the right to build
+> and patch your own image yourself**, or to pay anybody you like to do it. That covers your recipe,
+> the base definition and the build scripts, for your own machines. It is not a licence to our other
+> tools, and it is not permission to resell.*
 
-**Why it is weaker, and why to say it anyway.** The original promised a right; this promises a
-behaviour, and a behaviour is only as good as the entity offering it. That is a real downgrade and the
-reader will notice. Saying it plainly is better than hoping they do not — and the honest version has
-one advantage the original lacked: **it is true.**
+**The clause that does the work is "simply stops".** The draft's own note: *"Companies rarely announce
+their own death; they simply stop. A trigger that requires an announcement protects no one."* A buyer
+who has watched a vendor go quiet will recognise that clause, and it is the one line here nobody puts
+in a brochure. The 90 days is a placeholder in the draft; use whatever number survives legal review.
 
-**It must be published as an actual term**, not a sentiment on a page. Otherwise the next honesty audit
-finds it the way this one found the 25. See
+**Why it is still weaker than the licence it replaced.** A right that exists today beats one that only
+vests when something goes wrong, and it is only as good as a contract with a company that may not
+exist. The reader will notice. Say it plainly anyway, because the honest version has one advantage the
+original lacked: **once the terms exist, it is true.**
+
+**Until the terms document exists, this paragraph does not ship.** Four references on the site are
+already held for the same reason (`BLOCKED.md` B11, the wind-down entry). A commitment stated on a page
+with no document behind it is the fabricated-claim problem again. See
 [`../02-cases/anti-patterns/licence-reversals.md`](../02-cases/anti-patterns/licence-reversals.md).
 
 ---

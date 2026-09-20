@@ -337,8 +337,16 @@ const CASES = [
     // The terrain's §7 invariants. For a while this file existed and NOTHING ran it; the stand-in
     // proves only that, now that verify does run it, its failure reaches verify's exit status.
     gate: 'terrain invariants (spec §7)',
-    green: (s) => s.stubTest('auros-web/src/terrain/terrain.test.ts', true),
-    red: (s) => s.stubTest('auros-web/src/terrain/terrain.test.ts', false),
+    // Writing anything under auros-web/src switches the honesty gate on (`[ -d auros-web/src ]`), so
+    // this case must supply that tool AND a file it will scan: a directory holding only a .test.ts is
+    // an EMPTY scan once test files are excluded, and the honesty gate correctly refuses an empty
+    // scan with exit 2. Without the companion, GREEN fails for a reason unrelated to terrain.
+    green: (s) => s.tool('honesty-gate.mjs')
+      .write('auros-web/src/copy.md', 'Every recipe inherits from one base image.\n')
+      .stubTest('auros-web/src/terrain/terrain.test.ts', true),
+    red: (s) => s.tool('honesty-gate.mjs')
+      .write('auros-web/src/copy.md', 'Every recipe inherits from one base image.\n')
+      .stubTest('auros-web/src/terrain/terrain.test.ts', false),
     standIn: true,
   },
   {

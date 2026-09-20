@@ -93,6 +93,12 @@ if [ -x auros-base/tests/kargs-check.test.sh ]; then
   run "hardening karg check (both directions)" auros-base/tests/kargs-check.test.sh
 else skip "hardening karg check" "auros-base not checked out here"; fi
 
+# Idioms wrong only on the HEALTHY path: grep -c's double zero (B8/B11 failed on every clean image)
+# and find over absent directories dying silently under set -e.
+if [ -x auros-base/tests/shell-idioms.test.sh ]; then
+  run "shell idioms (healthy-path traps)" auros-base/tests/shell-idioms.test.sh
+else skip "shell idioms" "auros-base not checked out here"; fi
+
 # Three base builds were lost to systemd unit names from a version we do not run. This costs a second.
 if [ -x auros-base/tests/units.test.sh ]; then
   run "systemd units + install-directive parse" auros-base/tests/units.test.sh

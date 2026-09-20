@@ -89,7 +89,9 @@ Cost of this move: **adding links, and deciding on a state banner** (§9 decisio
 ## The order things must happen in
 
 ```
-A3  fix the 25 licence-grant claims + both outreach emails      ← BLOCKS EVERYTHING
+wind-down terms finalised + lawyer review (BLOCKED.md B11)      ← §9, the real root
+      │
+A3  fix the 25 licence-grant claims + all 3 outreach instances  ← BLOCKS EVERYTHING
       │
       ├── link the decision record + state banner (A7)           ← free, immediate
       │
@@ -104,7 +106,13 @@ A3  fix the 25 licence-grant claims + both outreach emails      ← BLOCKS EVERY
 ```
 
 **Nothing downstream of A3 may be published or sent.** Every outreach draft we have closes on a right we
-withdrew, and in both versions it is the load-bearing sentence.
+withdrew, and in each it is the load-bearing sentence — and the gate misses one of the three.
+
+**A3 itself cannot close until the wind-down terms exist.** Drafting them showed that D31's wording,
+*"you receive the build files"*, grants nothing under all rights reserved; the promise has to be a
+licence that vests if we close or simply stop publishing. The replacement copy is only true once that
+document is real, so the actual root of the whole plan is a **lawyer reviewing a two-page draft** that
+already exists (`docs/legal/WIND-DOWN-TERMS.DRAFT.md`).
 
 ## How we will know it is working
 

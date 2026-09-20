@@ -49,14 +49,16 @@ what makes the rest of the page credible.
 ## Tier 2 — build when the gate allows
 
 ### 5. The configurator, shareable
-**Value: 8 · Effort: a route · Blocked on: Gate 4, B11 (the Turnstile/§4.5 conflict)**
+**Value: 8 · Effort: a route · Blocked on: Gate 4**
 
 Spec §6D: *"the single most persuasive object on the site."* A URL that renders someone's configuration
 and its `remove:` block is the nearest thing this product has to a portfolio piece.
 
-Note B11: the human check needs a script host §4.5 does not permit, and the site currently — correctly —
-disables submit and says the email path is the only path. **That honesty is itself an asset**; do not
-paper over it to make the demo look complete.
+The earlier blocker — the order flow's human check needed a script host §4.5 did not permit — is
+**resolved by D33**: one named exemption for Cloudflare Turnstile, on the configurator page only.
+Worth keeping the lesson from the period before it: the site disabled submit and said so rather than
+shipping a check that could never complete. **That kind of visible honesty is an asset**; do not paper
+over the next gap to make a demo look complete.
 
 ### 6. The build console
 **Value: 7 · Effort: built, needs Gate 1 output · Blocked on: Gate 1**
@@ -101,7 +103,8 @@ director. Measure accordingly. [Why](../02-cases/data-as-marketing/tailscale.md)
 **Value: 8 · Effort: low · Blocked on: A3**
 
 `docs/outreach/PILOT-OFFER.md` is strong and its closing argument is a right we withdrew. Rewrite with
-D31's handover, and add the refurbisher variant with its own qualifying question: *"how many machines
+the vesting-licence form of the handover (see [`messaging.md`](messaging.md) §1 — D31's original
+wording grants nothing), once the terms exist, and add the refurbisher variant with its own qualifying question: *"how many machines
 can you not sell because they will not take Windows 11?"*
 
 ---

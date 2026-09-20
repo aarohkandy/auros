@@ -27,7 +27,11 @@ the largest committee, and a cheaper incumbent — and we find out in about six 
 
 ---
 
-## A2 — Resolve B9, the $0 tier · **blocks Gate 4 copy and the trust story**
+## A2 — Resolve B9, the $0 tier · **no longer blocks copy; still the trust story**
+
+*Status 2026-09-20:* B9 is now in a holding pattern that decides nothing — the tier file carries
+`blocked: true`, every page filters it out, and the pricing page says in words that a fifth tier is
+being held back and why. Unblocking it is clearing that flag, which is the human's act.
 
 Already written up in `BLOCKED.md` B9 with three options. It is here too because it is **not only a
 pricing decision, it is the trust argument.** The $0 tier was half of "we are not holding you hostage",
@@ -46,9 +50,15 @@ The honesty gate found 25 live places offering a right D30 withdrew. **Both draf
 `docs/outreach/EMAIL-DRAFT.md` close on that sentence, and in both it is the load-bearing one.**
 
 This is not a §9 decision about whether to fix it — it must be fixed. It is §9 because the
-**replacement wording is a website claim**, and D31's handover commitment has to read as a published
-term rather than a sentiment. Proposed wording is in
-[`04-plan/messaging.md`](../04-plan/messaging.md) and needs sign-off before use.
+**replacement wording is a website claim**, and D31's handover commitment has to exist as a real term
+rather than a sentiment. Drafting that term (`docs/legal/WIND-DOWN-TERMS.DRAFT.md`) showed D31's own
+wording — *"you receive the build files"* — grants nothing under all rights reserved; it has to be a
+**licence that vests on a trigger**. So A3 now depends on `BLOCKED.md` B11 (the wind-down entry):
+terms finalised, reviewed by a lawyer, *then* the copy. Proposed wording, aligned to the draft, is in
+[`04-plan/messaging.md`](../04-plan/messaging.md).
+
+The gate also **misses one of the three instances** (email Version B) — so the rewrite has to be done
+by reading, not by running the gate until it goes green.
 
 **Nothing can be published or sent until this closes.** Highest urgency, lowest ambiguity.
 
@@ -116,7 +126,7 @@ it is the same move that makes the rest of the site credible. But the wording is
 | | Decision | Blocks | Spends money | Recommendation |
 |---|---|---|---|---|
 | **A1** | Refurbishers first, schools last | The whole plan | No | **Yes** |
-| **A2** | Resolve B9 ($0 tier) | Gate 4 copy, trust story | No | Option 2 |
+| **A2** | Resolve B9 ($0 tier) | The trust story (copy is held, not blocked) | No | Option 2 |
 | **A3** | Rewrite 25 grants + both emails | Every channel | No | **Must happen first** |
 | **A4** | Publish `compat.tsv` publicly | Top of funnel | No | Yes, after Gate 5 |
 | **A5** | Code-signing certificate | Conversion at the riskiest step | **Yes, ~$10/mo** | Yes, now |
