@@ -83,6 +83,23 @@ const RULES = [
   { id: 'public-recipes', why: 'The repositories are readable, not licensed. "Public git repo" invites a reader to conclude they may copy it, which is the inference D30 exists to prevent.',
     re: /\b(?:public (?:git )?repositor(?:y|ies)|in a public repo|publicly available (?:recipes?|source))\b/gi,
     notNegated: true },
+  // FABRICATED EXPERIENCE — the worst AI tell, and the one a keyword list structurally cannot catch.
+  //
+  // The site said "the machines are in a room" and promised checks "against our own notes from machines
+  // we have built". There was no room, no notes and no machines: hardware/compat.tsv was a header row.
+  // Invented concrete detail is what a generator produces when a sentence would plausibly contain it,
+  // and it appeared on the page whose entire job is being believed.
+  //
+  // So this rule is CONDITIONAL ON THE EVIDENCE FILE. First-person claims of hands-on experience are
+  // refused while compat.tsv has zero physical rows, and become permissible automatically once it does.
+  // The gate does not decide whether we have experience; the evidence file does.
+  { id: 'fabricated-experience', why: 'hardware/compat.tsv has no physical rows, so we have tested nothing on real hardware. A first-person claim of hands-on experience is invented detail. This rule lifts itself automatically once physical rows exist.',
+    // "the machines" is deliberately NOT here: on this site it means the CUSTOMER'S machines ("the
+    // machines are yours", "the machines keep booting"), and the first draft of this rule flagged five
+    // true sentences for it. Only FIRST-PERSON possession signals a claim about our own experience, plus
+    // the handful of nouns that only name a facility ("the lab") and so imply we have one.
+    re: /\b(?:our (?:test )?(?:lab|machines|fleet|test hardware|bench|devices|laptops)\b|the (?:test )?(?:lab|bench|test hardware)\b|in our (?:testing|experience|lab)|we(?:'ve| have) (?:tested|seen|found|run|imaged|deployed|installed)|machines we(?:'ve| have) (?:built|imaged|tested)|our own notes|from experience)/gi,
+    notNegated: true, requiresNoPhysicalEvidence: true },
   { id: 'guarantee', why: 'We do not have the operating history to guarantee anything. Say what the system does, not what we promise.',
     re: /\b(?:guarantee[ds]?|100% (?:safe|reliable|secure)|never fails?|zero downtime|bulletproof)\b/gi },
   { id: 'multi-rollback', why: 'D10: bootc retains booted + exactly ONE rollback. Anything implying a history of images is false.',
@@ -121,6 +138,20 @@ const RULES = [
     re: /\b(?:for as long as we (?:are|exist)|in perpetuity|for life|lifetime (?:updates?|support|access)|always be (?:free|supported|maintained)|never stop(?:s|ping)? (?:updating|supporting))\b|\b(?:updates?|support(?:ed)?|maintained|rebuild(?:s|ing|t)?|included|free)\b[^.\n]{0,24}\bfor ?ever\b|\bfor ?ever\b[^.\n]{0,24}\b(?:free|supported|maintained|updates?)\b/gi,
     notNegated: true },
 ]
+
+// How many rows of hardware/compat.tsv are PHYSICAL evidence. Rules marked requiresNoPhysicalEvidence
+// only fire while this is zero — the evidence file, not the gate, decides whether we have experience.
+const PHYSICAL_ROWS = (() => {
+  for (const candidate of ['hardware/compat.tsv', '../hardware/compat.tsv', '../../hardware/compat.tsv']) {
+    try {
+      const lines = readFileSync(candidate, 'utf8').split('\n').filter(l => l.trim() && !l.startsWith('#'))
+      const header = lines[0].split('\t'); const i = header.indexOf('source')
+      if (i < 0) return 0
+      return lines.slice(1).filter(l => (l.split('\t')[i] || '').trim() === 'physical').length
+    } catch { /* try the next location */ }
+  }
+  return 0   // No evidence file found means no evidence. Fail toward refusing the claim.
+})()
 
 const findings = []
 let scanned = 0
@@ -239,12 +270,23 @@ function scan (file, root) {
   for (const rule of RULES) {
     rule.re.lastIndex = 0
     let m
+    if (rule.requiresNoPhysicalEvidence && PHYSICAL_ROWS > 0) continue
     while ((m = rule.re.exec(text)) !== null) {
       // A rule with `needsNear` only fires when its qualification is ABSENT nearby.
       // A mention inside a NEGATION is not a claim. "no testimonials", "never fabricate a case study",
       // "we do not say trusted by" are all the rule being described or refused, not exercised. Without
       // this, the files that audit our honesty are the ones that trip the honesty gate — which trains
       // people to annotate their way past it, and an escape hatch people use reflexively is not a gate.
+      // A forward negation. "We have tested NOTHING", "our test hardware, WHEN WE HAVE ANY", "until we
+      // have run yours" all state the absence of the thing the phrase names. The backward-looking guard
+      // below misses every one of them, because the word that negates comes after. The first four
+      // findings this rule produced on the real site were all this shape — true sentences, flagged.
+      if (rule.requiresNoPhysicalEvidence) {
+        const after = text.slice(m.index + m[0].length, m.index + m[0].length + 40).toLowerCase()
+        const lead = text.slice(Math.max(0, m.index - 12), m.index).toLowerCase()
+        if (/^\W{0,3}(?:nothing|none|no\b|not\b|yet\b|, when we have any|when we have any)/.test(after)) continue
+        if (/\buntil\s*$/.test(lead)) continue
+      }
       if (rule.notNegated) {
         const before = text.slice(Math.max(0, m.index - 60), m.index).toLowerCase()
         if (/\b(no|not|never|without|avoid|forbid(?:s|den)?|refuse[sd]?|fabricat\w*|invent\w*|do not|don't|must not|may not|zero)\b[^.]{0,55}$/.test(before)) continue
