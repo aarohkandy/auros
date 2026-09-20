@@ -297,6 +297,12 @@ const CASES = [
     standIn: true,
   },
   {
+    gate: 'shell idioms (healthy-path traps)',
+    green: (s) => s.write('auros-base/tests/shell-idioms.test.sh', '#!/usr/bin/env bash\nexit 0\n', 0o755),
+    red: (s) => s.write('auros-base/tests/shell-idioms.test.sh', '#!/usr/bin/env bash\necho "STAND-IN FAILED" >&2\nexit 1\n', 0o755),
+    standIn: true,
+  },
+  {
     gate: 'systemd units + install-directive parse',
     green: (s) => s.write('auros-base/tests/units.test.sh', '#!/usr/bin/env bash\nexit 0\n', 0o755),
     red: (s) => s.write('auros-base/tests/units.test.sh', '#!/usr/bin/env bash\necho "STAND-IN FAILED" >&2\nexit 1\n', 0o755),

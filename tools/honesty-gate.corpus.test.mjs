@@ -186,6 +186,12 @@ const MUST_FIRE = [
     file: 'a.md', rule: 'public-recipes',
     text: 'Your recipe lives in a public git repository that anyone can work from.\n' },
 
+  // No physical machine has been touched (B5), so a first-person claim of a test lab or of having
+  // imaged hardware is invented detail. The rule lifts itself once compat.tsv has physical rows.
+  { name: 'a first-person claim of a test lab we do not have',
+    file: 'a.md', rule: 'fabricated-experience',
+    text: 'Our lab runs every image on a shelf of donated ThinkPads before it ships.\n' },
+
   { name: 'a bare count attached to schools — a customer claim in an architecture diagram\'s clothes',
     file: 'a.md', rule: 'device-count-across',
     text: 'We are running 180 machines across three schools in the county.\n' },
@@ -273,6 +279,10 @@ const MUST_NOT_FIRE = [
   { name: 'a negated licence mention — describing the rule, not offering the right',
     file: 'a.md',
     text: 'We do not open-source our tooling. All rights reserved.\n' },
+
+  { name: '"the machines" meaning the CUSTOMER\'s machines — the rule\'s own documented non-match',
+    file: 'a.md',
+    text: 'The machines are yours, and they keep booting whatever happens to us.\n' },
 
   { name: 'the D31 wind-down commitment, which is the trust story we can actually keep',
     file: 'a.md',
