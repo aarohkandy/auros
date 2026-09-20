@@ -665,3 +665,34 @@ clean when it happens. Tracked as BLOCKED.md B13.
 **The general lesson,** already true of publishing and now true of committing: *never publish what you
 have not read.* A commit to a public repository is a publication. `git add -A` in a directory other
 agents write to publishes their work under your name without review.
+
+## D37 — `verify` reported PASS on failing suites, because I wrote D19's bug into it · 2026-09-20 · AGENT
+Found by the gates agent's meta-test, not by me.
+
+The first version of `./verify` ran the recipe suite and the site build as:
+
+    run "…" bash -c 'cd auros-recipes && (pnpm test 2>&1 | tail -30)'
+
+No `pipefail`. The pipeline's exit status was `tail`'s, which is always 0. So `verify` — and the `gates`
+CI workflow, which calls exactly this script — reported **PASS for those two suites whatever their real
+state was.**
+
+This is D19. I found it in the boot probe that morning, made `pipefail` a standing rule, and wrote in a
+commit message that it "appeared in our own code within an hour of writing the matrix". Then I wrote
+the same bug into the aggregate gate — the one whose whole job is to be the thing you trust when you
+are not reading every suite yourself.
+
+**Consequence, stated plainly: some green `verify` results reported earlier on 2026-09-20 were not
+evidence for the recipe suite or the site build.** Every other line in `verify` either ran a single
+command directly or already used `pipefail`, so the damage was bounded to those two. Both suites have
+since been run directly and pass (recipes 433/433; the site builds with 0 errors), so no actual defect
+shipped behind a false green — but that is luck, not the gate working.
+
+**Fixed:** both now run as `bash -euo pipefail -c`, and `tools/verify-meta.test.mjs` breaks each gate in
+turn and asserts `verify` exits non-zero — which is the only reason this was found at all.
+
+**The lesson, which is sharper than D19's:** knowing a rule is not the same as having applied it
+everywhere. The rule was written down, repeated, and violated by its author in the place it mattered
+most. What actually protects against that is not the rule — it is a test that breaks the thing on
+purpose and watches the aggregate go red. D34 says every check must be watched failing; `verify` is a
+check, and until the meta-test existed, nobody had ever watched it fail.
