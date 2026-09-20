@@ -524,3 +524,49 @@ is signed with it.
 **A production key is a human action and must exist before the first pilot.** Rotating costs a re-sign
 of everything published under the old key: free today while nothing is published, expensive later.
 Recorded in BLOCKED.md B10.
+
+---
+
+## D33 — §4.5 gains exactly one script-host exemption: `challenges.cloudflare.com` · 2026-09-20 · AGENT
+
+**Amends SPEC §4.5.** The rule was: *never use remote images, external fonts beyond Google Fonts, or
+any script host other than cdnjs on the public site.* The rule is now that plus one named endpoint:
+
+> `https://challenges.cloudflare.com/turnstile/v0/api.js` may be loaded, on the configurator page
+> only, and no other path on that host and no other host is added.
+
+**Why it had to be decided rather than worked around.** §6D's exit condition is that a stranger
+configures a build, presses the button, and a pull request appears in `auros-recipes`. The Worker
+refuses a POST without a verified Turnstile token and has no bypass — deliberately, because
+`/order-submit` writes to a public repository under our name. The token can only be produced by
+Turnstile's own script from Cloudflare's own origin; there is no self-hosted build and it cannot be
+put on cdnjs, because the whole point of the challenge is that Cloudflare serves it. So §4.5 and §6D
+could not both be satisfied, and the three ways out were: exempt the host, find a same-origin human
+check, or drop the human check and defend the endpoint some other way. Recorded as B11.
+
+**Why the exemption and not the alternatives.**
+
+- *A same-origin check* means we build a bot defence. A homegrown one on an endpoint that opens pull
+  requests in a public repository is worse than a third party's, and we would be maintaining it
+  instead of maintaining images.
+- *No human check* makes `/order-submit` an open PR-creation endpoint bounded only by a rate limit.
+  The rate limit is now two counters rather than one (per-address and global), which bounds the
+  damage — but a bound is not a door, and the repository being filled is the one carrying our name
+  and every customer's operating system.
+- *The exemption* costs one script from an origin the Worker already talks to for `siteverify`, and
+  §4.5's actual purpose survives: the rule exists so that no third party can change what a visitor's
+  browser executes without us noticing, and so that the site keeps working when somebody else's CDN
+  is having a bad day. Turnstile is one pinned URL, on the configurator page only, and every other
+  page on the site still loads nothing remote at all. The landing page, the pricing page and the FAQ
+  are unchanged.
+
+**What the exemption is NOT.** It is not "Cloudflare is fine". `challenges.cloudflare.com` is named;
+`static.cloudflareinsights.com`, analytics, any RUM beacon and any other Cloudflare property remain
+refused by §4.5 exactly as before. It is not a general allow-list, and the next host to want in needs
+its own decision here.
+
+**Mechanised, not remembered.** `auros-web/tools/configurator-a11y.test.mjs` fails the build if any
+page loads a script from a host other than `cdnjs.cloudflare.com` or this one endpoint, if a
+`cf-turnstile` widget ships on a page that does not load it, or if the loader is added without
+`render=explicit` — the widget lives inside a `<template>` and is cloned in at mount, so Turnstile's
+implicit renderer, which scans once when `api.js` executes, would never see it. **Closes B11.**

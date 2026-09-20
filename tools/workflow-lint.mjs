@@ -66,6 +66,45 @@ const check = (file) => {
     }
   })
 
+  // `${NAME}` IN AN `env:` VALUE — a shell expansion written where an expression was meant.
+  //
+  // GitHub interpolates `${{ }}` and nothing else. `RECIPE: ${RECIPE}` is not an error, not a
+  // warning, and not empty: it sets the variable to the nine literal characters `${RECIPE}`. Every
+  // later `"$RECIPE"` then expands back to that literal, so a job that binds an input this way
+  // computes paths that cannot exist and dies before it does the thing it exists to do.
+  //
+  // This cost us the validator on the only path an order takes. auros-recipes/build-recipe.yml had
+  // `RECIPE: ${RECIPE}` at the job level, so `node dist/cli.js validate customers/${RECIPE}/recipe.yaml`
+  // exited 2 on EVERY run — the recipe was never validated, never compiled, never gated. The failure
+  // looked like infrastructure, and the file two lines away used the correct `${{ }}` syntax, so it
+  // read as a convention rather than as a typo.
+  //
+  // Scope: `env:` values only, which is where the mistake is invisible. A `${VAR}` inside a `run:`
+  // block is an ordinary shell expansion and entirely correct.
+  {
+    let inEnv = false
+    let envIndent = 0
+    lines.forEach((line, i) => {
+      if (/^\s*#/.test(line) || line.trim() === '') return
+      const indent = line.length - line.trimStart().length
+      if (inEnv && indent <= envIndent) inEnv = false
+      const m = /^(\s*)env:\s*$/.exec(line)
+      if (m) { inEnv = true; envIndent = m[1].length; return }
+      if (!inEnv) return
+      const kv = /^\s*[A-Za-z_][A-Za-z0-9_]*:\s*(.+?)\s*$/.exec(line)
+      if (!kv) return
+      const value = kv[1]
+      if (/\$\{\{/.test(value)) return                 // a real expression: fine
+      if (!/\$\{[A-Za-z_][A-Za-z0-9_]*\}/.test(value)) return
+      problems.push({ file, line: i + 1, why:
+        'an `env:` value uses ${NAME} where a GitHub expression was meant. GitHub interpolates only ' +
+        '${{ }}, so this variable is set to the LITERAL string "${NAME}" — the job does not fail, it ' +
+        'quietly carries the wrong value into every step that reads it. Write ${{ inputs.name }}, ' +
+        '${{ matrix.name }} or ${{ env.NAME }}; if a shell expansion really was intended, do it ' +
+        'inside the `run:` block where it is one.', text: line.trim().slice(0, 120) })
+    })
+  }
+
   // D19: a step that cannot fail is not a check.
   const topLevel = lines.filter(l => /^[A-Za-z]/.test(l)).map(l => l.split(':')[0])
   if (!topLevel.includes('defaults') && !/shell:\s*bash -[a-z]*e[a-z]*o pipefail/.test(text) && !/shell:\s*pwsh/.test(text)) {

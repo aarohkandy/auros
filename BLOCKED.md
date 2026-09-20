@@ -111,31 +111,29 @@ long-lived organisational credential whose custody matters more than its cryptog
 Doing it late costs a re-sign of everything published under the development key. Doing it now costs
 nothing, because nothing is published.
 
-## B11 — The order flow's human check needs a script host §4.5 does not permit · OPEN · blocks Gate 4 exit
+## B11 — The order flow's human check needs a script host §4.5 did not permit · RESOLVED by D33 · Gate 4 unblocked
 Spec §6D's exit condition is that a stranger configures a build, submits, and a PR appears in
 `auros-recipes`. The Worker will not accept a POST without a verified Turnstile token
 (`auros-web/worker/lib/turnstile.js`), and Turnstile's widget is delivered by
-`https://challenges.cloudflare.com/turnstile/v0/api.js`. **Spec §4.5 permits no script host on the
+`https://challenges.cloudflare.com/turnstile/v0/api.js`. **Spec §4.5 permitted no script host on the
 public site other than cdnjs.** Turnstile is not on cdnjs and cannot be: the challenge is served
 from Cloudflare's own origin by design.
 
-This is not a one-line fix and it is not mine to make. It needs one of:
-1. **An explicit, recorded §4.5 exemption for `challenges.cloudflare.com`** — narrowly, for that one
-   endpoint. It is the same origin the Worker already calls for `siteverify`, so the trust decision
-   is arguably already taken on the server side; §4.5 is about the *browser* though, and the two are
-   not the same question.
-2. **A different human check** for the order flow — one that is same-origin, or one the Worker can
-   run without a third-party widget.
-3. **No human check, and a different abuse control on the Worker** (rate limit, proof of work,
-   a review queue). This is a §9 question about what an open PR-opening endpoint may cost.
+Three ways out were written down here: an explicit exemption for that one endpoint, a different
+same-origin human check, or no human check and a different abuse control on the Worker.
 
-*What the site does while this is open:* nothing pretends. `auros-web/src/components/configurator/human-check.ts`
-holds `HUMAN_CHECK_DEPLOYED = false`; the empty `<div class="cf-turnstile">` is not rendered at all,
-the submit button is disabled with the reason printed beside it, and the copy says the email path is
-the only path from the site today. Before this was found, the widget div shipped with nothing loading
-it, so every visitor — JS on or off — was told the check "has not completed", which described an
-exceptional state that was in fact the only state.
+**RESOLVED — DECISIONS.md D33 takes the first, narrowly.** `challenges.cloudflare.com/turnstile/v0/api.js`
+is exempt from §4.5, on the configurator page only. No other path on that host and no other host is
+added, and every other page on the site still loads nothing remote. The reasoning, and what the
+exemption explicitly is not, are in D33.
 
-*Turning it on is one constant plus the loader*, in the same commit that records the decision.
-`auros-web/tools/configurator-a11y.test.mjs` asserts the two halves cannot drift apart again: no
-widget without a loader, and no loader from a host §4.5 does not name.
+*What shipped with it, in the same change:* `human-check.ts` has `HUMAN_CHECK_DEPLOYED = true`, the
+loader is on the page with `render=explicit`, and `configurator.client.ts` calls `turnstile.render()`
+itself after the form template is cloned into the document — the implicit renderer scans for
+`.cf-turnstile` once, when `api.js` runs, and our widget does not exist yet at that moment, so it
+would never have been rendered even with the script present. That was the second half of the same
+fatal.
+
+*Still mechanised:* `auros-web/tools/configurator-a11y.test.mjs` fails the build on a script from any
+other host, on a widget with no loader, and on a loader without `render=explicit`.
+

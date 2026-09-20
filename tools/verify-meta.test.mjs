@@ -35,7 +35,7 @@
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  mkdtempSync, mkdirSync, writeFileSync, copyFileSync, rmSync, readFileSync, chmodSync,
+  mkdtempSync, mkdirSync, writeFileSync, copyFileSync, rmSync, readFileSync, chmodSync, symlinkSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, dirname } from 'node:path'
@@ -85,8 +85,34 @@ function sandbox (populate) {
   writeFileSync(join(dir, '.github', 'workflows', 'ok.yml'), CLEAN_WORKFLOW)
   for (const t of ALWAYS_RUN_TOOLS) copyFileSync(join(REPO, 'tools', t), join(dir, 'tools', t))
 
+  mkdirSync(join(dir, 'bin'), { recursive: true })
+
   const api = {
     dir,
+    /** Put an executable stand-in on PATH — the only way to exercise a gate guarded by
+     *  `command -v <tool>` on a machine where that tool is not installed. */
+    onPath (name, ok) {
+      const p = join(dir, 'bin', name)
+      writeFileSync(p, ok
+        ? '#!/usr/bin/env bash\necho "stand-in ok"\nexit 0\n'
+        : '#!/usr/bin/env bash\necho "STAND-IN FAILED" >&2\nexit 1\n')
+      chmodSync(p, 0o755)
+      return api
+    },
+    /**
+     * Symlink a top-level directory of the real repo into the sandbox.
+     *
+     * Used only by cases whose gate genuinely reads the rest of the tree — gate.test.mjs checks the
+     * PreToolUse hook in `.claude/`, the matrix definition in `auros-base/matrix/`, and every gate
+     * invocation in `auros-base/.github/workflows/`. Linking is read-only from the sandbox's point
+     * of view: no case writes through one, and the file each case BREAKS is always a copy in
+     * `tools/`, never a link. Heavy siblings (auros-web, auros-recipes) are deliberately never
+     * linked, so their gates skip and no case pays for a site build.
+     */
+    link (...names) {
+      for (const nme of names) symlinkSync(join(REPO, nme), join(dir, nme))
+      return api
+    },
     /** Copy a real tool or test file from tools/ into the sandbox. */
     tool (...names) { for (const nme of names) copyFileSync(join(REPO, 'tools', nme), join(dir, 'tools', nme)); return api },
     /** Write an arbitrary file, creating parents. */
@@ -115,12 +141,32 @@ function sandbox (populate) {
   return dir
 }
 
+/**
+ * The environment the sandboxed verify runs in.
+ *
+ * `NODE_TEST_CONTEXT` is the one that matters, and it cost an hour. Node sets it when a test file is
+ * run by the test runner, and any NESTED `node --test` that sees it switches to child-reporter mode
+ * and EXITS 0 whatever its tests did. Since this file runs under `node --test`, every sandboxed
+ * verify inherited it, so every `run "…" node --test …` gate inside a sandbox reported PASS on a
+ * test file that failed — a meta-test that could not go red, checking an aggregate for exactly that
+ * property. It is deleted here, not overwritten, because an empty value is still a value.
+ *
+ * This is worth remembering beyond this file: any test that shells out to something which itself
+ * shells out to `node --test` is subject to it.
+ */
+function childEnv (dir) {
+  const env = { ...process.env, PATH: `${join(dir, 'bin')}:${process.env.PATH}` }
+  delete env.NODE_TEST_CONTEXT
+  delete env.NODE_OPTIONS
+  return env
+}
+
 /** Run the sandbox's own ./verify and parse its report. */
 function runVerify (dir) {
   let exit = 0
   let out = ''
   try {
-    out = execFileSync('./verify', [], { cwd: dir, encoding: 'utf8', stdio: 'pipe' })
+    out = execFileSync('./verify', [], { cwd: dir, encoding: 'utf8', stdio: 'pipe', env: childEnv(dir) })
   } catch (e) {
     exit = e.status ?? -1
     out = String(e.stdout ?? '') + String(e.stderr ?? '')
@@ -161,10 +207,15 @@ const CASES = [
   },
   {
     gate: 'published commands resolve (spec §1.3)',
-    green: (s) => s.write('tools/content-commands.mjs', "console.log('stand-in ok')\n")
-      .write('auros-web/src/content/a.md', 'x\n'),
-    red: (s) => s.write('tools/content-commands.mjs', "console.error('STAND-IN FAILED'); process.exit(1)\n")
-      .write('auros-web/src/content/a.md', 'x\n'),
+    // Creating auros-web/src/content also satisfies `[ -d auros-web/src ]`, which switches the
+    // honesty gate on — so this case has to supply that tool too, or the sandbox fails for a reason
+    // that has nothing to do with the gate under test.
+    green: (s) => s.tool('honesty-gate.mjs')
+      .write('tools/content-commands.mjs', "console.log('stand-in ok')\n")
+      .write('auros-web/src/content/a.md', 'Every recipe inherits from one base image.\n'),
+    red: (s) => s.tool('honesty-gate.mjs')
+      .write('tools/content-commands.mjs', "console.error('STAND-IN FAILED'); process.exit(1)\n")
+      .write('auros-web/src/content/a.md', 'Every recipe inherits from one base image.\n'),
     standIn: true,
   },
   {
@@ -172,16 +223,16 @@ const CASES = [
     real: true,
     // The real gate.test.mjs asserts, among much else, that the shipped ledger parses cleanly.
     // Corrupting the ledger is therefore a REAL failure of the real suite, not a stand-in.
-    green: (s) => s.tool('gate.mjs', 'gate.test.mjs'),
-    red: (s) => s.tool('gate.mjs', 'gate.test.mjs')
+    green: (s) => s.link('.claude', 'auros-base').tool('gate.mjs', 'gate.test.mjs'),
+    red: (s) => s.link('.claude', 'auros-base').tool('gate.mjs', 'gate.test.mjs')
       .write('attest/passed-digests.tsv', 'digest\tnonsense\theader\n'),
     slow: true,
   },
   {
     gate: 'publish gate refusals (spec §4.3)',
     real: true,
-    green: (s) => s.tool('gate.mjs', 'gate.refusals.test.mjs'),
-    red: (s) => s.tool('gate.mjs', 'gate.refusals.test.mjs')
+    green: (s) => s.link('.claude', 'auros-base').tool('gate.mjs', 'gate.refusals.test.mjs'),
+    red: (s) => s.link('.claude', 'auros-base').tool('gate.mjs', 'gate.refusals.test.mjs')
       .write('attest/passed-digests.tsv', 'digest\tnonsense\theader\n'),
     slow: true,
   },
@@ -223,6 +274,21 @@ const CASES = [
     red: (s) => s.stubPkg('auros-recipes', 'test', false),
     standIn: true,
     note: 'this is the `| tail -30` call site — one of the two that reported PASS on a failing suite',
+  },
+  {
+    gate: 'installer safety core (spec §6C)',
+    // Guarded by `command -v go`, which is false on this machine, so the gate would otherwise always
+    // SKIP and its propagation would never be demonstrated anywhere. A stand-in `go` on PATH is what
+    // makes the branch reachable — and the branch, not the Go toolchain, is what this file tests.
+    green: (s) => s.onPath('go', true).write('auros-installer/go.mod', 'module auros-installer\n\ngo 1.23\n'),
+    red: (s) => s.onPath('go', false).write('auros-installer/go.mod', 'module auros-installer\n\ngo 1.23\n'),
+    standIn: true,
+  },
+  {
+    gate: 'systemd units exist (vs units.known)',
+    green: (s) => s.write('auros-base/tests/units.test.sh', '#!/usr/bin/env bash\nexit 0\n', 0o755),
+    red: (s) => s.write('auros-base/tests/units.test.sh', '#!/usr/bin/env bash\necho "STAND-IN FAILED" >&2\nexit 1\n', 0o755),
+    standIn: true,
   },
   {
     gate: 'workflow lint',
@@ -347,6 +413,15 @@ describe('the aggregation itself, independent of any one gate', () => {
   })
 })
 
+/**
+ * Every gate name `verify` invokes. `^\s*run "…"` is NOT enough: verify writes several gates as
+ * `if [ -f … ]; then run "…" …`, all on one line, and an anchored pattern silently missed three of
+ * them — which would have let a gate be added and go for ever without a propagation case.
+ */
+function runLines () {
+  return [...VERIFY_SRC.matchAll(/(?:^|;|\bthen\b|\belse\b|&&)\s*run\s+"([^"]+)"/gm)].map((m) => m[1])
+}
+
 describe('verify cannot lose an exit status — the D19 property, asserted structurally', () => {
   test('every pipeline inside a `bash -c` in verify runs under pipefail', () => {
     // `set -o pipefail` at the top of verify applies to THAT shell. `bash -c '…'` starts a new shell
@@ -378,10 +453,14 @@ describe('verify cannot lose an exit status — the D19 property, asserted struc
     // THE ANTI-ROT ASSERTION. A gate added to verify without a meta-case is a gate whose failure has
     // never been demonstrated to propagate. This is the check that makes the CASES list above stay
     // honest as verify grows, and it is the reason this file is not simply a snapshot.
-    const declared = [...VERIFY_SRC.matchAll(/^\s*run\s+"([^"]+)"/gm)].map((m) => m[1])
+    const declared = runLines()
     assert.ok(declared.length > 5, `only ${declared.length} run lines were parsed out of verify — the parse is wrong`)
     const covered = new Set(CASES.map((c) => c.gate))
-    const uncovered = declared.filter((g) => !covered.has(g))
+    // The one exclusion, and it is structural rather than convenient: a case for THIS gate would put
+    // a sandboxed verify inside a sandboxed verify, without end. The gate it names is this file, and
+    // this file's own red/green behaviour is demonstrated by the fifteen cases above.
+    const SELF = 'verify propagates every failure (meta)'
+    const uncovered = declared.filter((g) => !covered.has(g) && g !== SELF)
     assert.deepEqual(uncovered, [],
       `these gates are run by verify but no case here proves that their failure reaches verify's exit ` +
       `status: ${uncovered.map((g) => `"${g}"`).join(', ')}. Add a case to CASES with a green and a red ` +
@@ -390,7 +469,8 @@ describe('verify cannot lose an exit status — the D19 property, asserted struc
 
   test('every case in this file names a gate verify actually runs', () => {
     // The mirror: a case left behind after a gate is renamed silently stops testing anything.
-    const declared = new Set([...VERIFY_SRC.matchAll(/^\s*run\s+"([^"]+)"/gm)].map((m) => m[1]))
+    const declared = new Set(runLines())
+    declared.add('verify propagates every failure (meta)')
     const stale = CASES.map((c) => c.gate).filter((g) => !declared.has(g))
     assert.deepEqual(stale, [],
       `these cases name gates verify no longer runs: ${stale.map((g) => `"${g}"`).join(', ')}. ` +

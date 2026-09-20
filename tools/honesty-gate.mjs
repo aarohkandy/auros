@@ -13,8 +13,11 @@
 // Usage: node tools/honesty-gate.mjs <dir> [<dir>...]
 // Exit 0 = clean. Exit 1 = findings. Exit 2 = could not run (also a failure — fails closed).
 
-import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, extname, relative } from 'node:path'
+import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs'
+import { join, extname, relative, dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
 const SCAN_EXT = new Set(['.md', '.mdx', '.astro', '.ts', '.tsx', '.js', '.jsx', '.html', '.json', '.yaml', '.yml'])
 const SKIP_DIR = new Set(['node_modules', '.git', 'dist', '.astro', 'coverage', '.wrangler', 'fonts'])
@@ -70,8 +73,12 @@ const RULES = [
   // What we may now say is narrower and true: you have the image, and if we cease operating you are
   // given the build files needed to keep patching it. Not a licence to our tooling, not permission to
   // redistribute. See DECISIONS.md D31.
+  // NOTE on the `fork …` alternative: the space before the noun is INSIDE the optional group. It
+  // used to sit outside it — `fork (?:it|this|our|the) (?:repo|recipes?)?` — which made the space
+  // mandatory, so "fork it" and "fork this" (the two commonest phrasings by a distance) could never
+  // match and only "fork the repo" did. Caught by tools/honesty-gate.corpus.test.mjs.
   { id: 'licence-grant', why: 'D30/D31: proprietary, all rights reserved. Offering a right we withdrew is a claim we cannot honour, and it is the one the owner explicitly asked us not to make.',
-    re: /\b(?:you (?:can|may) (?:fork|copy|redistribute|rebuild (?:it|the same|your own))|fork (?:it|this|our|the) (?:repo|repository|recipes?)?|open[- ]source|free to (?:use|copy|modify|redistribute)|MIT licen[cs]e|Apache[- ]2)\b/gi,
+    re: /\b(?:you (?:can|may) (?:fork|copy|redistribute|rebuild (?:it|the same|your own))|fork (?:it|this|our|the)(?:\\s+(?:repo|repository|recipes?))?|open[- ]source|free to (?:use|copy|modify|redistribute)|MIT licen[cs]e|Apache[- ]2)\b/gi,
     notNegated: true },
   { id: 'public-recipes', why: 'The repositories are readable, not licensed. "Public git repo" invites a reader to conclude they may copy it, which is the inference D30 exists to prevent.',
     re: /\b(?:public (?:git )?repositor(?:y|ies)|in a public repo|publicly available (?:recipes?|source))\b/gi,
@@ -117,6 +124,98 @@ const RULES = [
 
 const findings = []
 let scanned = 0
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// TWO CROSS-FILE CHECKS, added 2026-09-20 after this gate returned "no unevidenced claims found"
+// over a build whose central trust argument was false.
+//
+// The gate was not broken. It was measuring the wrong thing. Every rule above is a REGEX OVER ONE
+// FILE, so it can only catch a claim whose WORDING is suspicious. Both defects that shipped were
+// claims whose wording was perfectly sober and whose EVIDENCE had moved:
+//
+//   - the site advertised a weekly CI cadence for a workflow that is paused on manual dispatch;
+//   - a licensing decision (D30/D31) falsified thirteen content files, and nothing re-read them.
+//
+// A claims ledger is only as good as the last time somebody re-read it against reality, so these
+// two rules read the reality instead of the sentence.
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * CITED-WORKFLOW-SCHEDULE. If the site names a workflow file AND asserts a cadence in the same
+ * sentence, open that workflow and check it actually has an active `schedule:` trigger.
+ *
+ * The published defect: `Replaceability test · Wednesdays 05:23 UTC ·
+ * auros-recipes/.github/workflows/replaceable.yml`, in the footer panel whose entire stated job is
+ * "what this site is standing on". The cron line in that file is commented out under a header
+ * reading PAUSED. A false row there is worse than a false row anywhere else on the site, and it
+ * passed every regex above because the path it cited was real.
+ */
+const CADENCE = /\b(?:every |each )?(?:Mondays?|Tuesdays?|Wednesdays?|Thursdays?|Fridays?|Saturdays?|Sundays?|nightly|every night|daily|weekly|hourly|every (?:hour|day|week))\b/i
+const WORKFLOW_PATH = /((?:[A-Za-z0-9._-]+\/)*\.github\/workflows\/[A-Za-z0-9._-]+\.ya?ml)/g
+
+/** True when the file has a `schedule:` trigger that is not commented out. */
+function hasActiveSchedule (yamlText) {
+  return yamlText.split('\n').some(l => /^\s*schedule\s*:/.test(l) && !/^\s*#/.test(l))
+}
+
+function checkCitedWorkflows (file, root, text, lines) {
+  WORKFLOW_PATH.lastIndex = 0
+  let m
+  while ((m = WORKFLOW_PATH.exec(text)) !== null) {
+    const lineNo = text.slice(0, m.index).split('\n').length
+    const line = lines[lineNo - 1] ?? ''
+    if (CODE_EXT.has(extname(file)) && PURE_COMMENT.test(line)) continue
+    if (/auros-allow:\s*\S+/.test(line) || /auros-allow:\s*\S+/.test(lines[lineNo - 2] ?? '')) continue
+    // Only a cadence asserted in the SAME rendered string is a claim about the schedule.
+    if (!CADENCE.test(line)) continue
+    const onDisk = join(REPO_ROOT, m[1])
+    if (!existsSync(onDisk)) {
+      findings.push({ file: relative(root, file), line: lineNo, rule: 'cited-workflow-missing',
+        why: 'The site cites a workflow file that is not in this tree. A path nobody can open is not evidence.',
+        match: m[1], context: line.trim().slice(0, 140) })
+      continue
+    }
+    if (!hasActiveSchedule(readFileSync(onDisk, 'utf8'))) {
+      findings.push({ file: relative(root, file), line: lineNo, rule: 'cited-workflow-schedule',
+        why: 'The site states a cadence for a workflow that has no active `schedule:` trigger. Say what the file does — "paused", "manual dispatch only" — or turn the schedule back on.',
+        match: m[1], context: line.trim().slice(0, 140) })
+    }
+  }
+}
+
+/**
+ * CLAIMS-FRESHNESS. `src/content/CLAIMS.md` must record which DECISIONS.md entry it was last read
+ * against, and that entry must be the latest one. D30 and D31 landed and thirteen content files
+ * became false; nothing in CI noticed, because nothing in CI knew the ledger had a date.
+ *
+ * Deliberately crude: any new decision invalidates the review, not just a licensing one. Deciding
+ * WHICH decisions touch the site is the judgement call that failed the first time.
+ */
+const FRESH_MARKER = /Reviewed against DECISIONS\.md:\s*D(\d+)/i
+
+function checkClaimsFreshness (root) {
+  const claims = join(root, 'content', 'CLAIMS.md')
+  const alt = join(root, 'src', 'content', 'CLAIMS.md')
+  const path = existsSync(claims) ? claims : (existsSync(alt) ? alt : null)
+  if (!path) return
+  const decisionsPath = join(REPO_ROOT, 'DECISIONS.md')
+  if (!existsSync(decisionsPath)) return
+  const latest = Math.max(0, ...[...readFileSync(decisionsPath, 'utf8').matchAll(/^##\s*D(\d+)\b/gm)].map(x => Number(x[1])))
+  const text = readFileSync(path, 'utf8')
+  const m = FRESH_MARKER.exec(text)
+  const rel = relative(root, path)
+  if (!m) {
+    findings.push({ file: rel, line: 1, rule: 'claims-freshness',
+      why: 'CLAIMS.md carries no "Reviewed against DECISIONS.md: D<n>" marker, so nothing can tell whether it has been read since the last decision.',
+      match: 'no review marker', context: '' })
+    return
+  }
+  if (Number(m[1]) < latest) {
+    findings.push({ file: rel, line: text.slice(0, m.index).split('\n').length, rule: 'claims-freshness',
+      why: `CLAIMS.md was last read against D${m[1]}; DECISIONS.md is at D${latest}. A decision landed and nobody re-read the claims against it. This is the exact shape of the D30/D31 failure: the copy did not change, reality did.`,
+      match: m[0], context: `latest decision on disk: D${latest}` })
+  }
+}
 
 function walk (dir, root) {
   let entries
@@ -166,15 +265,17 @@ function scan (file, root) {
       findings.push({ file: relative(root, file), line: lineNo, rule: rule.id, why: rule.why, match: m[0].trim(), context: line.trim().slice(0, 140) })
     }
   }
+  if (!file.endsWith('honesty-gate.mjs')) checkCitedWorkflows(file, root, text, lines)
 }
 
 const roots = process.argv.slice(2)
 if (roots.length === 0) { console.error('honesty-gate: no directories given — refusing to report a pass'); process.exit(2) }
-for (const r of roots) { try { walk(r, r) } catch (e) { console.error(`honesty-gate: cannot scan ${r}: ${e.message}`); process.exit(2) } }
+for (const r of roots) { try { walk(r, r); checkClaimsFreshness(r) } catch (e) { console.error(`honesty-gate: cannot scan ${r}: ${e.message}`); process.exit(2) } }
 if (scanned === 0) { console.error('honesty-gate: scanned 0 files — refusing to report a pass on an empty scan'); process.exit(2) }
 
 if (findings.length === 0) {
   console.log(`honesty-gate: ${scanned} files scanned, no unevidenced claims found.`)
+  console.log('honesty-gate: cited workflow schedules checked against the workflow files; CLAIMS.md checked against the latest DECISIONS.md entry.')
   process.exit(0)
 }
 

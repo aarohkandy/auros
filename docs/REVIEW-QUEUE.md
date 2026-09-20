@@ -79,3 +79,23 @@ through all of them.
 **Nothing is deployed**, so no false claim is public. The honesty gate does not catch these because they
 were true when written — which is worth noting: a claims ledger is only as good as the last time someone
 re-read it against reality. `CLAIMS.md` needs a "verified on" date per row.
+
+## R5 — "Derived is safer than hardcoded" is not a rule · CLOSED as a lesson · 2026-09-20
+Two bugs an hour apart, in the same function, in opposite directions.
+
+First it **hardcoded** a systemd link path naming a unit and a target from a greenboot version we do
+not run. The fix was to *derive* the expected links from the installed unit file, which cannot drift
+because it has nothing to drift from.
+
+Then the derivation itself was wrong: systemd's directory suffix is `.wants` but the directive is
+`WantedBy`, so deriving one from the other produced `WantsBy`, matched nothing, and made every unit
+look like it had no install section. The build then declared that bootc's own update timer could not be
+enabled.
+
+**The lesson, which generalises past systemd:** derived is safer than hardcoded *only when the thing
+you derive from is the same thing.* `.wants` and `WantedBy` look related and are not. Two spelled-out
+words cannot drift; a transformation between two merely-similar things can.
+
+Worth keeping because the first fix was written explicitly to avoid hardcoding, and the second bug was
+caused by taking that principle one step too far. A principle applied without asking what it is true
+*of* is just a different way to be wrong.

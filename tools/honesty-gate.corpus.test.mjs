@@ -167,6 +167,25 @@ const MUST_FIRE = [
     rule: 'social-proof',
     text: '---\nconst kicker = "Trusted by schools that had given up on these laptops"\n---\n<p>{kicker}</p>\n' },
 
+  // D30/D31. The owner's words were "i don't want them to distribute, cuz this is going to be a
+  // product later" — so a sentence offering a right we do not grant is not a style problem, it is
+  // the specific claim we were told not to make, and it would be the hardest one to walk back.
+  { name: 'an offer to fork and redistribute, which D30 withdrew',
+    file: 'a.md', rule: 'licence-grant',
+    text: 'Every recipe is yours: fork it, rebuild it, ship it to whoever you like.\n' },
+
+  { name: 'the word open-source applied to our own tooling',
+    file: 'a.md', rule: 'licence-grant',
+    text: 'The whole toolchain is open-source, so you are never locked in.\n' },
+
+  { name: 'a specific permissive licence named',
+    file: 'a.md', rule: 'licence-grant',
+    text: 'Released under the Apache-2 licence, like the rest of the ecosystem.\n' },
+
+  { name: '"public repository" as an invitation to copy',
+    file: 'a.md', rule: 'public-recipes',
+    text: 'Your recipe lives in a public git repository that anyone can work from.\n' },
+
   { name: 'a bare count attached to schools — a customer claim in an architecture diagram\'s clothes',
     file: 'a.md', rule: 'device-count-across',
     text: 'We are running 180 machines across three schools in the county.\n' },
@@ -247,6 +266,14 @@ const MUST_NOT_FIRE = [
     file: 'a.md',
     text: 'Office does not come across. Photoshop does not come across. Your files, bookmarks, Wi-Fi and printers do.\n' },
 
+  { name: 'the true licence position — readable, not licensed',
+    file: 'a.md',
+    text: 'The repositories are readable so you can see exactly what is on your machines. Nothing here is licensed for copying or redistribution; all rights reserved.\n' },
+
+  { name: 'a negated licence mention — describing the rule, not offering the right',
+    file: 'a.md',
+    text: 'We do not open-source our tooling. All rights reserved.\n' },
+
   { name: 'the D31 wind-down commitment, which is the trust story we can actually keep',
     file: 'a.md',
     text: 'You have the image already; it is on the laptops. If we cease operating, you get the build files needed to keep patching it.\n' },
@@ -314,6 +341,35 @@ describe('the corpus must stay quiet', () => {
         `    file: ${c.file}\n    ${c.text.trim().split('\n').join('\n    ')}\n  fired: ${JSON.stringify(r.rules)}\n`)
     })
   }
+})
+
+describe('the boundary of the negation guard, recorded rather than discovered', () => {
+  test('KNOWN LIMITATION: "nothing … says you may fork it" still fires', () => {
+    // The guard's vocabulary is no / not / never / without / avoid / forbid / refuse / fabricate /
+    // invent / do not / don't / must not / may not / zero. "nothing" and "nobody" are NOT in it, so
+    // a negation phrased with either is read as a claim.
+    //
+    // This is asserted as CURRENT BEHAVIOUR on purpose. Widening a SUPPRESSION list is how a gate
+    // goes quiet — every word added there is a word an author can put in front of a real claim — so
+    // the trade is deliberately left where it is: a rare false positive costs one `auros-allow` with
+    // a stated reason, and the alternative costs a false negative nobody ever sees.
+    //
+    // If somebody does widen it, this test goes red and they have to read this comment first.
+    const r = scan('a.md', 'Nothing on this site says you may fork it.\n')
+    assert.equal(r.exit, 1,
+      'GOOD NEWS: the negation guard now understands "nothing". Read the comment above before ' +
+      'accepting that change — it widens a suppression list, and everything a suppression list ' +
+      'covers is something an author can hide a real claim behind.')
+    assert.ok(r.rules.includes('licence-grant'))
+  })
+
+  test('the guard DOES cover the vocabulary it claims to, one word at a time', () => {
+    // The mirror: the words that ARE in the list must actually suppress, or the list is decoration.
+    for (const neg of ['We do not say', 'We never say', 'We must not say', 'We may not say', "We don't say"]) {
+      const r = scan('a.md', `${neg} trusted by anybody.\n`)
+      assert.equal(r.exit, 0, `"${neg}" did not suppress the social-proof rule — the negation list is not working`)
+    }
+  })
 })
 
 describe('the corpus itself is balanced, and the gate fails closed', () => {

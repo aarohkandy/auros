@@ -40,6 +40,33 @@ else skip "published commands resolve (spec §1.3)" "auros-web not checked out h
 if [ -f tools/gate.test.mjs ]; then run "publish gate (spec §4.3)" node --test tools/gate.test.mjs
 else skip "publish gate (spec §4.3)" "tools/gate.test.mjs not present yet"; fi
 
+# ── §4.3 — the gate's refusal paths, and that nothing relaxes them ──────────────────────────────────
+# The catalogue in gate.test.mjs, plus the shapes a ledger takes on a FILESYSTEM: line endings,
+# padding, byte-identical duplication, symlinks, permissions. Also executes the claim in gate.mjs's
+# header comment that no flag or environment variable turns a refusal into an allow.
+if [ -f tools/gate.refusals.test.mjs ]; then
+  run "publish gate refusals (spec §4.3)" node --test tools/gate.refusals.test.mjs
+else skip "publish gate refusals (spec §4.3)" "tools/gate.refusals.test.mjs not present yet"; fi
+
+# ── §4.4 — the honesty gate still works as a CLASSIFIER, not just on the sentences it has seen ──────
+# ~45 real-looking marketing sentences, half of which must fire and half must not. The quiet half is
+# the expensive one: a gate with false positives gets annotated past, and `auros-allow` reached for
+# reflexively is the end of the gate. No degenerate implementation passes both halves.
+if [ -f tools/honesty-gate.corpus.test.mjs ]; then
+  run "honesty gate corpus (spec §4.4)" node --test tools/honesty-gate.corpus.test.mjs
+else skip "honesty gate corpus (spec §4.4)" "tools/honesty-gate.corpus.test.mjs not present yet"; fi
+
+# ── The two state-file linters, proven able to go BOTH red and green ────────────────────────────────
+# Running a linter over a clean file only ever proves the file is clean. These prove the linter can
+# still say no — which is the half that stops being true silently.
+if [ -f tools/compat-lint.test.mjs ]; then
+  run "compat.tsv lint, both directions" node --test tools/compat-lint.test.mjs
+else skip "compat.tsv lint, both directions" "tools/compat-lint.test.mjs not present yet"; fi
+
+if [ -f tools/workflow-lint.test.mjs ]; then
+  run "workflow lint, both directions" node --test tools/workflow-lint.test.mjs
+else skip "workflow lint, both directions" "tools/workflow-lint.test.mjs not present yet"; fi
+
 # ── §6B — a recipe may only ADD ─────────────────────────────────────────────────────────────────────
 if [ -f auros-recipes/package.json ]; then
   run "recipe validator + compiler (spec §6B)" bash -euo pipefail -c 'cd auros-recipes && (pnpm test 2>&1 | tail -30)'
@@ -60,7 +87,7 @@ else skip "hardening karg check" "auros-base not checked out here"; fi
 
 # Three base builds were lost to systemd unit names from a version we do not run. This costs a second.
 if [ -x auros-base/tests/units.test.sh ]; then
-  run "systemd units exist (vs units.known)" auros-base/tests/units.test.sh
+  run "systemd units + install-directive parse" auros-base/tests/units.test.sh
 else skip "systemd units" "auros-base not checked out here"; fi
 
 if [ -f auros-web/package.json ]; then
@@ -90,6 +117,17 @@ else skip "configurator a11y regressions (spec §6D)" "auros-web/tools/configura
 
 # ── The honesty check on our own state files ────────────────────────────────────────────────────────
 run "compat.tsv honesty (no vm row claims a physical column)" node tools/compat-lint.mjs
+
+# ── THE AGGREGATE ITSELF ────────────────────────────────────────────────────────────────────────────
+# Everything above is theatre if THIS script can report success while one of them failed, and that
+# has happened here: two gates were invoked as `bash -c '… | tail -20'`, and because `bash -c` starts
+# a shell that does not inherit pipefail, a failing site build and a failing recipe suite both
+# printed PASS. This runs the real ./verify inside sandboxes with one gate broken at a time and
+# asserts the failure reaches the exit status. It runs LAST because it is the slowest, and it does
+# not recurse: its sandboxes do not contain this file, so verify skips it there.
+if [ -f tools/verify-meta.test.mjs ]; then
+  run "verify propagates every failure (meta)" node --test tools/verify-meta.test.mjs
+else skip "verify propagates every failure (meta)" "tools/verify-meta.test.mjs not present yet"; fi
 
 printf '\n\033[1m════ %d passed · %d failed · %d skipped ════\033[0m\n' "$PASS" "$FAIL" "$SKIP"
 [ "$FAIL" -eq 0 ] || exit 1
