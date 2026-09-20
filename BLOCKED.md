@@ -184,3 +184,22 @@ Moved to `aarohkandy/auros_private` and removed from `main` (D36). It remains in
 history. Purging needs a history rewrite and a force-push to `main` — destructive, and unsafe while
 agents are still pushing to the same repo, because it could discard their commits. **Do it when the
 repo is quiet.** Zero forks, so the rewrite will be clean.
+
+## B14 — Going live needs a Cloudflare account and explicit permission to publish · OPEN · blocks Gate 4
+Gate 4 is *"site live, and a stranger's configuration opens a valid PR."* The site builds, the
+configurator works, the order Worker exists and D33 gives it a submit path. Three separate things still
+stand between that and "live", and they are easy to conflate:
+
+1. **An account.** The spec names Cloudflare Pages plus one Worker. No Cloudflare account or API token
+   exists, and creating accounts is something I may not do. The owner creates a free account and adds an
+   API token as a repository secret. **The static pages alone could go on GitHub Pages instead** — free,
+   public repo, no new account — but the Worker that opens the pull request needs somewhere to run, and
+   that is the half Gate 4 actually tests.
+2. **Permission.** A live website is publishing public content, which needs the owner's explicit yes for
+   that specific action. Not assumed from "keep going".
+3. **B12.** The site states the wind-down commitment in four places and no terms document exists.
+   Publishing before B12 is resolved would put an unbacked promise in front of the exact audience that
+   would rely on it. **This one is not a formality; it is the reason the other two can wait.**
+
+Order of operations when the owner is ready: B12 terms → Cloudflare account + token → explicit go-ahead
+to publish → deploy → a stranger's order opens a PR.
