@@ -240,12 +240,24 @@ const CASES = [
     gate: 'honesty gate corpus (spec §4.4)',
     real: true,
     green: (s) => s.tool('honesty-gate.mjs', 'honesty-gate.corpus.test.mjs'),
-    // Break the GATE and the corpus catches it: delete every rule, and the must-fire half goes red.
-    red: (s) => s.tool('honesty-gate.corpus.test.mjs')
-      .write('tools/honesty-gate.mjs', readFileSync(join(REPO, 'tools', 'honesty-gate.mjs'), 'utf8')
-        .replace(/^const RULES = \[/m, 'const RULES = [].concat([')
-        .replace(/^\]\s*$/m, '])')),
+    // Break the GATE — not the corpus — and the corpus is what notices. Neutering ONE rule is the
+    // realistic regression: somebody edits a regex to silence a false positive and takes the real
+    // matches with it. Four must-fire sentences go red and the suite fails.
+    red: (s) => {
+      const src = readFileSync(join(REPO, 'tools', 'honesty-gate.mjs'), 'utf8')
+      const broken = src.replace("re: /\\b(trusted by|", "re: /\\b(zzz-this-never-matches|")
+      assert.notEqual(broken, src,
+        'the mutation this case depends on no longer applies to honesty-gate.mjs, so the case would ' +
+        'pass without breaking anything. Update the mutation to neuter some other rule.')
+      return s.tool('honesty-gate.corpus.test.mjs').write('tools/honesty-gate.mjs', broken)
+    },
     slow: true,
+  },
+  {
+    gate: 'honesty gate cross-file checks (spec §4.4)',
+    green: (s) => s.stubTest('tools/honesty-gate.crossfile.test.mjs', true),
+    red: (s) => s.stubTest('tools/honesty-gate.crossfile.test.mjs', false),
+    standIn: true,
   },
   {
     gate: 'compat.tsv lint, both directions',
@@ -285,7 +297,7 @@ const CASES = [
     standIn: true,
   },
   {
-    gate: 'systemd units exist (vs units.known)',
+    gate: 'systemd units + install-directive parse',
     green: (s) => s.write('auros-base/tests/units.test.sh', '#!/usr/bin/env bash\nexit 0\n', 0o755),
     red: (s) => s.write('auros-base/tests/units.test.sh', '#!/usr/bin/env bash\necho "STAND-IN FAILED" >&2\nexit 1\n', 0o755),
     standIn: true,

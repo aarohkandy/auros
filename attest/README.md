@@ -11,7 +11,7 @@ gate, because you stop looking.
 |---|---|
 | `passed-digests.tsv` | The ledger. Which exact digests passed the full matrix, on which profiles, under which matrix version. Starts with zero rows. |
 | `../tools/gate.mjs` | The enforcement library. One implementation, used by CI **and** by the hook. |
-| `../tools/gate.test.mjs` | 56 tests, almost all of them asserting refusals. |
+| `../tools/gate.test.mjs` | 64 tests, almost all of them asserting refusals. |
 | `../.claude/hooks/publish-gate.mjs` | The `PreToolUse` hook. Layer four. |
 
 ## Why this is four layers and not one
@@ -24,11 +24,32 @@ button. Relying on it would give us the *feeling* of a hard gate with none of it
 
 ### Layer 1 — the CI publish step reads the ledger
 
-Before `podman push` / `cosign sign`, the workflow runs `node tools/gate.mjs <digest>` and stops on a
-non-zero exit. This is the layer that actually implements §4.3, because CI is the only thing that
-normally publishes.
+**What it guards is the tag move, and the ordering is worth stating exactly, because the obvious
+reading of the sentence above is wrong.** In `auros-base/.github/workflows/build.yml`:
 
-*Does not protect against:* a publish that never goes through CI. It is a step in a workflow, and a
+| order | job | what reaches the registry |
+|---|---|---|
+| 1 | `build` | `podman push` to `:stage-<run_id>` — **unsigned bytes are in GHCR before any gate** |
+| 2 | `sign` | `cosign sign` on that digest — **signed before the ledger is consulted** |
+| 3 | `update` | U1–U5, R1 — the update and rollback leg, which needs a signed image to test against |
+| 4 | `record` | the row is written to the ledger, only on a full pass |
+| 5 | `publish` | `node meta/tools/gate.mjs <digest> --image <image>`, then the `:hardened` tag moves |
+
+The gate sits between 4 and 5. It is **not** between the bytes and the registry, and it is **not** before
+the signature. It cannot be: `update` tests that a machine refuses a bad image and rolls back, which
+needs a signed image to exist first. So the honest statement of this layer is: **the gate guards the tag
+that machines follow**, which is a defensible design and is not the same sentence as the one above it.
+
+*Does not protect against:* a digest that fails the update leg still existing in the registry, signed,
+under `:stage-<run_id>`, until the `cleanup` job removes it — and cleanup is best-effort, logging
+`::warning::could not delete … the token lacks delete:packages. The tag stays.` A machine pointed
+directly at such a digest would install it, because `auros-base/signing/policy.json` asks only for a
+valid signature over a repository it trusts and has no way to consult a ledger. Today this is bounded by
+the fact that **no production key exists**: `signing/keys/` holds only `auros-development.pub`, the sign
+step fails closed without `signing/keys/auros.pub`, and D32 refuses a development-signed image at the
+publish step. It stops being bounded the day a production key lands — BLOCKED.md B10.
+
+*Also does not protect against:* a publish that never goes through CI. It is a step in a workflow, and a
 workflow can be edited in the same pull request that removes the step. Its integrity is the integrity of
 review on `.github/workflows/`. It also cannot tell whether the row it read is true — see **the one thing
 none of these protect against**, below.
@@ -58,18 +79,30 @@ all.
 ### Layer 4 — the `PreToolUse` hook
 
 `.claude/hooks/publish-gate.mjs` inspects Bash commands for publishing shapes (`podman|docker|buildah
-push`, `skopeo copy`, `cosign sign|attest`, `crane`/`oras`/`regctl` copies, `gh release upload` of an image
-artifact) and blocks with exit code 2 when the digest has no recorded full pass. It is **conservative on
+push` including the `<noun> push` forms, `skopeo copy`, `cosign sign|attest`, `crane`/`oras`/`regctl`
+copies, `gh release upload` of an image artifact, and a `curl`/`wget` writing to a `/v2/…/manifests/`
+URL) and blocks with exit code 2 when the digest has no recorded full pass. It is **conservative on
 purpose**: if it cannot confidently parse a digest out of the command — a tag-only push, two different
 digests, uppercase hex that will not compare equal — it refuses rather than allowing. A false positive
 costs an operator thirty seconds; a false negative puts unbooted bytes on a school's laptops.
 
 *Does not protect against:* everything outside this harness — CI, a human shell, another agent, a
 different machine. It is also not a sandbox, and it does not pretend to be: it reads the command it is
-handed, so a publish reached through a shell script it cannot see (`bash ./deploy.sh`), a command
-assembled at runtime, or a piped-in payload (`curl … | bash`) is not something it can parse and therefore
-not something it can gate. It is defence in depth against haste, not against intent. Layers 1–3 are what
-stand up to intent.
+handed, so a publish reached through a shell script it cannot see (`bash ./deploy.sh`) or a command
+assembled at runtime from values it cannot evaluate is not something it can parse and therefore not
+something it can gate.
+
+**And the list above is a best effort, not a proof.** It matches a fixed set of command shapes, so a real
+publish spelled in a form not on that list is allowed — which is not hypothetical. An audit found
+eighteen: `podman image push` and `docker image push` (the documented forms, missed because the
+subcommand had to be the first positional), `crane cp`, `buildah manifest push`, `regctl image export`,
+five pieces of shell grammar in front of the command word (`then`, `do`, `{`, `(`, a leading
+redirection), `eval …`, `$(…) push`, `echo … | bash`, `python3 -c`, `node -e`, `make`, `npm run`, and a
+raw `curl -X PUT` to the registry API. All eighteen are refused now and each carries a test in
+`tools/gate.test.mjs` under *negative space* — but the general point survives the fix: this layer knows
+the shapes somebody thought of.
+
+It is defence in depth against haste, not against intent. Layers 1–3 are what stand up to intent.
 
 ## What the gate actually checks
 
@@ -119,8 +152,21 @@ can append a row asserting a pass that never happened, and every layer above wil
 it and publish, the token will sign the push, the machine will verify the signature, and the hook will
 step aside. The fourth layer does not help, because the row is valid.
 
+This was demonstrated, not theorised. Appending one line to a scratch copy of the ledger moved
+`node tools/gate.mjs <digest>` from `REFUSED [empty-ledger]` to `ALLOW — 7/7 profiles, 28/28 checks`, and
+the hook then exited 0 for a `podman push` of that digest. No VM ever booted.
+
 So the real boundary of this gate is **write access to `attest/passed-digests.tsv`**, and the only things
-defending that boundary are code review and git history — human controls, not mechanical ones. If this
+defending that boundary are code review and git history — human controls, not mechanical ones.
+
+One narrow thing has since been added, and its scope should not be overstated: the `PreToolUse` hook now
+refuses a Bash command that writes to the ledger, to the hook, to `.claude/settings.json` or to
+`tools/gate.mjs`, so **this agent in this harness** cannot author its own evidence or delete its own
+gate. Reads are untouched; only writes are refused. That is one process out of every process that can
+open the file. It is also incomplete by construction: `.claude/settings.json` installs the hook with
+matcher `Bash`, so a `Write` or `Edit` tool call never reaches it — the branch that would refuse one
+exists and is tested, but nothing routes such an event to it today. Widening that matcher is a change to
+the operator's own configuration and is theirs to make. If this
 ever needs to be stronger than that, the fix is signed attestations from the CI identity (the harness
 signs `results.json` with the workflow's OIDC identity and the gate verifies that signature) so that a
 hand-written row is cryptographically distinguishable from a real one. We have not built that, and until
@@ -156,7 +202,7 @@ refusing that digest again immediately, and git remembers what was there.
 ## Running it
 
 ```
-node --test tools/gate.test.mjs        # 56 tests
+node --test tools/gate.test.mjs        # 64 tests
 node tools/gate.mjs <sha256:…>         # exit 0 allow · 1 REFUSED · 2 could not decide (also a refusal)
 ./verify                               # every gate Auros has, including this one
 ```

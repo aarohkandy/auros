@@ -538,3 +538,107 @@ test('hook still blocks a genuine publish when a pass exists for a DIFFERENT dig
 })
 
 test.after(() => { if (tmp) rmSync(tmp, { recursive: true, force: true }) })
+
+// ── NEGATIVE SPACE: publish shapes this parser does NOT explicitly model ─────────────────────────
+//
+// The suite above proves the parser handles its own allowlist. It does not prove the allowlist is
+// complete, and an audit found eighteen shapes that were ALLOWED with the digest sitting in plain
+// text: `podman image push`, `docker image push`, `crane cp`, `buildah manifest push`,
+// `regctl image export`, `if …; then … fi`, `for …; do … done`, `{ … }`, `( … )`, a LEADING
+// redirection, `eval "…"`, `$(echo podman) push`, `echo … | bash`, `python3 -c`, `node -e`,
+// `make push`, `npm run`, and a raw `curl -X PUT` to /v2/…/manifests/.
+//
+// Every case below failed when it was written. That is the point of writing it: a test that asserts
+// the parser's own list back to it cannot discover that the list is short.
+test('hook BLOCKS publish shapes it does not explicitly model', () => {
+  const REF = `${BASE_IMAGE}@${DIGEST}`
+  for (const cmd of [
+    // subcommands that are not positional[0]
+    `podman image push ${REF}`,
+    `docker image push ${REF}`,
+    `buildah manifest push ${REF} docker://${REF}`,
+    `crane cp ${REF} ${BASE_IMAGE}:stable`,
+    `regctl image export ${REF} out.tar`,
+    // shell grammar in front of the command word
+    `if true; then podman push ${REF}; fi`,
+    `for i in 1; do podman push ${REF}; done`,
+    `{ podman push ${REF}; }`,
+    `(podman push ${REF})`,
+    `>/tmp/log podman push ${REF}`,
+    // indirection and interpreters
+    `eval "podman push ${REF}"`,
+    `$(echo podman) push ${REF}`,
+    `echo 'podman push ${REF}' | bash`,
+    `python3 -c "import subprocess;subprocess.run(['podman','push','${REF}'])"`,
+    `node -e "require('child_process').execSync('podman push ${REF}')"`,
+    `make push IMAGE=${REF}`,
+    `npm run publish:image --image=${REF}`,
+    // the registry API itself, no client involved
+    "curl -X PUT -H 'Authorization: Bearer t' --data-binary @manifest.json https://ghcr.io/v2/aarohkandy/auros-base/manifests/stable",
+  ]) blocked(cmd)
+})
+
+test('the same widening does not swallow ordinary work', () => {
+  for (const cmd of [
+    'make test',
+    'npm run build',
+    'pnpm install --frozen-lockfile',
+    `node tools/gate.mjs ${DIGEST}`,          // running the gate must not be refused BY the gate
+    'node --test tools/gate.test.mjs',
+    'python3 -m pip install --quiet jsonschema',
+    'for f in *.ts; do echo $f; done',
+    'if true; then echo hi; fi',
+    'podman build -t localhost/x:candidate -f Containerfile .',
+    `skopeo inspect --no-tags docker://${BASE_IMAGE}:hardened`,
+  ]) allowed(cmd)
+})
+
+// ── The evidence, and the gate, are not this agent's to edit ─────────────────────────────────────
+//
+// attest/README.md calls this "the one thing none of these protect against": nothing gated writes to
+// the ledger, so one appended line turned REFUSED into ALLOW with no VM anywhere. The real fix is a
+// signature from the CI identity on results.json, verified by decide(). This is the interim, and its
+// scope is exactly one agent in one harness — which is the scope of every claim this hook makes.
+const LEDGER_REL = ['attest', 'passed-digests.tsv'].join('/')
+const HOOK_REL = ['.claude', 'hooks', 'publish-gate.mjs'].join('/')
+const SETTINGS_REL = ['.claude', 'settings.json'].join('/')
+const GATE_REL = ['tools', 'gate.mjs'].join('/')
+
+test('hook BLOCKS writes to the ledger, the hook and the gate', () => {
+  for (const cmd of [
+    `printf 'row\\n' >> ${LEDGER_REL}`,
+    `sed -i '' 's/a/b/' ${LEDGER_REL}`,
+    `echo x | tee -a ${LEDGER_REL}`,
+    `cp /tmp/fake.tsv ${LEDGER_REL}`,
+    `mv /tmp/fake.tsv ${LEDGER_REL}`,
+    `truncate -s 0 ${LEDGER_REL}`,
+    `rm ${HOOK_REL}`,
+    `rm ${SETTINGS_REL}`,
+    `chmod 777 ${GATE_REL}`,
+  ]) blocked(cmd)
+})
+
+test('hook ALLOWS reading the ledger — it is public evidence, not a secret', () => {
+  for (const cmd of [
+    `cat ${LEDGER_REL}`,
+    `wc -l ${LEDGER_REL}`,
+    `grep sha256 ${LEDGER_REL}`,
+    `git diff ${LEDGER_REL}`,
+    `curl -sfL -o /tmp/x https://raw.githubusercontent.com/aarohkandy/auros/main/${LEDGER_REL}`,
+  ]) allowed(cmd)
+})
+
+test('a Write or Edit aimed at the ledger is refused, if such an event ever reaches this hook', () => {
+  // .claude/settings.json installs this hook with matcher "Bash", so these events do NOT reach it
+  // today and the ledger is NOT protected against the Write tool. Widening the matcher is a change
+  // to the operator's own configuration, not ours to make — so the branch is correct and the limit
+  // is stated, here and in the hook, rather than implied to be covered.
+  for (const rel of [LEDGER_REL, SETTINGS_REL, GATE_REL]) {
+    const payload = JSON.stringify({ tool_name: 'Write', tool_input: { file_path: `/Users/x/auros/${rel}` } })
+    let code = 0
+    try { execFileSync(process.execPath, [HOOK], { input: payload, stdio: 'pipe' }) } catch (e) { code = e.status }
+    assert.equal(code, 2, `a Write to ${rel} was allowed`)
+  }
+  const ok = JSON.stringify({ tool_name: 'Write', tool_input: { file_path: '/Users/x/auros/README.md' } })
+  execFileSync(process.execPath, [HOOK], { input: ok, stdio: 'pipe' })
+})

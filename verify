@@ -56,6 +56,14 @@ if [ -f tools/honesty-gate.corpus.test.mjs ]; then
   run "honesty gate corpus (spec §4.4)" node --test tools/honesty-gate.corpus.test.mjs
 else skip "honesty gate corpus (spec §4.4)" "tools/honesty-gate.corpus.test.mjs not present yet"; fi
 
+# The two checks that read something other than the sentence: a cited workflow's own triggers, and
+# whether CLAIMS.md has been re-read since the last decision. Both were added after a clean scan was
+# reported over a false trust argument, and neither is in RULES, so the corpus above does not cover
+# them.
+if [ -f tools/honesty-gate.crossfile.test.mjs ]; then
+  run "honesty gate cross-file checks (spec §4.4)" node --test tools/honesty-gate.crossfile.test.mjs
+else skip "honesty gate cross-file checks (spec §4.4)" "tools/honesty-gate.crossfile.test.mjs not present yet"; fi
+
 # ── The two state-file linters, proven able to go BOTH red and green ────────────────────────────────
 # Running a linter over a clean file only ever proves the file is clean. These prove the linter can
 # still say no — which is the half that stops being true silently.

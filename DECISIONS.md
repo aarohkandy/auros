@@ -570,3 +570,51 @@ page loads a script from a host other than `cdnjs.cloudflare.com` or this one en
 `cf-turnstile` widget ships on a page that does not load it, or if the loader is added without
 `render=explicit` — the widget lives inside a `<template>` and is cloned in at mount, so Turnstile's
 implicit renderer, which scans once when `api.js` executes, would never see it. **Closes B11.**
+
+## D34 — Every check must be watched failing, mechanically · 2026-09-20 · AGENT (measured)
+
+D19 said "a step that cannot fail is not a check" and left it as a rule people remember. Writing the
+base's build-script test suite turned it into two mechanisms, because the rule had already been
+broken three more times in files that had been reviewed and commented.
+
+**1. The direction audit.** `auros-base/tests/lib/harness.sh` records, per check id, whether that
+check has been seen going green AND seen going red, and **fails the suite** for any check observed in
+only one direction. A one-directional check needs `t_exempt <id> <reason>`, and the reason is printed
+in the run output. Written down because a test file that only demonstrates the happy path looks
+identical to one that works.
+
+**2. `auros-base/tests/prove-red.sh`.** 27 mutations, each reintroducing a specific bug into a
+scratch copy of the repo, each requiring the suite that owns it to go red — and to go red *for the
+stated reason*, so a mutation that breaks the suite incidentally is not scored as a catch. This is
+what a green `run-all.sh` cannot tell you: that the assertions would disagree with wrong code.
+
+**What the suite found while being written**, all of them "the check passes on input it should
+refuse":
+
+- **`build/10-hardening.sh`** read `kargs.d/*.toml` line by line, so a `kargs = [` array written
+  across several lines — valid TOML, accepted by bootc — was **invisible to the SELinux
+  kernel-argument check**. Same permanently-green shape as the `tr -d '[:space:]'` bug, third
+  variation in one day. Fixed by joining the file *before* splitting on commas, never after.
+- **`build/90-cleanup.sh`**'s `check_one()` ended in `*) return 0`, so a typo in the KIND column of
+  `hardening/protected.list` printed `PROTECTED ok` for a row that checked nothing. The protected set
+  — the thing that makes an unpatchable machine unshippable — was one typo away from silently
+  weaker. An unknown kind is now fatal.
+- **`build/40-windows-feel.sh`** asserted double-click with `grep -qx 'SingleClick=false'`. kdeglobals
+  is INI and KConfig reads that key from `[KDE]` only, so the key under any other group passed the
+  check while the machine still opened files on one click. Now group-aware.
+- **`build/00-common.sh`** validated the base DIGEST and never the base IMAGE NAME, then baked the
+  unvalidated `UPSTREAM_IMAGE` build argument into `/usr/lib/auros/release` as the image's permanent
+  record of its own provenance. Now: upstream, or the D21 mirror, or the build is refused —
+  `tools/resolve-upstream.sh`'s S1 rule, applied from inside where it fails next to its cause.
+
+**Standing consequence:** `AUROS_TEST_ROOT` is the one seam a shipped script may carry — unset on a
+real machine, pointed at a scratch tree by the tests. It now exists in `hardening-assert.sh` and in
+greenboot's `20-graphical-target.sh` and `30-update-timer-enabled.sh`, matching
+`40-no-new-failed-units.sh`. A required greenboot check that cannot be driven into failure does not
+merely prove nothing — **it disables rollback while looking installed**, because greenboot calls a
+boot green when every required check exits 0. All four are now driven into every failure branch they
+have.
+
+Runs in seconds on a laptop with no podman and no QEMU (`.github/workflows/unit-tests.yml`). It does
+not replace the check matrix and cannot: U1–U5 and B1–B12 in QEMU remain the only proof that a real
+machine does the real thing.

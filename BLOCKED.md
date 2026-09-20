@@ -144,3 +144,20 @@ fatal.
 *Still mechanised:* `auros-web/tools/configurator-a11y.test.mjs` fails the build on a script from any
 other host, on a widget with no loader, and on a loader without `render=explicit`.
 
+
+## B11 — The wind-down commitment is stated four times and has no document behind it · OPEN · §9 · blocks publication
+D31 says the handover must be *"a real published term rather than a sentiment"*, and the site now states
+it in four places: the landing close, `faq/1-if-you-disappear`, `pages/5-replaceable-on-purpose`, and
+the school tier.
+
+**No terms document exists.** A commitment made four times on a website with nothing behind it is a
+promise we have not actually made, which is the fabricated-claim prohibition wearing a different hat —
+and this one is worse than a marketing overclaim, because a school would be relying on it when they
+decide to put a fleet on us.
+
+Needs a human: it is a contractual undertaking, not copy. Roughly, it has to say **what** is handed over
+(the recipe, the base Containerfile, the build scripts — not a licence to the tooling), **when** the
+trigger fires, **how** the customer receives it, and **what it does not include.**
+
+Until it exists, the four sentences must not ship. Caught by the R4 rewrite rather than by a gate,
+because no gate can tell that a true-sounding sentence has no document behind it.
