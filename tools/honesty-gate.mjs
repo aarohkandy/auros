@@ -23,11 +23,14 @@ const SKIP_DIR = new Set(['node_modules', '.git', 'dist', '.astro', 'coverage', 
 // understands the rule routes around the letter of it far less often than one who does not.
 const RULES = [
   { id: 'social-proof', why: 'We have no customers. Implying otherwise is the fastest way to be worth distrusting.',
-    re: /\b(trusted by|used by (?:schools|hundreds|thousands|over)|our customers (?:say|report|love)|join (?:hundreds|thousands)|rated \d(?:\.\d)? (?:stars|out of)|as featured in|testimonial|case stud(?:y|ies))\b/gi },
+    re: /\b(trusted by|used by (?:schools|hundreds|thousands|over)|our customers (?:say|report|love)|join (?:hundreds|thousands)|rated \d(?:\.\d)? (?:stars|out of)|as featured in|testimonial|case stud(?:y|ies))\b/gi,
+    notNegated: true },
   { id: 'device-count', why: 'A device count in the field is a claim about customers we do not have. The 180/40/62 in the architecture diagram are illustrative and must be labelled as such.',
-    re: /\b(?:over|more than|already|now)\s+[\d,]{2,}\s*(?:\+\s*)?(?:devices?|machines?|laptops?|schools?|organi[sz]ations?|students?)\b/gi },
+    re: /\b(?:over|more than|already|now)\s+[\d,]{2,}\s*(?:\+\s*)?(?:devices?|machines?|laptops?|schools?|organi[sz]ations?|students?)\b/gi,
+    notNegated: true },
   { id: 'savings-figure', why: 'We cannot evidence a saving. The reader does this arithmetic with their own numbers; we supply the arithmetic, never the answer.',
-    re: /\b(?:saves?|saving|save you|cut costs? by|reduces? costs? by)\s+(?:up to\s+)?(?:[£$€]\s?[\d,]+|\d+\s?%)/gi },
+    re: /\b(?:saves?|saving|cut costs?|cuts? costs?|reduces? costs?|pays? for itself)\b[^.\n]{0,30}?(?:[£$€]\s?[\d,]{3,}|\d{1,3}\s?%)/gi,
+    notNegated: true },
   { id: 'unqualified-percent', why: 'A bare percentage reads as a measured result. If it is measured, cite the measurement; if it is not, delete it.',
     re: /\b\d{2,3}\s?% (?:of (?:schools|customers|users|machines)|faster|cheaper|fewer|less|more)\b/gi },
   { id: 'one-restart-unqualified', why: 'False on BitLocker/TPM-1.2 and Secure-Boot-restricted machines (PLAN.md §3.6). Must carry its qualification within the same sentence.',
@@ -70,6 +73,14 @@ function scan (file, root) {
     let m
     while ((m = rule.re.exec(text)) !== null) {
       // A rule with `needsNear` only fires when its qualification is ABSENT nearby.
+      // A mention inside a NEGATION is not a claim. "no testimonials", "never fabricate a case study",
+      // "we do not say trusted by" are all the rule being described or refused, not exercised. Without
+      // this, the files that audit our honesty are the ones that trip the honesty gate — which trains
+      // people to annotate their way past it, and an escape hatch people use reflexively is not a gate.
+      if (rule.notNegated) {
+        const before = text.slice(Math.max(0, m.index - 60), m.index).toLowerCase()
+        if (/\b(no|not|never|without|avoid|forbid(?:s|den)?|refuse[sd]?|fabricat\w*|invent\w*|do not|don't|must not|may not|zero)\b[^.]{0,55}$/.test(before)) continue
+      }
       if (rule.needsNear) {
         const from = Math.max(0, m.index - rule.nearWindow)
         const window = text.slice(from, m.index + rule.nearWindow)
