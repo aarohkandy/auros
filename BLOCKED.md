@@ -40,3 +40,14 @@ every path to a first customer. Lead time is human, not computational.
 Spec §2 says they arrive "this week". `compat.tsv` cannot get a `physical` row until they do, and §10
 identifies Gate 5 as one of the two that slip because hardware does not compress.
 *Workaround:* every VM profile row lands first, marked `source=vm` with physical columns empty.
+
+## B6 — Nightly pull size vs. a school's uplink · OPEN · constrains a website claim, not a build
+**Measured:** the Aurora base is **3.5 GB compressed**
+([evidence](docs/evidence/2026-09-20-runner-probe.md)). A nightly base change that touches a low layer is
+a 3.5 GB pull *per machine*; a 180-machine site on one uplink is a ~630 GB event.
+
+`rechunk`'s stable layer plan is the mitigation and it is now a requirement rather than an optimisation
+(DECISIONS.md D2). But until we have **measured** a real nightly delta, we may not claim "updates every
+night" to a large site without qualification. §9 reserves website claims we cannot evidence.
+*Action:* `results.json` carries `pull_size_delta_bytes` as a measured field. The claim waits for the
+measurement. Staged rollout and an on-site cache belong to the fleet console (§6E, deferred).

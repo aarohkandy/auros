@@ -7,9 +7,9 @@ The queue. Re-read at the start of every work session (spec §8). `[x]` done · 
 - [x] 0.1 Name + namespace fixed (`auros.config.json`) — D1
 - [x] 0.3 Root state files: PROGRESS / TASKS / GATE / BLOCKED / DECISIONS
 - [x] 0.4 `hardware/compat.tsv` with header + `source` column, hour one
-- [~] 0.2 Create 4 public repos, licences, CODEOWNERS
+- [x] 0.2 Create 4 public repos, licences, CODEOWNERS
 - [ ] 0.5 Publish-gate hook + `attest/passed-digests.tsv` ledger — must land BEFORE anything can build
-- [ ] 0.6 Skills: `recipe-compile`, `vm-check-matrix`, `driver-triage`, `theme-generate`
+- [x] 0.6 Skills: `recipe-compile`, `vm-check-matrix`, `driver-triage`, `theme-generate`
 
 ## W-A — auros-base (Gate 1 → Gate 2)
 - [ ] A1 Containerfile FROM pinned digest; `base.lock`
