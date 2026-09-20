@@ -208,3 +208,12 @@ defaults:
 The general form of the lesson, which matters more than the flag: **a step that cannot fail is not a
 check.** When adding any gate, the first question is "what would make this go red?", and if there is no
 answer, the gate is decoration.
+
+## D20 — `ostree container commit` is obsolete on this base · 2026-09-20 · AGENT (measured)
+Our boot probe failed with `error: Not in an ostree-based container environment` on a plain
+`RUN ... && ostree container commit`. The command belongs to the older rpm-ostree derivation flow and is
+not applicable to a modern bootc image derived from `ghcr.io/ublue-os/aurora`.
+
+**The base `Containerfile` must not call it.** `bootc container lint` (check S2) is the validation step.
+Recorded because every tutorial written before ~2024 ends with that line, and an agent or a human copying
+one would break the build in a way whose error message does not obviously point at the cause.
