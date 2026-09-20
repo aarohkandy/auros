@@ -68,10 +68,11 @@ CLAIMS.md says so in those words.
 
 The honesty gate's two new licence-grant rules found **25 places** where the site still offers a right
 D30 withdrew (`PROGRESS.md`, 2026-09-20 late). `docs/outreach/EMAIL-DRAFT.md` and
-`docs/outreach/PILOT-OFFER.md` carry the same problem — both versions of the first-contact email close
-on *"every configuration is a public file in a public repository — if I disappear, you rebuild the
-exact same operating system from it without me"*, and **that is the load-bearing sentence of both
-emails.**
+`docs/outreach/PILOT-OFFER.md` carry the same problem — both versions of the first-contact email and
+the one-pager close on the promise that the reader can rebuild the OS from a public file without us,
+worded three different ways, and **it is the load-bearing sentence in all three.** The gate catches two
+of the three and misses Version B entirely
+([details](honesty-gate-for-marketing.md)).
 
 So this is not a find-and-replace. **The single strongest trust argument in our outreach is a right we
 no longer grant**, and the replacement (D31's wind-down handover) is narrower and has to do the same

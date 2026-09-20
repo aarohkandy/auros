@@ -334,6 +334,14 @@ const CASES = [
     standIn: true,
   },
   {
+    // The terrain's §7 invariants. For a while this file existed and NOTHING ran it; the stand-in
+    // proves only that, now that verify does run it, its failure reaches verify's exit status.
+    gate: 'terrain invariants (spec §7)',
+    green: (s) => s.stubTest('auros-web/src/terrain/terrain.test.ts', true),
+    red: (s) => s.stubTest('auros-web/src/terrain/terrain.test.ts', false),
+    standIn: true,
+  },
+  {
     gate: 'compat.tsv honesty (no vm row claims a physical column)',
     real: true,
     green: () => {},                       // the base sandbox ships the repo's real, honest compat.tsv

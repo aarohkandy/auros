@@ -161,3 +161,9 @@ trigger fires, **how** the customer receives it, and **what it does not include.
 
 Until it exists, the four sentences must not ship. Caught by the R4 rewrite rather than by a gate,
 because no gate can tell that a true-sounding sentence has no document behind it.
+
+**B11 update:** a draft now exists at `docs/legal/WIND-DOWN-TERMS.DRAFT.md`, clearly marked as not legal
+advice and not in effect. Drafting it exposed a gap in D31 itself: **handing someone files they have no
+licence to use gives them nothing** under all-rights-reserved. The commitment has to be a *licence that
+vests on a trigger*, not a delivery. Because the repos are already readable, access needs no escrow —
+only the right to use does. Needs the human's confirmation and a lawyer's review.

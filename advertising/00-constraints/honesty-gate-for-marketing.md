@@ -9,16 +9,37 @@ conference abstract.
 
 ---
 
-## The concrete finding
+## The concrete finding — verified 2026-09-20, not inferred
 
-Both outreach drafts close on the same sentence:
+Run against `docs/outreach`, the gate **exits 1 with 6 findings**. Two of them are the withdrawn licence
+claim, caught by `public-recipes`:
 
-> *"every configuration is a public file in a public repository — if I disappear, you rebuild the exact
-> same operating system from it without me"*
+| Where | Text | Caught? |
+|---|---|---|
+| `EMAIL-DRAFT.md:26` (Version A) | *"…a public file in a public repository — if I vanish, you rebuild the exact same operating system from it without me"* | **Yes** — `public-recipes` |
+| `PILOT-OFFER.md:62` | *"…a public file in a public repository — if we disappear tomorrow, you can rebuild your exact operating system…"* | **Yes** — `public-recipes` |
+| `EMAIL-DRAFT.md:54–55` (Version B) | *"Every configuration I build is a public file — if I disappear, you can rebuild your machines from it without me."* | **No. Missed.** |
 
-That is the `licence-grant` and `public-recipes` rules, twice, in the highest-stakes copy we have — and
-it was invisible because the gate does not look at `docs/`. The website's 25 instances were found; the
-outreach's were not, because of a directory argument.
+**Version B makes the identical withdrawn claim and passes the gate.** Tested directly against both
+rules' regexes:
+
+- `licence-grant` matches `you can rebuild (it | the same | your own)`. Version B says *rebuild **your
+  machines***. Not in the list.
+- `public-recipes` matches *public **repository***. Version B says *public **file***. Not in the list.
+
+So the one email we would send a school carries a right D30 withdrew, and a clean gate run would have
+reported nothing. It was invisible twice over: the gate does not look at `docs/` at all, and when
+pointed there, one of the three instances still slips through because the prose used a different noun.
+
+**This is the failure mode the gate's own comments name** — *"the specific way a gate becomes
+decoration: it keeps checking what it always checked while the prose moves somewhere else."* An
+enumerated list of objects (`it | the same | your own`) will always trail the ways a person can phrase
+the same promise.
+
+**Scope note:** fixing the rule is engineering, owned alongside `tools/honesty-gate.corpus.test.mjs`,
+and is **not changed by this folder.** The advertising consequence stands regardless of the fix: A3 in
+[`human-decisions.md`](human-decisions.md) must rewrite all three by hand, because the gate cannot be
+relied on to have found them all.
 
 ## What to do
 

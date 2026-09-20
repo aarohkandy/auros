@@ -123,6 +123,15 @@ if [ -f auros-web/tools/configurator-a11y.test.mjs ]; then
   run "configurator a11y + honesty regressions (spec §6D)" bash -euo pipefail -c 'cd auros-web && node --test tools/configurator-a11y.test.mjs'
 else skip "configurator a11y regressions (spec §6D)" "auros-web/tools/configurator-a11y.test.mjs not present yet"; fi
 
+# The terrain's own §7 properties — the 18-colour ceiling measured against the real output buffer,
+# the ore budget, the fixed seed, Math.random being unreachable, window-crop determinism. This file
+# existed for a while as 493 lines that NOTHING ran: not package.json, not a workflow, not this
+# script — and it could not be run, because its relative imports carried no extension. Both halves
+# are fixed; this line is the half that makes it a gate. See the first line of this file.
+if [ -f auros-web/src/terrain/terrain.test.ts ]; then
+  run "terrain invariants (spec §7)" bash -euo pipefail -c 'cd auros-web && node --experimental-strip-types --test src/terrain/terrain.test.ts'
+else skip "terrain invariants (spec §7)" "auros-web/src/terrain/terrain.test.ts not present yet"; fi
+
 # ── The honesty check on our own state files ────────────────────────────────────────────────────────
 run "compat.tsv honesty (no vm row claims a physical column)" node tools/compat-lint.mjs
 
