@@ -41,6 +41,13 @@ const RULES = [
   { id: 'device-count', why: 'A device count in the field is a claim about customers we do not have. The 180/40/62 in the architecture diagram are illustrative and must be labelled as such.',
     re: /\b(?:over|more than|already|now)\s+[\d,]{2,}\s*(?:\+\s*)?(?:devices?|machines?|laptops?|schools?|organi[sz]ations?|students?)\b/gi,
     notNegated: true },
+  // The device-count rule above requires a leading over/more than/already/now, which is what keeps
+  // it off SPEC §3's illustrative 180-machine fleet and off "180 machines on one uplink". The shape
+  // it therefore cannot see is a bare count ATTACHED TO ORGANISATIONS — "180 machines across three
+  // schools" — which is a customer claim wearing an architecture diagram's clothes.
+  { id: 'device-count-across', why: 'A device count attached to schools, nonprofits or customers is a claim about customers we do not have, whether or not it carries a leading "over".',
+    re: /\b[\d,]{2,}\s*(?:\+\s*)?(?:devices?|machines?|laptops?)\s+(?:across|at|in|for)\s+(?:[\d,]+|a|three|four|five|several|multiple)?\s*(?:schools?|nonprofits?|organi[sz]ations?|customers?|councils?|trusts?)\b/gi,
+    notNegated: true },
   { id: 'savings-figure', why: 'We cannot evidence a saving. The reader does this arithmetic with their own numbers; we supply the arithmetic, never the answer.',
     re: /\b(?:saves?|saving|cut costs?|cuts? costs?|reduces? costs?|pays? for itself)\b[^.\n]{0,30}?(?:[£$€]\s?[\d,]{3,}|\d{1,3}\s?%)/gi,
     notNegated: true },
@@ -106,7 +113,7 @@ function walk (dir, root) {
     try { st = statSync(p) } catch { continue }
     if (st.isDirectory()) { walk(p, root); continue }
     if (!SCAN_EXT.has(extname(p))) continue
-    if (IS_TEST.test(e.name)) continue
+    if (IS_TEST.test(e)) continue
     scanned++
     scan(p, root)
   }

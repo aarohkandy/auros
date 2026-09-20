@@ -98,3 +98,15 @@ Three options:
 Note for whoever decides: spec §6D requires the school tier to show a replacement-cost comparison
 because *"our real competitor is doing nothing, which is free."* The $0 tier was the other half of that
 argument. Removing it strengthens "doing nothing" as the alternative.
+
+## B10 — A production signing key is a human action · OPEN · blocks publishing, not building
+D32 created a development key so Gate 1 is not blocked. It builds, boots and passes the matrix; the
+publish step refuses it by reading the key kind back out of the image.
+
+**Before a single customer machine exists**, a human must generate a production key pair, commit the
+public half as `signing/keys/auros.pub`, and place the private half in the signing secret. It is a
+long-lived organisational credential whose custody matters more than its cryptography — see
+`auros-base/signing/RISKS.md` R3.
+
+Doing it late costs a re-sign of everything published under the development key. Doing it now costs
+nothing, because nothing is published.

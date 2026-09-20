@@ -490,3 +490,37 @@ and grants no rights to a competitor today — which was the whole objection to 
 needed to keep patching it."* Weaker, and true. The `replaceable.yml` CI job stays paused until there is
 a handover artefact to execute against — and when there is, it gets executed rather than asserted, same
 as before.
+
+## D32 — A development signing key, which cannot publish · 2026-09-20 · AGENT
+`build/30-update-agent.sh` refused to build without a signing key, and its reasoning was right: an
+image whose policy references `/usr/lib/pki/containers/auros.pub` and finds nothing there would
+**refuse every update for the rest of that machine's life** — in a school, months later, with no
+terminal and no out-of-band console. Better to refuse the build.
+
+But that blocked Gate 1, which asks only that the base *builds in CI and boots in a VM*.
+
+**Those are two different questions, and the build now tells them apart:**
+
+| | needs |
+|---|---|
+| "Can this image be built and exercised?" | a key that **exists**, so the policy is coherent and the signature machinery can be tested end to end |
+| "Can a school trust this image?" | a key whose **custody** someone is accountable for |
+
+Conflating them either blocks all testing until a human mints a long-lived credential, or ships a
+throwaway key to a customer. So: an ECDSA P-256 development key
+(`signing/keys/auros-development.pub`, fingerprint `1495cbe4…2500b`). It builds, boots and passes the
+matrix. It is **refused at the publish step**, which is the only place an image becomes reachable by a
+machine.
+
+**The kind is written into the image and read back out of it**, not carried as a workflow variable. A
+variable can be set by whoever edits the workflow; a file inside the artifact travels with the thing
+being judged. Same reasoning as the gate recomputing its verdict instead of trusting the harness's
+`verdict` field.
+
+The private half is in the `AUROS_DEV_SIGNING_KEY` Actions secret and nowhere else — not on the build
+machine, not in the repo, not in any log. If it leaks, generate another and forget it; nothing of value
+is signed with it.
+
+**A production key is a human action and must exist before the first pilot.** Rotating costs a re-sign
+of everything published under the old key: free today while nothing is published, expensive later.
+Recorded in BLOCKED.md B10.

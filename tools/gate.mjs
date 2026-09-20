@@ -28,7 +28,7 @@
 // rather than ignoring it, so an unrecognised flag is itself a refusal. `tools/gate.test.mjs`
 // asserts both of those properties against this file's own source text.
 
-import { readFileSync } from 'node:fs'
+import { readFileSync, lstatSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -135,6 +135,15 @@ export function parseLedger (text) {
     else {
       const t = Date.parse(r.recorded_at)
       if (Number.isNaN(t)) problems.push(`line ${lineNo}: recorded_at "${r.recorded_at}" is not a real instant`)
+      // Date.parse does NOT reject a date that cannot exist: it rolls it over, so "2026-02-30" comes
+      // back as 2026-03-02 and a shape check alone reports it clean. The only reliable test is that
+      // the instant prints back as the string we were given. Caught by gate.refusals.test.mjs; the
+      // field is the ledger's whole audit trail, and a timestamp that silently means a different day
+      // is worse than an obviously missing one because it still looks like evidence.
+      else if (new Date(t).toISOString().replace(/\.\d{3}Z$/, 'Z') !== r.recorded_at) {
+        problems.push(`line ${lineNo}: recorded_at "${r.recorded_at}" is not a date that exists — it normalises to ` +
+          `"${new Date(t).toISOString().replace(/\.\d{3}Z$/, 'Z')}". A rolled-over date is not a record of when anything happened.`)
+      }
       else if (t > Date.now() + FUTURE_TOLERANCE_MS) problems.push(`line ${lineNo}: recorded_at "${r.recorded_at}" is in the future`)
     }
     rows.push(r)
@@ -216,6 +225,28 @@ export function decide (query, paths = DEFAULT_PATHS) {
 
   const drift = driftCheck(paths)
   if (drift) return refuse('matrix-drift', `${drift} Refusing every digest until the gate and the matrix agree.`)
+
+  // The ledger must be a REGULAR FILE at the path this gate derived from its own location. A symlink
+  // is a second name for bytes somewhere else, and "somewhere else" is a place a build step can write
+  // without touching anything a reviewer reads. The job that manufactures evidence must not be able to
+  // hand the job that reads it a different file by renaming one, so a non-regular ledger is a refusal
+  // rather than a follow. lstat, never stat: stat would follow the very link we are trying to see.
+  try {
+    const st = lstatSync(paths.ledger)
+    if (st.isSymbolicLink()) {
+      return refuse('ledger-not-a-regular-file',
+        `${paths.ledger} is a symbolic link, not a regular file. The ledger is the one artefact a publish is ` +
+        'gated on; a link means the bytes that decide live somewhere this repo does not show a reviewer. ' +
+        'Replace the link with the file.')
+    }
+    // A directory (or a device, or a socket) where the ledger should be keeps the historical
+    // `no-ledger` code: from a caller's point of view nothing readable is there at all.
+    if (!st.isFile()) {
+      return refuse('no-ledger', `${paths.ledger} is not a regular file. An attestation ledger that is not a file records nothing.`)
+    }
+  } catch (e) {
+    return refuse('no-ledger', `cannot stat the attestation ledger at ${paths.ledger}: ${e.message}. An unreadable ledger proves nothing passed.`)
+  }
 
   let text
   try { text = readFileSync(paths.ledger, 'utf8') } catch (e) {

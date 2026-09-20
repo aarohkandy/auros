@@ -385,7 +385,10 @@ test('every gate.mjs invocation in every Auros workflow is one this parser accep
     // Strip trailing shell noise, then unquote and substitute CI's own placeholders for concrete
     // values. Substituting a digest for `${{ needs.build.outputs.digest }}` does not weaken the
     // test: the parser's job is to accept the SHAPE, and the shape is what the call site controls.
-    const tokens = (call.rest.split(/\s+/).filter(Boolean))
+    // Shell redirections are not argv — `>/dev/null 2>&1` never reaches the program. Strip them,
+    // along with their targets, before asking the parser about what is left.
+    const raw = call.rest.replace(/(^|\s)\d?(>>|>|<)\s*\S+/g, ' ')
+    const tokens = (raw.split(/\s+/).filter(Boolean))
       .filter((t) => !['||', '&&', ';', '|'].includes(t))
       .map((t) => t.replace(/^['"]|['"]$/g, ''))
     const argv = []

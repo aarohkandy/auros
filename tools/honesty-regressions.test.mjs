@@ -128,6 +128,25 @@ describe('FATAL 1 — the rebuild command a sceptic is invited to run', { skip: 
     }
   })
 
+  test('the page does not imply the replaceability job has passed when it has not', () => {
+    // The `stranger` workflow is the right thing to build and the right thing to tell a reader
+    // about. It has also never produced an image, because ghcr.io/aarohkandy/auros-base:hardened
+    // does not exist yet (Gate 1). A test that exists and a test that is passing are different
+    // facts, and on this page in particular the difference is the whole point.
+    const t = read(CONTENT, 'faq/1-if-you-disappear.md')
+    if (!/stranger/.test(t)) return
+    const ledger = join(META, 'attest/passed-digests.tsv')
+    // The first non-comment line is the ledger's header, not a pass. Counting it as one made this
+    // test skip itself silently — which is the failure mode the ledger's own comments warn about,
+    // reproduced in the test that reads it.
+    const rows = existsSync(ledger) ? readFileSync(ledger, 'utf8').split('\n').filter((l) => l.trim() && !l.startsWith('#')) : []
+    const passes = Math.max(0, rows.length - 1)
+    if (passes === 0) {
+      assert.match(t, /has not produced an image yet|has never gone green|not yet passed/i,
+        'The page describes the replaceability workflow without saying it has never produced an image. No base image has been published, so the job cannot have passed, and implying it has is the same fabrication as a testimonial.')
+    }
+  })
+
   test('the published command references paths that exist (tools/content-commands.mjs)', () => {
     execFileSync(process.execPath, [join(META, 'tools/content-commands.mjs')], { stdio: 'pipe' })
   })
@@ -368,6 +387,7 @@ describe('the gates that mechanise all of the above still fail closed', () => {
         ['record.md', 'We checked it against our own notes from machines we have built.'],
         ['time.md', 'Changing the setting is a thirty-second job once you know which one it is.'],
         ['perpetual.md', 'Nightly rebuilds of the base it stands on, for as long as we are here.'],
+        ['devices.md', 'We keep 180 machines across three schools patched every night.'],
       ]
       for (const [name, text] of cases) {
         writeFileSync(join(dir, name), text)
@@ -377,6 +397,10 @@ describe('the gates that mechanise all of the above still fail closed', () => {
         )
         rmSync(join(dir, name))
       }
+      // The other half of the same test. A rule that also caught SPEC §3's illustrative fleet would
+      // be quietly widened until somebody deleted the architecture diagram to get a green build.
+      writeFileSync(join(dir, 'ok.md'), '180 machines on one uplink is the case that needs a local mirror.')
+      execFileSync(process.execPath, [join(META, 'tools/honesty-gate.mjs'), dir], { stdio: 'pipe' })
     } finally { rmSync(dir, { recursive: true, force: true }) }
   })
 })
