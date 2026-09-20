@@ -10,6 +10,6 @@ node_modules/
 .wrangler/
 dist/
 
-# HELD pending the owner: a go-to-market strategy may not belong in a public repo.
-# It was committed once without review (swept in by git add -A). See the session log.
+# Moved to the private repo aarohkandy/auros_private (DECISIONS.md D36). Ignored here so that no
+# git add -A can sweep a copy back into a public repository — which is how it got here the first time.
 advertising/

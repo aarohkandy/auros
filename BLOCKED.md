@@ -118,7 +118,7 @@ long-lived organisational credential whose custody matters more than its cryptog
 Doing it late costs a re-sign of everything published under the development key. Doing it now costs
 nothing, because nothing is published.
 
-## B11 — The order flow's human check needs a script host §4.5 did not permit · **RESOLVED BY D33, PENDING HUMAN RATIFICATION** · RESOLVED by D33 · Gate 4 unblocked
+## B11 — The order flow's human check needs a script host §4.5 did not permit · **RESOLVED — D33 RATIFIED BY THE HUMAN 2026-09-20** · RESOLVED by D33 · Gate 4 unblocked
 Spec §6D's exit condition is that a stranger configures a build, submits, and a PR appears in
 `auros-recipes`. The Worker will not accept a POST without a verified Turnstile token
 (`auros-web/worker/lib/turnstile.js`), and Turnstile's widget is delivered by
@@ -178,3 +178,9 @@ The wind-down blocker is now **B12**. Several advertising documents had already 
 and written around it as *"B11, the wind-down entry"*; they are updated to B12. Worth recording because
 working around a bookkeeping bug instead of fixing it leaves the next reader to make the same mistake,
 and here the mistake would have been shipping a promise with nothing behind it.
+
+## B13 — Purge `advertising/` from the public meta repo's history · OPEN · deferred by the owner
+Moved to `aarohkandy/auros_private` and removed from `main` (D36). It remains in the public repo's
+history. Purging needs a history rewrite and a force-push to `main` — destructive, and unsafe while
+agents are still pushing to the same repo, because it could discard their commits. **Do it when the
+repo is quiet.** Zero forks, so the rewrite will be clean.

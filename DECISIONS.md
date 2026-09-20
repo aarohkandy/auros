@@ -527,14 +527,11 @@ Recorded in BLOCKED.md B10.
 
 ---
 
-## D33 — §4.5 gains exactly one script-host exemption: `challenges.cloudflare.com` · 2026-09-20 · AGENT · **PENDING HUMAN RATIFICATION**
+## D33 — §4.5 gains exactly one script-host exemption: `challenges.cloudflare.com` · 2026-09-20 · AGENT · **RATIFIED BY THE HUMAN, 2026-09-20**
 
-> **Ratification needed.** This amends one of spec §4's HARD PROHIBITIONS, which the spec describes as
-> "not preferences". The reasoning below is sound and I agree with it — but an agent should not be the
-> last word on relaxing a hard prohibition, so it is held here the same way D13 was. Until the human
-> ratifies it, treat the order flow as having **no public submit path**, and do not deploy the
-> configurator page with the Turnstile loader. The alternative if it is rejected is a first-party,
-> same-origin challenge, with the costs D33 describes below.
+> **Ratified by the human on 2026-09-20.** This amends one of spec §4's HARD PROHIBITIONS. It was held
+> for ratification rather than taking effect on an agent's say-so, because an agent should not be the
+> last word on relaxing a hard prohibition. It is now in force, on exactly the terms below and no wider.
 
 **Amends SPEC §4.5.** The rule was: *never use remote images, external fonts beyond Google Fonts, or
 any script host other than cdnjs on the public site.* The rule is now that plus one named endpoint:
@@ -648,3 +645,23 @@ before proof, so an unverified archive got the wrong refusal message; an integer
 in `KnownFolders` that `go vet` rejects for Windows; a test (`TestSteps_IsPure`) that had been quietly
 narrowed to three fields and now compares the whole value again; and a locked-file test that could
 never have passed and had never run, because it skips itself under root.
+
+## D36 — A private repo for what has no reason to be public · 2026-09-20 · HUMAN
+The owner created `aarohkandy/auros_private`, with the rule: *if there is a benefit to something being
+public, keep it public; otherwise make it private.* And: do not spend extra money doing it.
+
+That rule sorts cleanly, because the only metered thing is GitHub Actions minutes:
+- **Product repos stay public.** Their CI is the expensive part — hours of VM builds and boots,
+  unmetered only on public repos. Everything in them is all-rights-reserved regardless (D30/D31).
+- **Anything without CI goes private for free.** First occupant: `advertising/`, a 48-file go-to-market
+  strategy an agent wrote and I committed to the public meta repo **without reading it**, swept in by
+  `git add -A`. A strategy is worth less the more competitors can read it. Public for about an hour.
+
+**Removed from `main`; not yet purged from history.** Purging means rewriting history and force-pushing
+`main` of a repo several agents are pushing to right now, which could discard their work. The owner said
+this can wait, so it waits until the repo is quiet. Nobody has forked the repo, so the rewrite will be
+clean when it happens. Tracked as BLOCKED.md B13.
+
+**The general lesson,** already true of publishing and now true of committing: *never publish what you
+have not read.* A commit to a public repository is a publication. `git add -A` in a directory other
+agents write to publishes their work under your name without review.
