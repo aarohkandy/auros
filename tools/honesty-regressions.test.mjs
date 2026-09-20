@@ -312,6 +312,40 @@ describe('MINOR — numbers with no source', { skip: !haveWeb && 'auros-web not 
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
+describe('the footer licence claim matches the LICENSE file', { skip: !haveWeb && 'auros-web not checked out' }, () => {
+  // Not from the original finding list. Found while fixing it: D30 replaced Apache-2.0 with an
+  // all-rights-reserved notice across all five repositories while this work was in progress, and
+  // copy.ts still said "Site and source released under Apache 2.0". The footer links to the
+  // repository, so the file that contradicts the sentence is one click from the sentence.
+  const note = () => read(CONTENT, 'copy.ts').match(/licenceNote:\s*"([^"]+)"/)[1]
+
+  test('the site does not name a licence the repository does not carry', () => {
+    const licence = read(WEB, 'LICENSE')
+    const apacheInFile = /Apache License/i.test(licence)
+    const apacheInCopy = /Apache/i.test(note())
+    assert.equal(apacheInCopy, apacheInFile,
+      `footer.licenceNote says "${note()}" and auros-web/LICENSE ${apacheInFile ? 'is' : 'is not'} Apache-2.0. A licence claim is checkable in one click, so it is the worst possible sentence to get wrong.`)
+    if (/all rights reserved/i.test(licence)) {
+      assert.match(note(), /all rights reserved/i, 'the LICENSE reserves all rights and the footer does not say so')
+    }
+  })
+
+  test('a proprietary licence does not silently drop the GPL components in the image', () => {
+    const licence = read(WEB, 'LICENSE')
+    if (!/all rights reserved/i.test(licence)) return
+    assert.match(note(), /GPL/,
+      'D30: the built image contains GPL and LGPL software because Fedora does, and recipients hold rights under those licences that we cannot withhold. Our code being closed and the image carrying those rights are both true at once, and D30 says the website must not imply otherwise.')
+  })
+
+  test('the §9 decision D30 opens is recorded in CLAIMS.md rather than answered in the copy', () => {
+    const claims = read(CONTENT, 'CLAIMS.md')
+    assert.match(claims, /D30/, 'CLAIMS.md does not mention D30. The licence change makes every row in section 7 conditional; an unrecorded conditional claim is an unevidenced one.')
+    assert.match(claims, /does not publish until|The site does not publish/i,
+      'CLAIMS.md no longer blocks publication on the replaceability question D30 opens. Only a human may resolve it; nobody may remove the block by rewriting a page.')
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
 describe('the gates that mechanise all of the above still fail closed', () => {
   test('honesty-gate reports a clean scan of the site', { skip: !haveWeb && 'auros-web not checked out' }, () => {
     execFileSync(process.execPath, [join(META, 'tools/honesty-gate.mjs'), join(WEB, 'src')], { stdio: 'pipe' })

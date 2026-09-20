@@ -23,6 +23,19 @@ skip () { printf '\n\033[1m── %s ──\033[0m\n   \033[33mSKIP\033[0m  %s\n
 if [ -d auros-web/src ]; then run "honesty gate (spec §4.4)" node tools/honesty-gate.mjs auros-web/src
 else skip "honesty gate (spec §4.4)" "auros-web not checked out here"; fi
 
+# ── The 2026-09-20 honesty audit, as permanent assertions ───────────────────────────────────────────
+# Each fatal and major finding from that audit is one named test here. A finding fixed only in prose
+# comes back the next time somebody rewrites the paragraph; a finding fixed as an assertion does not.
+if [ -f tools/honesty-regressions.test.mjs ]; then
+  run "honesty regressions (2026-09-20 audit)" node --test tools/honesty-regressions.test.mjs
+else skip "honesty regressions" "tools/honesty-regressions.test.mjs not present yet"; fi
+
+# ── A published command is a claim about a filesystem ───────────────────────────────────────────────
+# The rebuild command on the website was wrong by one path component for weeks. honesty-gate reads
+# prose and cannot see a filesystem; this reads the filesystem.
+if [ -d auros-web/src/content ]; then run "published commands resolve (spec §1.3)" node tools/content-commands.mjs
+else skip "published commands resolve (spec §1.3)" "auros-web not checked out here"; fi
+
 # ── §4.3 — no untested image reaches a customer ─────────────────────────────────────────────────────
 if [ -f tools/gate.test.mjs ]; then run "publish gate (spec §4.3)" node --test tools/gate.test.mjs
 else skip "publish gate (spec §4.3)" "tools/gate.test.mjs not present yet"; fi

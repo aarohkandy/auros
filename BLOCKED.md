@@ -73,3 +73,28 @@ Publishing any of it now would be the fabricated claim §4.4 forbids.
 **Resolved:** D31. The claim becomes *"you have the image; if we cease operating you get the build
 files needed to keep patching it."* Weaker than the original and true. The four sections need rewriting
 before anything ships; the mechanism (configurator, order PR) never depended on the answer.
+
+## B9 — The $0 self-serve tier has no product any more · OPEN · §9 (pricing) · blocks Gate 4 copy
+D30/D31 made everything all-rights-reserved. The self-serve tier existed **because** the recipes were
+public and forkable — that was the entire product at that price. `tiers/5-self-serve.md` currently says:
+
+> *"Every recipe, including every customer recipe, in a public repository" · "The base image
+> Containerfile, the hardening, and the policy modules" · "you can have the same image we would build
+> for you and pay us nothing"*
+
+**Every line of that is now false**, and it is a pricing question, which §9 reserves for the human. I am
+not deleting a tier the spec fixes.
+
+Three options:
+1. **Remove the tier.** Four tiers. Cleanest and most honest. Loses the "we are not holding you hostage"
+   signal that made the other four easier to trust.
+2. **Redefine at $0 as "read, don't build".** Recipes readable so a customer can see exactly what is on
+   their machines, with no licence to build or redistribute. Keeps some of the signal; the tier stops
+   being a product and becomes a transparency promise, which may be the more honest framing anyway.
+3. **Keep the tier and open-source only `auros-recipes`** — recipes permissive, everything else
+   proprietary. The recipe file is the least valuable thing we produce (LICENSING.md), so this costs
+   little, but it does hand a competitor a working schema.
+
+Note for whoever decides: spec §6D requires the school tier to show a replacement-cost comparison
+because *"our real competitor is doing nothing, which is free."* The $0 tier was the other half of that
+argument. Removing it strengthens "doing nothing" as the alternative.

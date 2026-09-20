@@ -56,3 +56,26 @@ because "they are the same instructions we use" — which is only a reason to be
 **Before Gate 4:** a CI job clones `auros-recipes` from scratch into a container with nothing but podman,
 runs the published commands verbatim, and asserts an image comes out. If they do not work, the page is
 wrong and the page is the trust asset.
+
+## R4 — Site content still claims replaceability · OPEN · blocks Gate 4 copy, not mechanism
+D31 settled the new claim: *"you have the image; if we cease operating you get the build files needed to
+keep patching it."* Thirteen content files still make the old, now-false claim. They need rewriting
+together, in one pass, by whoever owns the voice — not patched one at a time, because the argument runs
+through all of them.
+
+| File | What is now false |
+|---|---|
+| `faq/1-if-you-disappear.md` | The whole answer is clone-and-build instructions |
+| `pages/5-replaceable-on-purpose.mdx` | The entire page |
+| `pages/1-landing.mdx` | Closing section, "We are replaceable on purpose" |
+| `tiers/5-self-serve.md` | The tier has no product — **§9, see BLOCKED.md B9** |
+| `tiers/2-school-nonprofit.md` | References public recipes |
+| `pages/3-pricing.mdx` | References the self-serve tier |
+| `layers/3-stratum-1.md`, `layers/5-bedrock.md` | Terrain strata copy |
+| `migration/04-active-directory.md`, `migration/20-files.md` | Incidental references |
+| `faq/5-do-you-see-my-data.md` | Incidental |
+| `copy.ts`, `CLAIMS.md` | Strings and the claims ledger |
+
+**Nothing is deployed**, so no false claim is public. The honesty gate does not catch these because they
+were true when written — which is worth noting: a claims ledger is only as good as the last time someone
+re-read it against reality. `CLAIMS.md` needs a "verified on" date per row.
