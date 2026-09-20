@@ -16,7 +16,12 @@ run () {
 skip () { printf '\n\033[1m── %s ──\033[0m\n   \033[33mSKIP\033[0m  %s\n' "$1" "$2"; SKIP=$((SKIP+1)); }
 
 # ── §4.4 — no fabricated social proof, enforced mechanically ────────────────────────────────────────
-run "honesty gate (spec §4.4)" node tools/honesty-gate.mjs auros-web/src
+# NOTE: the four product repos are separate git repos (DECISIONS.md D6) and are gitignored here, so a
+# fresh checkout of the meta repo alone does not contain them. CI checks them out as siblings. If a
+# directory is genuinely absent we SKIP — but the gate itself still fails closed on an empty scan, which
+# is how we learned this: the first CI run reported FAIL rather than a false PASS.
+if [ -d auros-web/src ]; then run "honesty gate (spec §4.4)" node tools/honesty-gate.mjs auros-web/src
+else skip "honesty gate (spec §4.4)" "auros-web not checked out here"; fi
 
 # ── §4.3 — no untested image reaches a customer ─────────────────────────────────────────────────────
 if [ -f tools/gate.test.mjs ]; then run "publish gate (spec §4.3)" node --test tools/gate.test.mjs

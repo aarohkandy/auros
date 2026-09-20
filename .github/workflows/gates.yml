@@ -1,11 +1,18 @@
 # The gates, run on every push. A gate nobody runs is a gate that does not exist.
 # This calls ./verify — the same entry point a developer runs locally — so "passes locally" and
 # "passes in CI" cannot drift apart.
+#
+# The four product repos are separate git repos with separate lifetimes (DECISIONS.md D6), so they are
+# checked out as siblings here. That keeps ONE copy of each gate script rather than vendoring them into
+# four repos where they would drift.
 name: gates
 on:
   push:
   pull_request:
   workflow_dispatch:
+  schedule:
+    # Also keeps the repo "active" so GitHub does not disable scheduled workflows after 60 days.
+    - cron: '17 6 * * 1'
 
 defaults:
   run:
@@ -14,11 +21,27 @@ defaults:
 jobs:
   gates:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: aarohkandy/auros-web, path: auros-web }
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: aarohkandy/auros-recipes, path: auros-recipes }
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: aarohkandy/auros-installer, path: auros-installer }
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
+      - uses: actions/setup-go@v5
+        with: { go-version: '1.23' }
       - run: corepack enable
+      - name: What was checked out
+        run: |
+          for d in auros-web auros-recipes auros-installer; do
+            printf '%-18s %s\n' "$d" "$([ -d "$d" ] && echo present || echo ABSENT)"
+          done
       - name: Run every gate
         run: ./verify
