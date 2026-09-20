@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "auros-web-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--prefix", "auros-web", "astro", "preview", "--root", "auros-web", "--port", "4331"],
+      "port": 4331
+    }
+  ]
+}

@@ -7,7 +7,7 @@ anyone can reopen. **"It should work" is not evidence** (spec §4.3).
 
 | Gate | Criterion (binary) | Status | Evidence |
 |---|---|---|---|
-| 1 | `auros-base:hardened` builds in CI and boots in a VM | **IN PROGRESS** | pipeline proven as far as a qcow2; boot under test |
+| 1 | `auros-base:hardened` builds in CI and boots in a VM | **IN PROGRESS** | **path proven end to end** — [derived image → qcow2 → KVM boot in ~30 s](docs/evidence/2026-09-20-boot-path.md). Our *hardened* base still building. |
 | 2 | A recipe inherits from it; a base change propagates to it and to a running VM with no human action | pending | propagation built (`auros-recipes/.github/workflows/propagate.yml`); needs Gate 1 first |
 | 3 | 100/100 clean migrations and 20/20 clean aborts | **UNBLOCKED** | harness built (`auros-installer/.github/workflows/gate3.yml`); needs the tool to compile |
 | 4 | Site live; a stranger's configuration opens a valid PR | pending | content + schema done; configurator and Worker in build |
@@ -21,7 +21,10 @@ anyone can reopen. **"It should work" is not evidence** (spec §4.3).
   ([run](https://github.com/aarohkandy/auros-base/actions/runs/35538612202)).
 - The upstream base resolves to `sha256:911281f2…d0d2f1`, is **3.5 GB compressed**, and pulls in ~58 s.
 - A derived image builds, and `bootc container lint` passes on it.
-- `bootc-image-builder` produces a qcow2 from it, given a **≥20 GiB** root filesystem (D26).
+- `bootc-image-builder` produces a **4.4 GB** qcow2 from it in **~7 min**, given a ≥20 GiB root (D26).
+- **That qcow2 boots in QEMU under KVM and reaches a running system in ~30 seconds**, including
+  `bootc-status-update.target` — the mechanism check U1 reads
+  ([run](https://github.com/aarohkandy/auros-base/actions/runs/35539867513)).
 
 **Enforced mechanically, and each verified able to go red:**
 - §4.3 — no untested image publishes (`tools/gate.mjs`, fails closed).
@@ -31,7 +34,8 @@ anyone can reopen. **"It should work" is not evidence** (spec §4.3).
   `internal/safety` can reach the system disk, and asserts it is not vacuous.
 
 **Not proven, and not claimed:**
-- That the base image boots to a login prompt. Under test.
+- That **our hardened base** boots. The probe booted a *minimal derivative* — one marker file. Gate 1
+  needs `auros-base:hardened`, with policy modes, update agent and signing, through the full matrix.
 - That a base change propagates unattended within 20 minutes. Built, untested.
 - Anything about real hardware. No physical machine has been touched.
 
