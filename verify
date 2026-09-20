@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# One command that runs every gate Auros has. Run it before you believe anything.
+#
+# The point of a single entry point is that a gate nobody runs is a gate that does not exist. CI runs
+# exactly this script, so "it passes locally" and "it passes in CI" cannot drift apart.
+set -uo pipefail
+cd "$(dirname "$0")"
+
+PASS=0; FAIL=0; SKIP=0
+run () {
+  local name="$1"; shift
+  printf '\n\033[1m── %s ──\033[0m\n' "$name"
+  if "$@"; then printf '\033[32m   PASS\033[0m  %s\n' "$name"; PASS=$((PASS+1));
+  else printf '\033[31m   FAIL\033[0m  %s\n' "$name"; FAIL=$((FAIL+1)); fi
+}
+skip () { printf '\n\033[1m── %s ──\033[0m\n   \033[33mSKIP\033[0m  %s\n' "$1" "$2"; SKIP=$((SKIP+1)); }
+
+# ── §4.4 — no fabricated social proof, enforced mechanically ────────────────────────────────────────
+run "honesty gate (spec §4.4)" node tools/honesty-gate.mjs auros-web/src
+
+# ── §4.3 — no untested image reaches a customer ─────────────────────────────────────────────────────
+if [ -f tools/gate.test.mjs ]; then run "publish gate (spec §4.3)" node --test tools/gate.test.mjs
+else skip "publish gate (spec §4.3)" "tools/gate.test.mjs not present yet"; fi
+
+# ── §6B — a recipe may only ADD ─────────────────────────────────────────────────────────────────────
+if [ -f auros-recipes/package.json ]; then
+  run "recipe validator + compiler (spec §6B)" bash -c 'cd auros-recipes && (pnpm test 2>&1 | tail -30)'
+else skip "recipe toolchain (spec §6B)" "auros-recipes not scaffolded yet"; fi
+
+# ── §6C — the abort path is tested more than the happy path ─────────────────────────────────────────
+if command -v go >/dev/null 2>&1 && [ -f auros-installer/go.mod ]; then
+  run "installer safety core (spec §6C)" bash -c 'cd auros-installer && go vet ./... && go test ./... -count=1'
+else skip "installer safety core (spec §6C)" "go not installed locally — this runs in CI"; fi
+
+# ── §7 — the design system is fixed ─────────────────────────────────────────────────────────────────
+if [ -f tools/contrast.mjs ]; then run "WCAG AA contrast, measured (spec §7)" node tools/contrast.mjs
+else skip "contrast (spec §7)" "tools/contrast.mjs not present yet"; fi
+
+if [ -f auros-web/package.json ]; then
+  run "site builds (spec §6D)" bash -c 'cd auros-web && (pnpm build 2>&1 | tail -20)'
+else skip "site build (spec §6D)" "auros-web not scaffolded yet"; fi
+
+# ── The honesty check on our own state files ────────────────────────────────────────────────────────
+run "compat.tsv honesty (no vm row claims a physical column)" node tools/compat-lint.mjs
+
+printf '\n\033[1m════ %d passed · %d failed · %d skipped ════\033[0m\n' "$PASS" "$FAIL" "$SKIP"
+[ "$FAIL" -eq 0 ] || exit 1
