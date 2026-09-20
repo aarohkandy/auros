@@ -13,7 +13,7 @@
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs'
+import { mkdtempSync, writeFileSync, rmSync, readFileSync, readdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -313,6 +313,111 @@ test('an environment variable cannot change the CLI verdict', () => {
     assert.equal(run(env), base, `an environment variable changed the verdict: ${JSON.stringify(env)}`)
   }
   assert.notEqual(base, 0, 'the real ledger has no passes, so the baseline verdict must not be an allow')
+})
+
+// ── The call sites: every invocation in CI must be one this parser accepts ───────────────────────
+// THIS IS THE TEST THAT WAS MISSING, and its absence is why the publish gate had never once run.
+// build.yml called `gate.mjs record --results … --ledger … --checks …` and then
+// `gate.mjs check --digest … --results … --ledger …`. Neither subcommand has ever existed: "record"
+// and "check" were swallowed as the positional digest and the next token killed the parser with
+// exit 2. Under `shell: bash -euo pipefail` the step died before the gate ran, so the publish was
+// fail-closed by accident — and the same accident meant nothing could ever ship.
+//
+// Fifty-six tests called `decide()` and `main()` with arguments the tests themselves invented. Not
+// one of them called `main()` with the arguments CI actually uses. So this section does two things:
+// it pins the exact shapes as literals, and it reads every workflow in the tree and runs whatever it
+// finds there, so a future edit to a call site fails here rather than in production at 3am.
+
+const OK_DIGEST = OTHER            // a well-formed digest with no recorded pass: a REFUSAL, not a parse error
+const acceptsArgv = (argv) => {
+  const code = main(argv)
+  assert.notEqual(code, 2, `gate.mjs cannot parse this invocation: gate.mjs ${argv.join(' ')}`)
+  return code
+}
+
+test('the argv shapes build.yml uses are invocations this parser accepts', () => {
+  // Exit 1 (refused — the repo ledger is empty), never exit 2 (could not parse).
+  assert.equal(acceptsArgv([OK_DIGEST]), 1)
+  assert.equal(acceptsArgv([OK_DIGEST, '--image', BASE_IMAGE]), 1)
+  assert.equal(acceptsArgv([OK_DIGEST, '--image', BASE_IMAGE, '--recipe', 'lincoln']), 1)
+})
+
+test('the shapes CI actually shipped are rejected, and say so in terms that name the real program', () => {
+  const stderr = []
+  const orig = console.error
+  console.error = (...a) => stderr.push(a.join(' '))
+  try {
+    assert.equal(main(['record', '--results', 'results.json', '--ledger', 'meta/attest/passed-digests.tsv', '--checks', 'matrix/checks.yaml']), 2)
+    assert.equal(main(['check', '--digest', OK_DIGEST, '--results', 'results.json', '--ledger', 'meta/attest/passed-digests.tsv']), 2)
+    assert.equal(main(['--require-pass', 'results.json']), 2)
+  } finally { console.error = orig }
+  const text = stderr.join('\n')
+  assert.match(text, /no subcommands/, 'the refusal must say that subcommands do not exist')
+  assert.match(text, /record-pass\.mjs/, 'it must name the program that DOES write a pass, or the next author invents another one')
+})
+
+test('every gate.mjs invocation in every Auros workflow is one this parser accepts', () => {
+  const roots = ['auros-base', 'auros-recipes', 'auros-installer', 'auros-web', '.']
+    .map((r) => join(REPO_ROOT, r, '.github', 'workflows'))
+
+  const found = []
+  for (const dir of roots) {
+    let entries
+    try { entries = readdirSync(dir) } catch { continue }
+    for (const f of entries) {
+      if (!/\.ya?ml$/.test(f)) continue
+      // Fold shell line-continuations so a multi-line invocation is read as one command.
+      const text = readFileSync(join(dir, f), 'utf8').replace(/\\\n\s*/g, ' ')
+      for (const line of text.split('\n')) {
+        if (/^\s*#/.test(line)) continue                       // a YAML comment is documentation
+        // `a || b` is TWO commands, and a fallback chain is exactly where a broken call site hides —
+        // the reader's eye reads "if the first one fails we try the other", not "both are unparseable".
+        for (const part of line.split(/\s*(?:\|\||&&|;)\s*/)) {
+          const m = /(?:^|\s)node\s+(\S*gate\.mjs)\s*(.*)$/.exec(part)
+          if (!m) continue
+          found.push({ file: `${dir.replace(REPO_ROOT + '/', '')}/${f}`, raw: part.trim(), rest: m[2] })
+        }
+      }
+    }
+  }
+
+  for (const call of found) {
+    // Strip trailing shell noise, then unquote and substitute CI's own placeholders for concrete
+    // values. Substituting a digest for `${{ needs.build.outputs.digest }}` does not weaken the
+    // test: the parser's job is to accept the SHAPE, and the shape is what the call site controls.
+    const tokens = (call.rest.split(/\s+/).filter(Boolean))
+      .filter((t) => !['||', '&&', ';', '|'].includes(t))
+      .map((t) => t.replace(/^['"]|['"]$/g, ''))
+    const argv = []
+    let sawPositional = false
+    for (const t of tokens) {
+      const isPlaceholder = t.includes('${{') || /^\$\{?[A-Za-z_]\w*\}?$/.test(t)
+      if (t.startsWith('--')) { argv.push(t); continue }
+      if (argv.length && argv[argv.length - 1] === '--image') { argv.push(isPlaceholder ? BASE_IMAGE : t); continue }
+      if (argv.length && argv[argv.length - 1] === '--recipe') { argv.push(isPlaceholder ? 'lincoln' : t); continue }
+      if (!sawPositional) { argv.push(isPlaceholder ? OK_DIGEST : t); sawPositional = true; continue }
+      argv.push(t)
+    }
+    const orig = console.error
+    console.error = () => {}
+    let code
+    try { code = main(argv) } finally { console.error = orig }
+    assert.notEqual(code, 2,
+      `${call.file} invokes the gate in a way the gate cannot parse, so that step dies before the ` +
+      `gate runs and the workflow is gated on nothing:\n    ${call.raw}\n  parsed as: gate.mjs ${argv.join(' ')}\n` +
+      '  THE ONLY FORM THIS PROGRAM HAS: gate.mjs <sha256:…> [--image REF] [--recipe NAME].\n' +
+      '  Writing a pass is a different program in a different job: auros-base/matrix/run/record-pass.mjs\n' +
+      '  --results <file> --ledger <meta>/attest/passed-digests.tsv. Gate on the digest afterwards,\n' +
+      '  against a ledger fetched from origin, never against the file the same job just wrote.')
+  }
+
+  // Non-vacuity. A scan that finds nothing passes for the wrong reason, and this particular scan
+  // finding nothing would mean the publish gate is not called from any workflow at all.
+  const base = found.filter((c) => c.file.startsWith('auros-base/'))
+  assert.ok(base.length >= 1,
+    'found no `node …/gate.mjs …` invocation in auros-base/.github/workflows. Either the checkout is ' +
+    'incomplete, or nothing in the build pipeline calls the publish gate — and the second one is the ' +
+    'condition this whole file exists to make impossible.')
 })
 
 // ── The shipped ledger ───────────────────────────────────────────────────────────────────────────

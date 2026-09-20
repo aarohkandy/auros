@@ -455,3 +455,38 @@ Three ways forward, and this is the human's call:
    in the current build depends on the answer except website copy.
 
 **Blocking Gate 4 only**, not Gate 1/2/3. Recorded in BLOCKED.md B8.
+
+## D31 — Public repos, all rights reserved; wind-down handover as the trust story · 2026-09-20 · HUMAN
+
+**Visibility: public, all rights reserved.** Copying is illegal; reading is not prevented. The reason
+this is the right trade today is CI: public repos get unlimited Actions minutes, and this project has
+already spent tens of hours of runner time on VM builds and boots. Private would cap us at 2,000
+minutes/month — about 25 full runs — which would have made the last two hours of build-fix iteration
+impossible. Revisit when there is a customer, not before.
+
+**Trust story: the customer gets the image, and the build files if we cease.**
+
+The human's reply — *"they get the image as soon as we're done with it wdym"* — is right, and clarifying
+it sharpened what we are actually selling:
+
+The customer **always** has the image. It is installed on their laptops and it keeps booting whatever
+happens to us. That was never the risk, and answering "you get the image" does not answer the question
+they asked.
+
+What dies with us is the **maintenance**: the nightly rebuild against upstream that keeps it patched.
+Spec §1.1 says it plainly — *"The OS is not the product. The maintained image is the product."* So a
+school's real question is not *"do I have it"* but *"will it still be safe on my network in four years."*
+
+**The commitment, and it must be written as a real published term rather than a sentiment:** if Auros
+ceases operating, each customer receives the build files for their own image — the recipe, the base
+Containerfile and the build scripts — so they or anyone they hire can keep patching it. Not a licence to
+our tooling. Not redistribution rights. The specific artefacts needed to keep *their* machines alive.
+
+This costs us nothing while we exist, is worth a great deal to a buyer with no track record to check,
+and grants no rights to a competitor today — which was the whole objection to Apache.
+
+**Consequence for the site (BLOCKED.md B8 resolved):** the four replaceability sections change from
+*"clone this and rebuild it yourself, any time"* to *"you have the image; if we stop, you get what is
+needed to keep patching it."* Weaker, and true. The `replaceable.yml` CI job stays paused until there is
+a handover artefact to execute against — and when there is, it gets executed rather than asserted, same
+as before.

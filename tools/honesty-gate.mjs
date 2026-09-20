@@ -80,7 +80,13 @@ const RULES = [
     re: /\b(?:in our (?:experience|testing|deployments?)|machines we(?:'ve| have) built|schools we(?:'ve| have) (?:worked|migrated)|we(?:'ve| have) (?:seen|found|migrated|deployed|tested)\b(?!\s+(?:nothing|none|no ))|from what we(?:'ve| have) seen|every time we)\b/gi,
     notNegated: true },
   { id: 'time-estimate', why: 'An unmeasured duration is a number with no source, and the reader budgets from it. Say the SHAPE of the work (a per-machine visit) or measure it.',
-    re: /\b(?:takes?|in|about|roughly|around|under|only|just|budget)\s+(?:an?\s+)?(?:\d+|one|two|three|four|five|ten|fifteen|twenty|thirty|sixty|a few|couple of)[- ]?(?:second|minute|hour|day|week|afternoon|morning)s?\b/gi,
+    // Two shapes, because the published defects used both: a verb-led estimate ("it takes an
+    // afternoon per machine") and an adjectival one ("a thirty-second job"). The second is the one
+    // that matters most — it reads as trivial and it is per-machine work across a whole fleet.
+    // A configured schedule is not an estimate of human effort: "a 3-hour random delay" and a
+    // "15-minute poll" are values in a unit file and a cron line, not guesses at how long a job
+    // takes. The lookahead lets those through and keeps "a thirty-second job" caught.
+    re: /\b(?:\d+|one|two|three|four|five|six|ten|fifteen|twenty|thirty|forty|sixty|ninety|a few|a couple of)[- ](?:second|minute|hour|afternoon|morning)s?\b(?!\s*(?:random(?:i[sz]ed)? )?(?:delay|interval|timer|timeout|window|poll|cron|jitter))|\b(?:takes?|take|in|about|roughly|around|under|only|just|budget)\s+(?:an?\s+)?(?:\d+|one|two|three|four|five|ten|fifteen|twenty|thirty|sixty|a few|a couple of)[- ]?(?:second|minute|hour|day|week|afternoon|morning)s?\b/gi,
     notNegated: true },
   { id: 'perpetual-commitment', why: 'Duration of service is a commercial term and §9-reserved. An open-ended commitment attached to a one-time price is decided by publishing it, which is not an agent\'s decision to make.',
     re: /\b(?:for as long as we (?:are|exist)|in perpetuity|for life|lifetime (?:updates?|support|access)|always be (?:free|supported|maintained)|never stop(?:s|ping)? (?:updating|supporting))\b|\b(?:updates?|support(?:ed)?|maintained|rebuild(?:s|ing|t)?|included|free)\b[^.\n]{0,24}\bfor ?ever\b|\bfor ?ever\b[^.\n]{0,24}\b(?:free|supported|maintained|updates?)\b/gi,

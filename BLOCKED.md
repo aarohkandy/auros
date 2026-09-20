@@ -62,7 +62,7 @@ GitHub is not busy. The `repository_dispatch` path is instant and needs the cred
 *Not solvable without the credential.* Recorded so that a slow Gate 2 run is read as infrastructure
 latency rather than as a broken propagation design.
 
-## B8 — The site advertises replaceability, which proprietary licensing makes false · OPEN · blocks Gate 4
+## B8 — The site advertises replaceability, which proprietary licensing makes false · **RESOLVED 2026-09-20** → D31
 D30 made everything all-rights-reserved. Four places on the site now claim the opposite: the FAQ's
 "what happens when you go out of business" answer (clone-and-build instructions), the entire
 *Replaceable on purpose* page, the landing page's closing section, and
@@ -70,6 +70,6 @@ D30 made everything all-rights-reserved. Four places on the site now claim the o
 
 Publishing any of it now would be the fabricated claim §4.4 forbids.
 
-**Needs the human to pick a trust story** (DECISIONS.md D30 lists three). Gate 4's exit condition — a
-stranger configures a build and a PR appears — does not depend on the answer, so the mechanism can be
-finished while the copy waits. **No site content ships until this is resolved.**
+**Resolved:** D31. The claim becomes *"you have the image; if we cease operating you get the build
+files needed to keep patching it."* Weaker than the original and true. The four sections need rewriting
+before anything ships; the mechanism (configurator, order PR) never depended on the answer.
