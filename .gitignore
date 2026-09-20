@@ -9,3 +9,7 @@ node_modules/
 *.log
 .wrangler/
 dist/
+
+# HELD pending the owner: a go-to-market strategy may not belong in a public repo.
+# It was committed once without review (swept in by git add -A). See the session log.
+advertising/
