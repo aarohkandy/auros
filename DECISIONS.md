@@ -369,3 +369,45 @@ exactly the moment the promise is about not depending on us.
 than no artefact, so the drift check is not optional. It also gives the customer something genuinely
 useful: the diff of their Containerfile across two commits is a plain-English record of what changed on
 their machines.
+
+## D29 — The site must feel human and alive · 2026-09-20 · HUMAN
+Verbatim: *"also make sure the website feels human, not ai, like very lively and inviting, like a new
+thing thats happening, like the cool inviting future"*
+
+This is not in tension with §7, and reading it as "add motion" would be the exact mistake §7 warns
+about — *"the overcorrection against generic design is adding visual noise; restraint is the
+correction."* Every lever §7 bans (gradients, glow, particles, pulsing, hero animation) is a lever that
+makes a site feel **more** generated, not less, because every generated site reaches for them first.
+
+**What actually reads as AI-made**, and is therefore banned here as firmly as gradients:
+- Symmetric three-up card grids. Icon + heading + two hedged sentences, repeated.
+- "Why choose us." "Seamlessly." "Empower." "Revolutionary." "Simply." "In today's world."
+- Copy with no point of view — every sentence defensible, none of them anyone's opinion.
+- Stock structure: hero, features, testimonials, CTA. A reader recognises the skeleton before the words.
+- Perfect symmetry everywhere. Nothing decided, everything centred.
+- Claims with no number in them, or numbers with no source.
+
+**Where the life actually comes from.** Five sources, all of which are *true things*, which is why they
+cannot be faked and why a generated site does not have them:
+
+1. **The build console is the hero's living element.** Real pipeline output, streaming:
+   `pruning 214 packages` · `booting test vm · uefi-secureboot` · `✓ wifi associates` ·
+   `signed · cosign keyless`. §7 already says this "replaces every decorative animation impulse" and is
+   "more interesting than any animation and it is true." A thing genuinely happening on the page is the
+   most alive element a website can have, and we are one of very few products that can honestly show one.
+2. **Specificity.** Real digests, real package counts, the real 3.5 GB, the real Marathi sentence from
+   the example recipe. Concrete nouns are the difference between a person writing and a model averaging.
+3. **A voice with opinions.** The `.exe` page already does this — *"That is slower and it is the honest
+   version."* Someone decided that. Keep going.
+4. **Asymmetry and deliberate decisions.** The configurator is two unequal columns. The removal list is
+   longer than the install list and looks it. Not every section is a grid.
+5. **The terrain itself.** A hand-built pixel cross-section of the earth, generated from one seed, that
+   *means* something. Nobody's template has that.
+
+**The feeling to aim for**, in one line: *a small crew who found something true and are showing you,
+rather than a company presenting itself.* Early, specific, a bit opinionated, visibly made by people —
+and inviting precisely because it is not trying to look enormous.
+
+**What this does NOT license:** any new motion, gradient, shadow, radius over 3px, or remote asset. §7's
+ink and motion rules stand unchanged. The brief is warmth and life through *truth and voice*, not
+through effects.

@@ -8,7 +8,9 @@ The queue. Re-read at the start of every work session (spec §8). `[x]` done · 
 - [x] 0.3 Root state files: PROGRESS / TASKS / GATE / BLOCKED / DECISIONS
 - [x] 0.4 `hardware/compat.tsv` with header + `source` column, hour one
 - [x] 0.2 Create 4 public repos, licences, CODEOWNERS
-- [ ] 0.5 Publish-gate hook + `attest/passed-digests.tsv` ledger — must land BEFORE anything can build
+- [x] 0.5 Publish gate, four layers: `attest/passed-digests.tsv` ledger + `tools/gate.mjs` (CI **and** hook,
+      fails closed, no bypass) + `.claude/hooks/publish-gate.mjs` + `attest/README.md` on what each layer
+      does **not** protect against. 56 tests, `node --test tools/gate.test.mjs`, wired into `./verify`.
 - [x] 0.6 Skills: `recipe-compile`, `vm-check-matrix`, `driver-triage`, `theme-generate`
 
 ## W-A — auros-base (Gate 1 → Gate 2)
