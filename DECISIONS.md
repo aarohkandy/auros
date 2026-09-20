@@ -190,3 +190,21 @@ is what would catch the breakage, and it checks discoverability rather than trus
 `POST /repos/{other}/{repo}/dispatches`. (Note the commonly-cited recursion rule is not the cause — the
 docs explicitly exempt `repository_dispatch`.) Needs a PAT or a GitHub App installation token.
 Confirms BLOCKED.md **B2**; the scheduled-poll fallback stands and satisfies Gate 2's 20-minute window.
+
+## D19 — Standing CI rule: `set -o pipefail`, always · 2026-09-20 · AGENT
+Our own first boot probe piped a build step through `tail -40`. The pipeline's exit status was `tail`'s,
+so a **failing** `bootc-image-builder` was scored as a **passing** step, and the workflow reported success
+while producing no image at all.
+
+This is exactly the failure mode the check matrix exists to prevent, and it appeared in our own code
+within an hour of writing the matrix. Every workflow in every Auros repo therefore sets:
+
+```yaml
+defaults:
+  run:
+    shell: bash -euo pipefail {0}
+```
+
+The general form of the lesson, which matters more than the flag: **a step that cannot fail is not a
+check.** When adding any gate, the first question is "what would make this go red?", and if there is no
+answer, the gate is decoration.
