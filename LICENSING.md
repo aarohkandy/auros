@@ -20,6 +20,26 @@ asset is being forkable.
 agreement. It is a business decision, so if the human prefers MIT, that is theirs to make and it is one
 command right now.
 
+## Can we use Aurora? Yes.
+
+`ublue-os/aurora` is **Apache-2.0** (verified from the GitHub API, 2026-09-20). That is permissive: we
+may build on it commercially, modify it, redistribute derived images and charge for the service. There
+is no copyleft obligation on our recipes or tooling. What it asks is modest — retain the licence and
+copyright notices, state what we changed, and pass along a NOTICE file where one exists. We are
+Apache-2.0 ourselves, so there is no mixing question.
+
+**Two distinctions that matter more than Aurora's licence:**
+
+1. **Aurora's licence covers Aurora's build scripts, not everything inside the image.** The image
+   contains Fedora packages under their own individual terms. That is the ordinary position for anyone
+   shipping a Linux appliance, and the obligations travel with the packages — but it means **the website
+   must never imply the image has a single licence.**
+
+2. **The binding constraint on using Aurora is operational, not legal.** Upstream garbage-collects the
+   digest we pin (weekly, 90 days, keep 7 tags — D21). The licence permits mirroring; D21 is us
+   actually doing it. Without the mirror, "fork this and rebuild your exact operating system without us"
+   stops being true the moment upstream forgets, and that is the claim we advertise hardest.
+
 ## Upstream, verified from the GitHub API on 2026-09-20 rather than from memory
 
 | Project | Licence | What we use it for |
