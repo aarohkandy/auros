@@ -355,7 +355,23 @@ report line read better, is how the wall stops meaning anything.
 visible to the user rather than hidden from them, which is the property that matters. Details:
 `auros-installer/packaging/systemd/README.md`.
 
-## B16 — The only code path that moves the upstream pin does not exist · **FATAL** · OPEN · breaks the core promise
+## B16 — The only code path that moves the upstream pin does not exist · **RESOLVED 2026-09-20** (auros-base `c849612`)
+> **Resolved.** `cmd_drift` and `cmd_update` exist; `gate1-exit.yml` now calls `tools/mirror-upstream.sh`
+> instead of the nonexistent `mirror` subcommand. `tests/dispatch.test.sh` fails on any case-arm dispatch
+> to an undefined function in any shell script, and on any workflow calling a subcommand its script does
+> not dispatch; `tests/resolve-upstream.test.sh` drives drift/update against a stub registry. Both were
+> watched red on the pre-fix tree. Run live against ghcr.io on 2026-09-20: `aurora:stable` still at
+> `911281f2…`, `moved=false`. `pin-upstream.sh` (named in `auros.config.json:14`) is still a dangling
+> reference. **Not fixed by this:** §2.3 of SYSTEM-REVIEW — the trigger is still "digest moved", so our own
+> layer's CVEs and an upstream stall still never rebuild and still report green.
+>
+> *ID collision:* the publish-gate hook entry above is also numbered B16. Both are referenced by that
+> number elsewhere, so neither is renumbered; this one is "B16 (upstream pin)".
+>
+> *Also found:* `base.lock`'s `UPSTREAM_PULL_SIZE_BYTES=3758096384` is exactly 3.5 GiB, not a measurement.
+> The live read is **3,706,306,117**. `update` rewrites it on the next upstream move; not hand-edited here,
+> per the file's own rule.
+
 Found by the end-to-end system review (`docs/SYSTEM-REVIEW.md`), not by any test.
 
 `auros-base/tools/resolve-upstream.sh:269-270` dispatches `drift) cmd_drift ;;` and
