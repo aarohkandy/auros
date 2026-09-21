@@ -168,7 +168,7 @@ export function driftCheck (paths = DEFAULT_PATHS) {
   let checksText, profilesText
   try { checksText = readFileSync(paths.checks, 'utf8') } catch { return null }
   try { profilesText = readFileSync(paths.profiles, 'utf8') } catch {
-    return `${paths.checks} is readable but ${paths.profiles} is not — the matrix definition is half-present`
+    return null || `${paths.checks} is readable but ${paths.profiles} is not — the matrix definition is half-present`
   }
 
   const mv = /^matrix_version:\s*(\d+)\s*$/m.exec(checksText)

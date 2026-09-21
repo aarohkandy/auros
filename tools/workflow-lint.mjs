@@ -8,8 +8,9 @@
 //
 // Also checks that every workflow sets pipefail (D19), after a pipe through `tail` made a failing
 // build score as a passing step.
-import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs'
+import { join } from 'node:path'
+import { relative } from 'node:path'
 
 const roots = process.argv.slice(2)
 if (!roots.length) { console.error('workflow-lint: no roots given — refusing to report a pass'); process.exit(2) }
@@ -103,6 +104,40 @@ const check = (file) => {
         '${{ matrix.name }} or ${{ env.NAME }}; if a shell expansion really was intended, do it ' +
         'inside the `run:` block where it is one.', text: line.trim().slice(0, 120) })
     })
+  }
+
+  // A workflow GitHub REJECTS AT STARTUP produces a run with zero jobs, listed by its file path, and
+  // `gh run view --log-failed` shows nothing at all, because no step ever ran. That happened to
+  // gate3.yml. Document structure was fine; the expressions were not.
+  //
+  // These catch the two that actually occur: a matrix built from an input or expression that can be
+  // empty or a non-list, and a `uses:` pointing at a local file that is not in the repository.
+  const matrixFrom = text.match(/matrix:\s*\n\s+\w+:\s*\$\{\{\s*fromJSON\(([^)]*)\)/)
+  // A job guarded by an `if:` that tests the same expression is SAFE: GitHub evaluates the condition
+  // first and skips the job, so the matrix is never expanded. That is the mitigation this rule's own
+  // message recommends, and the rule flagged a correctly-guarded job in propagate.yml until it
+  // accounted for it. A lint that does not honour its own advice teaches people to ignore it.
+  const guardedBy = matrixFrom
+    ? new RegExp('if:[^\\n]*' + matrixFrom[1].trim().split(/[.\s]/).pop().replace(/[^\w]/g, '')).test(text)
+      || /if:[^\n]*!=\s*'\[\]'/.test(text)
+    : false
+  if (matrixFrom && !guardedBy && !/\|\|/.test(matrixFrom[1]) && !/'\[/.test(matrixFrom[1])) {
+    problems.push({ file, line: lines.findIndex(l => l.includes('fromJSON(')) + 1, why:
+      'a matrix built from fromJSON() with no fallback. If the expression yields an empty list, null, ' +
+      'or a non-array, GitHub REJECTS the workflow at startup: zero jobs, the run listed by file path, ' +
+      'and --log-failed shows nothing because nothing ran. Give it a default, e.g. ' +
+      "fromJSON(needs.x.outputs.y || '[\"placeholder\"]'), or guard the job with an if:.",
+      text: matrixFrom[0].split('\n').pop().trim().slice(0, 120) })
+  }
+  for (const m of text.matchAll(/^\s*uses:\s*(\.\/[^\s#]+)/gm)) {
+    const rel = m[1].replace(/^\.\//, '')
+    const repoRoot = file.slice(0, file.indexOf('.github/workflows'))
+    if (repoRoot && !existsSync(join(repoRoot, rel))) {
+      problems.push({ file, line: text.slice(0, m.index).split('\n').length, why:
+        `uses: ${m[1]} but that file does not exist in this repository. A local \`uses:\` that cannot ` +
+        'resolve is a startup rejection, not a step failure — zero jobs and an empty log.',
+        text: m[0].trim() })
+    }
   }
 
   // D19: a step that cannot fail is not a check.

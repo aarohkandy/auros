@@ -226,3 +226,99 @@ Being built now on branch `feat/linux-restore`, with the abort paths attacked be
 **The process lesson:** `TASKS.md` said this workstream was nearly done, because it tracked the tasks
 someone had written down rather than the deliverables the spec demands. Audit against the contract,
 not against your own list.
+
+## B16 — The publish gate's hook is installed for `Bash` only, so the ledger is one `Write` away · OPEN · needs a settings change, which is the owner's
+
+`.claude/hooks/publish-gate.mjs` protects four paths — `attest/passed-digests.tsv`, `.claude/hooks/`,
+`.claude/settings*.json`, `tools/gate.mjs` — and it protects them correctly. Fed a `Write` event for
+the ledger it exits **2** with the right message; that branch of the file works and was executed to
+confirm it.
+
+**It is never fed one.** `.claude/settings.json` registers the hook with `"matcher": "Bash"`, so the
+harness routes Bash tool calls to it and nothing else. The `event.tool_name !== 'Bash'` branch — the
+half that guards against `Write` and `Edit` — has never run and cannot run. It is a check that cannot
+fail, which §D34 says is not a check.
+
+**The concrete chain, each step verified against the installed hook:**
+
+| step | tool | hook verdict |
+|---|---|---|
+| append a `pass` row for any digest | `Write` / `Edit` | not routed to the hook at all |
+| `git add attest/passed-digests.tsv && git commit` | `Bash` | **exit 0** — `git` is not a mutator and there is no redirection, so `protectedWrites()` does not fire |
+| `git push` | `Bash` | exit 0 |
+
+After that, `tools/gate.mjs` reads the row, `build-recipe.yml` fetches the same file from
+`raw.githubusercontent.com/aarohkandy/auros/main` and publishes. No VM ever booted. The audit
+recorded in the hook's own comments proved the second half of this a while ago; what is new is that
+the first step needs no shell at all, so the guard added in response to that audit is bypassed by the
+default tool an agent reaches for.
+
+**The fix is one line** — `"matcher": "Bash|Write|Edit|MultiEdit|NotebookEdit"` — and it is in
+`.claude/settings.json`, which is the operator's harness configuration. An agent that can edit the
+file that installs its own gate does not have a gate, which is precisely why that path is on the
+protected list. **So this is written here instead of made.** It costs nothing to apply and it closes
+the only remaining step of the chain that does not already require a human.
+
+*Scope, honestly:* this is layer four of four (PLAN.md §3.2). It constrains one agent in one harness
+and does nothing about a person with an editor, another session, or CI. B17 is the part that would.
+
+## B17 — The attestation ledger is an unsigned TSV, so a typed row and a booted VM are the same evidence · OPEN · needs a decision about identity
+
+`tools/gate.mjs` refuses everything unless `attest/passed-digests.tsv` records a full pass for the
+exact digest. Every layer that matters reads that file: the CI publish step in
+`auros-recipes/.github/workflows/build-recipe.yml`, the equivalent in `auros-base`, and the hook. The
+file is tab-separated text in a git repository. Its only access control is write access to
+`aarohkandy/auros`.
+
+`attest/README.md` and `gate.mjs`'s own header already say this — *"a field that says pass is exactly
+what a broken or malicious harness would write"* — and both name the same fix: **the matrix harness
+signs `results.json` with the CI OIDC identity, and `decide()` verifies that signature** before it
+believes a row. Then a row typed by a person, or by an agent, or by a compromised runner outside the
+workflow, is distinguishable from one a machine produced.
+
+Why it is not being done here: it needs a decision about *which identity signs* and *where the public
+half lives* — the same class of question as B10's production signing key, and plausibly the same key
+custody. Choosing it unilaterally would be choosing an organisational credential, which §9 reserves.
+
+**Until it exists, no gate in this product is stronger than write access to one text file.** That is
+worth saying in those words on the page that lists what we have not solved, rather than only in the
+comments of the code that depends on it.
+
+## B18 — `/build-console` is unauthenticated and spends the same GitHub budget the order path needs · OPEN · needs a decision on the abuse control
+
+`GET /build-console?recipe=<name>` takes no token and is not rate limited. Each connection holds an
+SSE stream for up to eight minutes, polling `GET /actions/runs/{id}/jobs` every three seconds — about
+160 authenticated GitHub calls per connection, all against the **installation token that
+`/order-submit` also uses to open pull requests.**
+
+`routes/order.js` rate-limits orders twice, per address and globally, and its comment explains
+exactly why the global ceiling exists. The console has neither counter. A few dozen concurrent
+streams exhaust the installation's hourly budget, and the first thing that stops working is not the
+console — the console degrades honestly, which it was carefully written to do — it is
+`openRecipePr()`, which starts returning 502 to real customers.
+
+There is also a smaller, real disclosure: an unknown recipe name falls back to `main`, while a name
+with an order behind it returns that order's branch in the `hello` event
+(`order/<name>-<date>-<hash>`). So the endpoint answers "does a customer called X exist, and when did
+they order". The file's own comment refuses a "whatever is building right now" parameter *"because
+that would leak which customers exist"*; probing by name leaks the same thing more slowly. The
+pull request is public, so this is a confirmation rather than a revelation — but the argument written
+in the file is not currently true of the file.
+
+**Three options, and picking one is a product decision:**
+1. Rate-limit by address in KV, the way `/order-submit` already does. Cheapest. Also limits a
+   legitimate customer watching their own build reconnect after every runtime cut.
+2. Require the order's branch suffix (the YAML fingerprint already in the branch name) as an
+   unguessable token in the query string. Closes the enumeration too; means the console URL has to be
+   handed to the customer rather than constructed from their name.
+3. Serve the console from a cached KV snapshot refreshed by one scheduled poll, so viewers cost
+   nothing at GitHub. Most work; decouples the budget entirely.
+
+**Also folded in here, from the same review:** `src/pages/configure.astro` passed no `sitekey` to the
+configurator, so `dist/configure.html` shipped Cloudflare's published **test** sitekey. It now reads
+`PUBLIC_TURNSTILE_SITEKEY` and falls back to the test key for local builds (verified in both
+directions). That makes a real key *possible*; it does not make it *present*. **B14's go-live
+sequence needs a step that fails the deploy if the built page still carries
+`1x00000000000000000000AA`** — the Worker refuses a test SECRET on a reachable host, so a forgotten
+sitekey does not open the door, it refuses every single visitor, and Gate 4 fails on day one for a
+reason nothing in the repository would have named.

@@ -83,6 +83,21 @@ if [ -f auros-recipes/package.json ]; then
   run "recipe validator + compiler (spec §6B)" bash -euo pipefail -c 'cd auros-recipes && (pnpm test 2>&1 | tail -30)'
 else skip "recipe toolchain (spec §6B)" "auros-recipes not scaffolded yet"; fi
 
+# ── §6D — the order Worker, which is the only endpoint a stranger can reach ─────────────────────────
+# 244 tests over Turnstile, the schema the Worker validates with, the YAML emitter, the signature on
+# /build-result and the body of the pull request an order becomes. NOTHING RAN THEM. auros-web has
+# exactly one workflow and it snapshots the build console; `pnpm build` runs the terrain and a11y
+# tests and not these; this script did not mention the Worker at all. `worker/package.json`'s own
+# `test` script could not have run them either -- `node --test test/` resolves `test/` as a MODULE
+# path on Node 22 and dies with MODULE_NOT_FOUND before a single test executes, which is why nobody
+# noticed. Among the tests that were unreachable: schema-provenance.test.js, the one that asserts
+# the Worker validates against a schema byte-identical to the one auros-recipes uses in CI -- the
+# assertion behind the sentence a refused visitor is shown at the moment they are most inclined to
+# believe us. A suite nobody runs is a suite that does not exist.
+if [ -f auros-web/worker/package.json ]; then
+  run "order Worker (spec §6D)" bash -euo pipefail -c 'cd auros-web/worker && (node --test "test/*.test.js" 2>&1 | tail -20)'
+else skip "order Worker (spec §6D)" "auros-web/worker not checked out here"; fi
+
 # ── §6C — the abort path is tested more than the happy path ─────────────────────────────────────────
 if command -v go >/dev/null 2>&1 && [ -f auros-installer/go.mod ]; then
   run "installer safety core (spec §6C)" bash -euo pipefail -c 'cd auros-installer && go vet ./... && go test ./... -count=1'
