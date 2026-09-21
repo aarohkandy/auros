@@ -13,7 +13,7 @@ Two tools do the mechanical half. **Neither of them will answer a question a per
 
 | | |
 |---|---|
-| `auros-base/tools/capture-compat.sh` | runs **on the booted machine**; fills the observable columns from sysfs and prints the questions for the rest |
+| `auros-base/tools/capture-compat.sh --ask` | runs **on the booted machine**; fills the observable columns from sysfs and asks the seven questions it refuses to answer |
 | `auros-base/tools/quote-from-compat.mjs` | reads the table back; says **tested and works** / **tested, caveat** / **never seen** / **unsupported** |
 | `tools/compat-lint.mjs` (meta repo) | refuses a dishonest row before it can be committed |
 
@@ -41,6 +41,7 @@ auros-base/tools/capture-compat.sh --facts-out ~/t440s.facts
 It reads DMI, `/proc/cpuinfo`, `/proc/meminfo`, `/sys/firmware/efi`, `/sys/class/tpm` and the PCI/USB
 trees, and prints a partial row with `source=physical` plus a **facts file naming the path behind every
 single value**. It does not need `lspci`, `dmidecode` or root, and it does not need the network.
+(`--ask` does all of this and then puts the seven questions — see step 5.)
 
 The identifying columns are numeric by construction: `wifi=pci:8086:08b1;gpu=pci:8086:0a16`. **"Intel
 Wireless" is not a model** — two laptops five years apart carry that string and different silicon, and a
@@ -78,6 +79,14 @@ When something is broken, before writing `fail`: `journalctl -b -p warning`, the
 not, or nothing.
 
 ### 5 — Write the row
+
+```bash
+auros-base/tools/capture-compat.sh --ask --tester aaroh --row-out row.tsv
+```
+
+`--ask` puts the seven questions one at a time and offers SKIP explicitly, because "nobody tried this"
+has to be an easy answer to give — otherwise somebody gives a wrong one instead, and a wrong one is the
+only kind of row that costs us anything. The flag form is there for a second pass and for scripts:
 
 ```bash
 auros-base/tools/capture-compat.sh \
@@ -135,7 +144,7 @@ or mark the model `supported-with-caveat`, or propose `unsupported` to the human
 Both are tested in both directions and the suites will tell you if you have broken that:
 
 ```bash
-bash auros-base/tests/capture-compat.test.sh        # 110+ assertions, incl. mutating the script
+bash auros-base/tests/capture-compat.test.sh        # 132 assertions, incl. mutating the script
 node --test auros-base/tools/quote-from-compat.test.mjs
 node --test tools/compat-lint.test.mjs              # meta repo
 ```

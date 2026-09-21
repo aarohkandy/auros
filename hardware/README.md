@@ -50,13 +50,21 @@ because that would be a guess wearing the costume of an observation.
 
 ```
 # on the machine, as the person testing it
-auros-base/tools/capture-compat.sh                 # observable columns + the seven questions
-auros-base/tools/capture-compat.sh --wifi ok --trackpad ok --suspend ok \
-  --brightness partial --note-brightness "keys work, lowest step is still bright" \
-  --gpu ok --audio ok --webcam fail --tester aaroh --row-out row.tsv
+auros-base/tools/capture-compat.sh --ask --tester aaroh --row-out row.tsv
 
 # back here
 cat row.tsv >> hardware/compat.tsv && node tools/compat-lint.mjs
+```
+
+`--ask` probes the machine, then puts the seven questions one at a time, with SKIP offered explicitly
+because *"nobody tried this"* has to be an easy answer to give or people give a wrong one instead. The
+flag form is there for scripting and for a second pass:
+
+```
+auros-base/tools/capture-compat.sh \
+  --wifi ok --trackpad ok --suspend ok \
+  --brightness partial --note-brightness "keys work, lowest step is still bright" \
+  --gpu ok --audio ok --webcam fail --tester aaroh --row-out row.tsv
 ```
 
 ## Reading a row back
