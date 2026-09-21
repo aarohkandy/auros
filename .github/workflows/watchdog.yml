@@ -1,0 +1,62 @@
+# watchdog — the out-of-band check that the nightly is actually happening (SYSTEM-REVIEW §2.17, H1, H2).
+#
+# It lives HERE, not in auros-base, because a job inside a workflow cannot notice that workflow's own
+# absence: a disabled or rejected nightly runs nothing, including any step that would complain. This
+# reads the product repos' public Actions API (read-only) and keeps ONE issue labelled `watchdog` in
+# this repo open while anything is red. Logic and the list of checks: tools/watchdog.mjs.
+#
+# WHO WATCHES THE WATCHDOG. This repo is public, so GitHub will disable THIS schedule after 60 days
+# without a push, exactly like the nightly. A monthly heartbeat commit would fix that and is refused as
+# noise. Instead the watchdog checks this repo's own `pushed_at` along with the product repos', and goes
+# red at WATCHDOG_INACTIVITY_WARN_DAYS — i.e. it announces its own coming death in the issue, daily,
+# for the last 15 days while it can still run. RESIDUAL RISK, stated plainly: if nobody pushes to this
+# repo during those 15 days, the watchdog goes silent at day 60 and the only remaining signal is
+# GitHub's own "workflow disabled" email. Nothing inside GitHub Actions can close that gap without a
+# commit or an external scheduler; that trade is deliberate. The same applies to gates.yml's cron.
+#
+# A red run also fails this workflow, so GitHub's standard failure notification is a second channel
+# (and the only channel if the watchdog itself breaks, e.g. an API error — which is red, never green).
+name: watchdog
+
+on:
+  schedule:
+    # 07:47 and 19:47 UTC. The nightly fires at 04:17 and can take about an hour, so the morning run
+    # sees a fresh night; twice a day means a missed night is reported within ~40 h, not ~50.
+    - cron: '47 7,19 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read   # checkout of this repo
+  actions: read    # workflow list/runs (the product repos are public; this covers this repo)
+  issues: write    # the ONE `watchdog` issue, in THIS repo only
+
+concurrency:
+  group: watchdog
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash -euo pipefail {0}
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check the nightly, its schedule, and the propagate poll
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          # ── Owner-tunable thresholds ───────────────────────────────────────────────────────────
+          # Hours since auros-base's last COMPLETED scheduled nightly before it counts as missing.
+          # 24 h cadence + ~1 h build + GitHub's cron delay under load (BLOCKED.md B7).
+          WATCHDOG_NIGHTLY_MAX_AGE_HOURS: '30'
+          # Same, for auros-recipes' propagate.yml, which polls every 10 minutes.
+          WATCHDOG_PROPAGATE_MAX_AGE_HOURS: '3'
+          # Days without a push, in ANY Auros repo including this one, before warning. GitHub
+          # disables scheduled workflows in public repos at 60; this is the lead time you get.
+          WATCHDOG_INACTIVITY_WARN_DAYS: '45'
+        run: node tools/watchdog.mjs

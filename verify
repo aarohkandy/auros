@@ -78,6 +78,13 @@ if [ -f tools/workflow-lint.test.mjs ]; then
   run "workflow lint, both directions" node --test tools/workflow-lint.test.mjs
 else skip "workflow lint, both directions" "tools/workflow-lint.test.mjs not present yet"; fi
 
+# ── SYSTEM-REVIEW §2.17/H1/H2 — the out-of-band watchdog on the nightly, both directions ────────────
+# .github/workflows/watchdog.yml runs it against the live API; this runs it against canned API JSON,
+# every condition red and green, so the one thing watching the nightly is itself proven able to say no.
+if [ -f tools/watchdog.test.mjs ]; then
+  run "nightly watchdog, both directions" node --test tools/watchdog.test.mjs
+else skip "nightly watchdog, both directions" "tools/watchdog.test.mjs not present yet"; fi
+
 # ── §6B — a recipe may only ADD ─────────────────────────────────────────────────────────────────────
 if [ -f auros-recipes/package.json ]; then
   run "recipe validator + compiler (spec §6B)" bash -euo pipefail -c 'cd auros-recipes && (pnpm test 2>&1 | tail -30)'
