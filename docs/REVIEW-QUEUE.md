@@ -150,3 +150,41 @@ Still open, and worth deciding together with R6 once Gate 1 is green:
 Minor, deliberately left: the `pull_request` trigger's `paths-ignore` does not include `probe-*.yml`,
 only the `push` one does. Fixing it means editing `build.yml`, which correctly queues another
 fifty-minute build for a cosmetic asymmetry. It goes in with the next real change to that file.
+
+## R8 — `verify-meta` cannot currently prove the §4.3 publish gate propagates · OPEN · not mine to fix
+**Measured just now:** `node --test tools/verify-meta.test.mjs` → **59 tests, 54 pass, 5 fail, exit 1.**
+All five failures are the same error, and none of them is about the gate they name:
+
+```
+EEXIST: file already exists, symlink '/Users/aaroh/auros/auros-base' -> '…/s-7/auros-base'
+```
+
+**Cause.** The uncommitted `licence-consistency` change added `LICENCE_REPOS` and now does
+`mkdirSync(join(dir, r))` for `.`, `auros-base`, `auros-recipes`, `auros-installer` and `auros-web`
+in **every** sandbox. Four cases — both directions of *publish gate (spec §4.3)* and of *publish gate
+refusals* — call `s.link('.claude', 'auros-base')`, and `symlinkSync` will not create a link where a
+directory already exists. `mkdir -p` is idempotent; `symlink` is not.
+
+**Why it matters more than five red tests.** §4.3 is the prohibition that an untested image never
+reaches a customer, and these are the cases that prove a failure of that gate reaches `verify`'s exit
+status. They are red for a reason that has nothing to do with the gate, which is the worst state for a
+meta-test to be in: the signal is there and it is unreadable.
+
+**Fix, one line, in `link()` rather than in the loop** — the loop's directories are wanted, the
+collision is only with a case that wants a link at the same path:
+
+```js
+link (...names) {
+  for (const nme of names) {
+    rmSync(join(dir, nme), { recursive: true, force: true })   // a case that LINKS a sibling wins
+    symlinkSync(join(REPO, nme), join(dir, nme))               // over the empty one LICENCE_REPOS made
+  }
+  return api
+}
+```
+
+**Left alone deliberately:** `tools/verify-meta.test.mjs` and `tools/gate.mjs` are both modified in the
+working tree by whoever is writing the licence gate. Editing a file somebody is mid-edit on to fix
+their own in-flight change is how two agents lose an afternoon. The two cases added for the compat
+capture/quoting gates were verified separately against the current file and pass in both directions
+(`--test-name-pattern "compat (capture|quoting)"` → 4/4).
