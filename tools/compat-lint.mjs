@@ -10,6 +10,23 @@ import { readFileSync } from 'node:fs'
 const PHYSICAL_ONLY = ['wifi', 'trackpad', 'suspend', 'brightness', 'webcam']
 const PATH = 'hardware/compat.tsv'
 
+// ── the `ids` column, added when auros-base/tools/capture-compat.sh gave it somewhere to go ──────
+// GATE5-RUNBOOK step 1 and the driver-triage skill both say the same thing: "Intel Wireless" is not
+// a model, and a row that records a marketing name is a row we cannot match against the next
+// machine — which is the entire point of building this file. Until this column existed the runbook
+// demanded numeric IDs and the schema had nowhere to put them, so they were being dropped.
+//
+// Format: role=bus:vvvv:dddd, several roles separated by ';', several devices in one role by ','.
+//   wifi=pci:8086:08b1;gpu=pci:8086:0a16;webcam=usb:04f2:b39a
+// The point of the pattern is that a MARKETING NAME CANNOT SATISFY IT. "wifi=Intel Wireless-AC 7260"
+// is rejected here rather than discovered in four years when it matches nothing.
+const ONE_ID = '(pci|usb):[0-9a-f]{4}:[0-9a-f]{4}'
+const IDS_ENTRY = new RegExp(`^[a-z][a-z0-9_]*=${ONE_ID}(,${ONE_ID})*$`)
+// A TPM either is not there, or is one of exactly two generations. Anything else is a string
+// somebody typed. `2` and `1.2.0` and `TPM 2.0` all mean the same thing to a human and none of them
+// sort, filter or compare, so they are refused at the door.
+const TPM_VALUES = ['', 'none', '1.2', '2.0']
+
 let text
 try { text = readFileSync(PATH, 'utf8') } catch (e) {
   console.error(`compat-lint: cannot read ${PATH}: ${e.message} — failing closed`); process.exit(2)
@@ -18,7 +35,7 @@ const lines = text.split('\n').filter(l => l.trim() !== '')
 if (lines.length === 0) { console.error('compat-lint: file is empty, not even a header — failing closed'); process.exit(2) }
 
 const header = lines[0].split('\t')
-for (const required of ['model', 'year', 'source', 'verdict', ...PHYSICAL_ONLY]) {
+for (const required of ['model', 'year', 'source', 'verdict', 'ids', 'tpm', ...PHYSICAL_ONLY]) {
   if (!header.includes(required)) { console.error(`compat-lint: header is missing required column "${required}"`); process.exit(2) }
 }
 const idx = Object.fromEntries(header.map((h, i) => [h, i]))
@@ -39,6 +56,31 @@ rows.forEach((raw, n) => {
       if (v !== '') problems.push(`${PATH}:${lineNo}  vm row claims ${col}="${v}". A QEMU profile cannot observe ${col}. Leave it empty — empty is the honest value.`)
     }
   }
+  // ── ids ──────────────────────────────────────────────────────────────────────────────────────
+  const ids = (c[idx.ids] ?? '').trim()
+  if (source === 'physical' && ids === '') {
+    problems.push(`${PATH}:${lineNo}  a physical row with an empty ids column. Record the numeric PCI/USB IDs ` +
+      '(auros-base/tools/capture-compat.sh reads them out of sysfs). A row we cannot match against the next ' +
+      'machine is not the asset spec §8 describes; it is an anecdote.')
+  }
+  if (ids !== '') {
+    for (const entry of ids.split(';')) {
+      if (!IDS_ENTRY.test(entry)) {
+        problems.push(`${PATH}:${lineNo}  ids entry "${entry}" is not role=bus:vvvv:dddd with lowercase hex ` +
+          '(e.g. wifi=pci:8086:08b1, webcam=usb:04f2:b39a, two cards as role=a,b). A marketing name matches ' +
+          'nothing four years from now, which is when this file has to earn its keep.')
+      }
+    }
+  }
+
+  // ── tpm ──────────────────────────────────────────────────────────────────────────────────────
+  const tpm = (c[idx.tpm] ?? '').trim()
+  if (!TPM_VALUES.includes(tpm)) {
+    problems.push(`${PATH}:${lineNo}  tpm="${tpm}" — must be one of ${TPM_VALUES.filter(Boolean).join(', ')}, ` +
+      'or empty for "a TPM is present but we could not read its version". ' +
+      'GATE5-RUNBOOK defers BitLocker-on-TPM-1.2 to physical machines, and that check is selected by this column.')
+  }
+
   if ((c[idx.verdict] ?? '').trim() === 'unsupported' && source === 'vm') {
     problems.push(`${PATH}:${lineNo}  a vm row may not declare a model unsupported. That is a §9 decision reserved for a human, made on physical evidence.`)
   }

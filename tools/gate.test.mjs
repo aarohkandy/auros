@@ -642,3 +642,194 @@ test('a Write or Edit aimed at the ledger is refused, if such an event ever reac
   const ok = JSON.stringify({ tool_name: 'Write', tool_input: { file_path: '/Users/x/auros/README.md' } })
   execFileSync(process.execPath, [HOOK], { input: ok, stdio: 'pipe' })
 })
+
+// ═════════════════════════════════════════════════════════════════════════════════════════════════
+// DRIFT, AGAINST THE REAL MATRIX FILES
+//
+// There are already two drift tests above. Both point the gate at a STUB checks.yaml whose entire
+// content is a `matrix_version:` line. That stub is wrong in two ways at once — the version differs
+// AND the check set is empty — so either comparison alone refuses it, and deleting the other one
+// changes nothing that any test can see. A mutation run confirmed it: `if (Number(mv[1]) !==
+// MATRIX_VERSION)` → `if (false)` and `if (missing.length || extra.length)` → `&&` both survived the
+// full suite.
+//
+// Every test below therefore starts from the REAL matrix files and changes exactly one thing, so the
+// refusal is attributable to that thing. The first test is the control that makes the rest mean
+// something: an unedited copy of both real files must still ALLOW.
+// ═════════════════════════════════════════════════════════════════════════════════════════════════
+
+const realChecks = () => readFileSync(DEFAULT_PATHS.checks, 'utf8')
+const realProfiles = () => readFileSync(DEFAULT_PATHS.profiles, 'utf8')
+
+/** A fixture whose ledger is `ledgerText` and whose matrix files are copies (optionally edited). */
+function matrixFixture (ledgerText, { checks, profiles } = {}) {
+  tmp ??= mkdtempSync(join(tmpdir(), 'auros-gate-'))
+  const paths = fixture(ledgerText)
+  const put = (name, text) => {
+    const p = join(tmp, `${name}-${Math.random().toString(36).slice(2)}.yaml`)
+    writeFileSync(p, text)
+    return p
+  }
+  if (checks !== undefined) paths.checks = put('checks', checks)
+  if (profiles !== undefined) paths.profiles = put('profiles', profiles)
+  return paths
+}
+
+/** Delete the `- id: <id>` line from a matrix file, and prove the fixture actually changed. */
+function withoutId (text, id) {
+  const re = new RegExp(`^\\s*-?\\s*id:\\s*${id}\\s*$`)
+  const out = text.split('\n').filter((l) => !re.test(l)).join('\n')
+  assert.notEqual(out, text, `the fixture did not remove an "id: ${id}" line — it would prove nothing`)
+  return out
+}
+
+test('CONTROL: verbatim copies of the real matrix files still ALLOW', () => {
+  // Without this, every drift refusal below could be caused by the copying rather than by the edit.
+  const d = decide({ digest: DIGEST }, matrixFixture(ledgerWith(row()), {
+    checks: realChecks(), profiles: realProfiles(),
+  }))
+  assert.equal(d.allowed, true, `copying the real matrix files verbatim changed the verdict: ${d.reason}`)
+})
+
+test('REFUSES every digest when checks.yaml declares a different matrix_version than the gate', () => {
+  // The worst survivor of the run. Bump auros-base/matrix/checks.yaml to v2 while the gate still
+  // enforces v1 and the gate ALLOWED a pass recorded under v1 — the harness testing one matrix, the
+  // gate enforcing another, nothing red. checks.yaml's own comment says bumping the matrix
+  // INVALIDATES every previously recorded pass; this is the test that makes that sentence true.
+  const bumped = realChecks().replace(/^matrix_version:\s*\d+\s*$/m, `matrix_version: ${MATRIX_VERSION + 1}`)
+  assert.notEqual(bumped, realChecks(), 'the fixture did not change the matrix_version line')
+  const d = decide({ digest: DIGEST }, matrixFixture(ledgerWith(row()), { checks: bumped, profiles: realProfiles() }))
+  refused(d, 'matrix-drift')
+  // Both numbers, because a drift message naming one of them tells nobody which side to change.
+  assert.match(d.reason, new RegExp(`checks\\.yaml says ${MATRIX_VERSION + 1}`),
+    `the refusal must name the version the matrix declares; got: ${d.reason}`)
+  assert.match(d.reason, new RegExp(`this gate enforces ${MATRIX_VERSION}`),
+    `the refusal must name the version the gate enforces; got: ${d.reason}`)
+})
+
+test('REFUSES every digest when checks.yaml is BEHIND the gate, not only ahead of it', () => {
+  const older = realChecks().replace(/^matrix_version:\s*\d+\s*$/m, 'matrix_version: 0')
+  refused(decide({ digest: DIGEST }, matrixFixture(ledgerWith(row()), { checks: older, profiles: realProfiles() })), 'matrix-drift')
+})
+
+test('REFUSES when checks.yaml LACKS a check the gate requires — a deletion, in one direction only', () => {
+  // The most likely real edit: somebody removes a check they think is flaky. With the drift condition
+  // written as `missing.length && extra.length`, a pure deletion is invisible and the gate keeps
+  // certifying passes for a matrix that no longer runs that check.
+  for (const id of ['S10', 'S1', 'R1', 'B12', 'U1']) {
+    const d = decide({ digest: DIGEST }, matrixFixture(ledgerWith(row()), {
+      checks: withoutId(realChecks(), id), profiles: realProfiles(),
+    }))
+    refused(d, 'matrix-drift')
+    assert.match(d.reason, /gate requires but matrix lacks/, `deleting ${id} was reported as: ${d.reason}`)
+    assert.ok(d.reason.includes(id), `the refusal must name the missing check ${id}; got: ${d.reason}`)
+  }
+})
+
+test('REFUSES when checks.yaml DEFINES a check the gate does not require — an addition, one direction only', () => {
+  const added = `${realChecks()}\n  - id: S11\n    name: A check this gate has never heard of\n`
+  const d = decide({ digest: DIGEST }, matrixFixture(ledgerWith(row()), { checks: added, profiles: realProfiles() }))
+  refused(d, 'matrix-drift')
+  assert.match(d.reason, /matrix defines but gate does not require/, d.reason)
+  assert.match(d.reason, /S11/, `the refusal must name the extra check; got: ${d.reason}`)
+})
+
+test('REFUSES when profiles.yaml defines a profile the gate does not know', () => {
+  // The base-coverage rule ("the base must pass every profile in profiles.yaml") is computed from the
+  // gate's own KNOWN_PROFILES. Add an 8th profile to profiles.yaml and, with the drift check reduced
+  // to `pMissing.length`, the base is ALLOWED after passing only the 7 the gate knows — a gap in
+  // every customer fleet at once, and silent.
+  const added = realProfiles().replace(/^(\s*)- id: tpm12\s*$/m,
+    '$1- id: uefi-future\n$1  summary: A profile this gate has never heard of.\n$1- id: tpm12')
+  assert.notEqual(added, realProfiles(), 'the fixture did not add a profile')
+  const d = decide({ digest: DIGEST }, matrixFixture(ledgerWith(row()), { checks: realChecks(), profiles: added }))
+  refused(d, 'matrix-drift')
+  assert.match(d.reason, /matrix defines but gate does not know/, d.reason)
+  assert.match(d.reason, /uefi-future/, `the refusal must name the extra profile; got: ${d.reason}`)
+})
+
+test('REFUSES when profiles.yaml LACKS a profile the gate knows — the inverse, also untested until now', () => {
+  for (const id of ['bios-legacy', 'uefi-modern', 'tpm12']) {
+    const d = decide({ digest: DIGEST }, matrixFixture(ledgerWith(row()), {
+      checks: realChecks(), profiles: withoutId(realProfiles(), id),
+    }))
+    refused(d, 'matrix-drift')
+    assert.match(d.reason, /gate knows but matrix lacks/, d.reason)
+    assert.ok(d.reason.includes(id), `the refusal must name the missing profile ${id}; got: ${d.reason}`)
+  }
+})
+
+// ═════════════════════════════════════════════════════════════════════════════════════════════════
+// THE NAMESPACE BOUNDARY
+//
+// The existing foreign-image test uses `docker.io/someone/else`, which is obviously not ours and is
+// therefore refused by almost any implementation. Dropping the trailing slash from the namespace
+// prefix — `${registry}/${org}/` → `${registry}/${org}` — survived the whole suite, and it turns
+// every org whose NAME STARTS WITH ours into a member of our namespace. Namespace confusion, in the
+// one check that confirms the image is ours at all.
+// ═════════════════════════════════════════════════════════════════════════════════════════════════
+
+test('REFUSES an image in an org whose name merely STARTS WITH ours', () => {
+  const evilOrgs = [`${CONFIG.org}-evil`, `${CONFIG.org}x`, `${CONFIG.org}.attacker`, `${CONFIG.org}2`]
+  for (const org of evilOrgs) {
+    const image = `${CONFIG.registry}/${org}/${CONFIG.product}-base`
+    assert.ok(image.startsWith(`${CONFIG.registry}/${CONFIG.org}`),
+      `the fixture "${image}" is not actually a prefix collision, so it tests the wrong thing`)
+    assert.ok(!image.startsWith(`${CONFIG.registry}/${CONFIG.org}/`), 'and it must not be genuinely ours')
+    const d = decide({ digest: DIGEST }, fixture(ledgerWith(row({ image }))))
+    refused(d, 'foreign-image')
+    assert.ok(d.reason.includes(image), `the refusal must name the image it rejected; got: ${d.reason}`)
+  }
+})
+
+test('REFUSES a registry whose name merely starts with ours', () => {
+  for (const registry of [`${CONFIG.registry}.evil.com`, `${CONFIG.registry}x`]) {
+    refused(decide({ digest: DIGEST }, fixture(ledgerWith(row({
+      image: `${registry}/${CONFIG.org}/${CONFIG.product}-base`,
+    })))), 'foreign-image')
+  }
+})
+
+test('CONTROL: a genuine image in our namespace, including a longer NAME, still ALLOWS', () => {
+  // The boundary cuts on the org separator, not on string length: `auros-base-kiosk` is ours.
+  assert.equal(decide({ digest: DIGEST }, fixture(ledgerWith(row()))).allowed, true)
+  assert.equal(decide({ digest: DIGEST }, fixture(ledgerWith(row({
+    image: `${CONFIG.registry}/${CONFIG.org}/${CONFIG.product}-base-kiosk`,
+  })))).allowed, true)
+})
+
+// ═════════════════════════════════════════════════════════════════════════════════════════════════
+// A BROKEN CONFIG IS A BROKEN CONFIG, AND MUST SAY SO
+//
+// Not a fail-open: with `!config.registry && !config.org`, a config declaring only `registry` still
+// refuses — but as `foreign-image`, because the prefix becomes "ghcr.io/undefined/". At 2am the
+// operator is told the recorded image is foreign when the real fault is auros.config.json, and the
+// fix goes in the wrong direction. The existing test for this branch asserts no code at all, so any
+// refusal satisfies it.
+// ═════════════════════════════════════════════════════════════════════════════════════════════════
+
+test('REFUSES with code bad-config when auros.config.json declares only half the namespace', () => {
+  tmp ??= mkdtempSync(join(tmpdir(), 'auros-gate-'))
+  const cases = [
+    ['only registry', { registry: CONFIG.registry, product: CONFIG.product }],
+    ['only org', { org: CONFIG.org, product: CONFIG.product }],
+    ['neither', { product: CONFIG.product }],
+    ['an empty registry string', { registry: '', org: CONFIG.org }],
+    ['an empty org string', { registry: CONFIG.registry, org: '' }],
+  ]
+  for (const [what, cfg] of cases) {
+    const p = join(tmp, `config-${Math.random().toString(36).slice(2)}.json`)
+    writeFileSync(p, JSON.stringify(cfg))
+    const d = decide({ digest: DIGEST }, fixture(ledgerWith(row()), { config: p }))
+    refused(d, 'bad-config')
+    assert.match(d.reason, /registry and org/,
+      `a config with ${what} must be reported as a broken config, not as a foreign image; got: ${d.reason}`)
+  }
+})
+
+test('CONTROL: a config declaring both halves ALLOWS, so bad-config is not refusing everything', () => {
+  tmp ??= mkdtempSync(join(tmpdir(), 'auros-gate-'))
+  const p = join(tmp, `config-good-${Math.random().toString(36).slice(2)}.json`)
+  writeFileSync(p, JSON.stringify({ registry: CONFIG.registry, org: CONFIG.org, product: CONFIG.product }))
+  assert.equal(decide({ digest: DIGEST }, fixture(ledgerWith(row()), { config: p })).allowed, true)
+})

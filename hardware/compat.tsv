@@ -1,1 +1,1 @@
-model	year	source	cpu	ram_gb	firmware	wifi	trackpad	suspend	brightness	gpu	audio	webcam	verdict	notes	tested_on	tester
+model	year	source	cpu	ram_gb	firmware	ids	tpm	wifi	trackpad	suspend	brightness	gpu	audio	webcam	verdict	notes	tested_on	tester

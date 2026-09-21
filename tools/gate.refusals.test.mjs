@@ -22,7 +22,7 @@
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  mkdtempSync, writeFileSync, mkdirSync, symlinkSync, chmodSync, rmSync, readFileSync,
+  mkdtempSync, writeFileSync, mkdirSync, symlinkSync, chmodSync, rmSync, readFileSync, realpathSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, dirname } from 'node:path'
@@ -30,7 +30,7 @@ import { fileURLToPath } from 'node:url'
 import { execFileSync } from 'node:child_process'
 
 import {
-  decide, main, parseLedger,
+  decide, main, parseLedger, assertPublishable,
   MATRIX_VERSION, REQUIRED_CHECKS, KNOWN_PROFILES, HEADER, DEFAULT_PATHS, DIGEST_RE,
 } from './gate.mjs'
 
@@ -549,6 +549,607 @@ describe('the repository as it stands', () => {
       'found no gate.mjs invocation in any checked-out workflow. Either no repo is checked out beside us, or ' +
       'nothing calls the publish gate at all — and this test refuses to pass on an empty scan either way.')
     assert.deepEqual(problems, [], `\n  - ${problems.join('\n  - ')}\n`)
+  })
+})
+
+
+// ═════════════════════════════════════════════════════════════════════════════════════════════════
+// 7. WHAT A MUTATION RUN FOUND THIS SUITE COULD NOT SEE
+//
+// Everything from here down was written against a specific surviving mutation: a change to
+// tools/gate.mjs that made the gate weaker while all 334 tests stayed green. Each block names the
+// mutation it kills, and each was confirmed by re-applying that mutation and watching the new test
+// go red. A test added without re-running the mutation is a guess.
+//
+// The two rules they all obey, both of which came from real bugs in this repo:
+//   1. A check that cannot fail is not a check. Every block below has a stated answer to "what makes
+//      this go red?", and a CONTROL asserting the same fixture minus the one defect still ALLOWS.
+//   2. Test the refusals harder than the happy path.
+// ═════════════════════════════════════════════════════════════════════════════════════════════════
+
+// ── 7.1 The header is the ledger's schema declaration ────────────────────────────────────────────
+// M01: `fields.length !== HEADER.length || fields.some(...)` → `fields.some(...)`.
+// `some()` only iterates the fields that are PRESENT, so a header of 8 columns matches the first 8
+// of HEADER vacuously and the file is accepted. A row underneath it then publishes. If the header can
+// be short, the file a reviewer reads and the file the gate parses are not the same document.
+describe('the header must be the whole header', () => {
+  test('REFUSES a header with FEWER columns than HEADER', () => {
+    const short = HEADER.slice(0, -1).join('\t')            // recorded_by dropped
+    const d = refuses(at(`${short}\n${rowLine()}\n`), 'a header missing its last column')
+    assert.equal(d.code, 'malformed-ledger')
+    assert.match(d.reason, /header must be exactly/)
+  })
+
+  test('REFUSES a header truncated at EVERY prefix length, not merely by one column', () => {
+    for (let k = 1; k < HEADER.length; k++) {
+      const d = decide({ digest: DIGEST }, at(`${HEADER.slice(0, k).join('\t')}\n${rowLine()}\n`))
+      assert.equal(d.allowed, false,
+        `a ${k}-column header was accepted as this ledger's schema, and the row under it published`)
+      assert.equal(d.code, 'malformed-ledger', `a ${k}-column header refused as ${d.code}`)
+    }
+  })
+
+  test('REFUSES a header with MORE columns than HEADER', () => {
+    refuses(at(`${HEADER.join('\t')}\textra\n${rowLine()}\n`), 'an over-long header')
+  })
+
+  test('REFUSES a header whose columns are the right ones in the wrong ORDER', () => {
+    const swapped = [...HEADER]
+    ;[swapped[0], swapped[1]] = [swapped[1], swapped[0]]
+    refuses(at(`${swapped.join('\t')}\n${rowLine()}\n`), 'digest and image transposed')
+  })
+
+  test('CONTROL: the exact header, and only the exact header, ALLOWS', () => {
+    allows(at(GOOD), 'the unmodified header')
+  })
+})
+
+// ── 7.2 Every required check, one at a time ──────────────────────────────────────────────────────
+// M36: `REQUIRED_CHECKS.filter(...)` → `REQUIRED_CHECKS.slice(1).filter(...)`, so S1 is never
+// required and a row recording 27 of 28 checks publishes. It survived because EVERY incomplete-checks
+// test in this repo dropped the LAST element (`REQUIRED_CHECKS.slice(0, -1)`). One check at one end
+// of one array, untested — which is the exact shape of "a skipped check is a failed check" failing
+// silently. A loop over the whole matrix is the only thing that closes it, and it stays correct when
+// the matrix grows.
+describe('a skipped check is a failed check — every id in the matrix, individually', () => {
+  for (const missing of REQUIRED_CHECKS) {
+    test(`REFUSES a row whose checks_passed omits ${missing}`, () => {
+      const kept = REQUIRED_CHECKS.filter((c) => c !== missing)
+      assert.equal(kept.length, REQUIRED_CHECKS.length - 1, 'the fixture did not actually drop a check')
+      const d = refuses(at(`${headerLine()}\n${rowLine({
+        checks_passed: `${kept.join(',')}/${REQUIRED_CHECKS.length}`,   // declared count still says 28
+      })}\n`), `${missing} absent from a row that still declares a full matrix`)
+      assert.equal(d.code, 'incomplete-checks')
+      assert.ok(d.reason.includes(`missing ${missing}.`),
+        `the refusal must name ${missing}, or the operator does not know which check to go and run; got: ${d.reason}`)
+    })
+  }
+
+  test(`CONTROL: all ${REQUIRED_CHECKS.length} checks recorded ALLOWS — the loop above is not vacuous`, () => {
+    allows(at(GOOD), 'a complete check set')
+  })
+})
+
+// ── 7.3 A duplicated check id cannot pad a row to look complete ──────────────────────────────────
+// M38: `if (chk.items.length !== checkSet.size)` → `if (false)`. Duplication is how a row pads its
+// count to look complete while a real check is absent: the declared-count test and the missing-set
+// test are both satisfied because the SET still contains everything. The suite had a duplicate-PROFILE
+// test, so the pattern was known — there was simply no duplicate-CHECK test.
+describe('duplicate check ids', () => {
+  test('REFUSES a row whose checks_passed lists a check twice', () => {
+    const d = refuses(at(`${headerLine()}\n${rowLine({
+      checks_passed: `S1,${REQUIRED_CHECKS.join(',')}/${REQUIRED_CHECKS.length}`,
+    })}\n`), 'S1 listed twice')
+    assert.equal(d.code, 'duplicate-check')
+    assert.match(d.reason, /twice/)
+  })
+
+  test('REFUSES a duplicate standing in for a check that genuinely did not run', () => {
+    // The hostile shape: R1 never ran, S1 is written twice, the declared count still says 28. It
+    // refuses as `duplicate-check` and not `incomplete-checks` because the duplicate test runs first
+    // in decide(). Asserting the code the gate ACTUALLY returns rather than the one that reads best —
+    // a test written to the prettier code gets "fixed" later by reordering the gate.
+    const padded = ['S1', ...REQUIRED_CHECKS.filter((c) => c !== 'R1')]
+    assert.equal(padded.length, REQUIRED_CHECKS.length, 'the fixture must be the right LENGTH, which is the point')
+    assert.equal(new Set(padded).size, REQUIRED_CHECKS.length - 1, 'and must genuinely be missing one id')
+    const d = refuses(at(`${headerLine()}\n${rowLine({
+      checks_passed: `${padded.join(',')}/${REQUIRED_CHECKS.length}`,
+    })}\n`), 'a duplicate padding out an absent R1')
+    assert.equal(d.code, 'duplicate-check')
+  })
+
+  test('REFUSES a duplicate of EVERY id in the matrix, not just the first', () => {
+    for (const c of REQUIRED_CHECKS) {
+      const d = decide({ digest: DIGEST }, at(`${headerLine()}\n${rowLine({
+        checks_passed: `${[c, ...REQUIRED_CHECKS].join(',')}/${REQUIRED_CHECKS.length}`,
+      })}\n`))
+      assert.equal(d.allowed, false, `a row listing ${c} twice was ALLOWED`)
+      assert.equal(d.code, 'duplicate-check', `${c} duplicated refused as ${d.code}`)
+    }
+  })
+
+  test('CONTROL: the same set with no duplicate ALLOWS', () => {
+    allows(at(GOOD), 'no duplicated check')
+  })
+})
+
+// ── 7.4 The declared check count, in BOTH directions ─────────────────────────────────────────────
+// M35: `chk.declared !== REQUIRED_CHECKS.length` → `<`. A row declaring 29 required checks while
+// listing the 28 this matrix defines was ALLOWED. A row that disagrees with the gate about how many
+// checks EXIST was written against a different matrix — that is what the code comment says, and only
+// the too-few direction was ever tested.
+describe('the declared check count must EQUAL the matrix', () => {
+  test('REFUSES a row declaring MORE required checks than the matrix defines', () => {
+    const d = refuses(at(`${headerLine()}\n${rowLine({
+      checks_passed: `${REQUIRED_CHECKS.join(',')}/${REQUIRED_CHECKS.length + 1}`,
+    })}\n`), `declared ${REQUIRED_CHECKS.length + 1} where the matrix has ${REQUIRED_CHECKS.length}`)
+    assert.equal(d.code, 'wrong-check-count')
+    assert.match(d.reason, new RegExp(`declares ${REQUIRED_CHECKS.length + 1} required checks`), d.reason)
+  })
+
+  test('REFUSES a row declaring FEWER required checks than the matrix defines', () => {
+    const d = refuses(at(`${headerLine()}\n${rowLine({
+      checks_passed: `${REQUIRED_CHECKS.join(',')}/${REQUIRED_CHECKS.length - 1}`,
+    })}\n`), 'declared one too few')
+    assert.equal(d.code, 'wrong-check-count')
+  })
+
+  test('equality is the ONLY accepted relation — a sweep either side of the boundary', () => {
+    for (const delta of [-5, -2, -1, 1, 2, 5, 100]) {
+      const declared = REQUIRED_CHECKS.length + delta
+      const d = decide({ digest: DIGEST }, at(`${headerLine()}\n${rowLine({
+        checks_passed: `${REQUIRED_CHECKS.join(',')}/${declared}`,
+      })}\n`))
+      assert.equal(d.allowed, false, `a declared count of ${declared} was ACCEPTED against a matrix of ${REQUIRED_CHECKS.length}`)
+      assert.equal(d.code, 'wrong-check-count', `declared ${declared} refused as ${d.code}`)
+    }
+    allows(at(GOOD), `declared count exactly ${REQUIRED_CHECKS.length}`)
+  })
+})
+
+// ── 7.5 The profile count, in BOTH directions ────────────────────────────────────────────────────
+// M32: `prof.items.length !== prof.declared` → `<`. A row claiming `uefi-modern,bios-legacy/1` — two
+// profiles passed, one bound — was ALLOWED. The row is internally inconsistent, which means the
+// recording procedure did not write it, and an inconsistent row is the first sign of a hand-edited
+// ledger. Only the fewer-than-declared direction was tested.
+describe('the profile count must EQUAL the number of ids listed', () => {
+  const profileRow = (over) => at(`${headerLine()}\n${rowLine({ recipe: 'lincoln', ...over })}\n`)
+
+  test('REFUSES a row listing MORE profiles than it declares bound', () => {
+    const d = refuses(profileRow({ profiles_passed: 'uefi-modern,bios-legacy/1' }), '2 listed, 1 bound')
+    assert.equal(d.code, 'partial-profile-pass')
+    assert.match(d.reason, /2 of 1/, d.reason)
+  })
+
+  test('REFUSES a row listing FEWER profiles than it declares bound', () => {
+    const d = refuses(profileRow({ profiles_passed: 'uefi-modern,bios-legacy/3' }), '2 listed, 3 bound')
+    assert.equal(d.code, 'partial-profile-pass')
+    assert.match(d.reason, /2 of 3/, d.reason)
+  })
+
+  test('items.length === declared is the only accepted relation, swept both ways', () => {
+    const ids = ['uefi-modern', 'bios-legacy', 'low-ram']
+    for (let declared = 1; declared <= 6; declared++) {
+      const d = decide({ digest: DIGEST }, profileRow({ profiles_passed: `${ids.join(',')}/${declared}` }))
+      if (declared === ids.length) {
+        assert.equal(d.allowed, true, `${ids.length} profiles bound to ${declared} was REFUSED: ${d.reason}`)
+      } else {
+        assert.equal(d.allowed, false, `${ids.length} profiles listed against ${declared} bound was ALLOWED`)
+        assert.equal(d.code, 'partial-profile-pass', `declared ${declared} refused as ${d.code}`)
+      }
+    }
+  })
+})
+
+// ── 7.6 matrix_version is an integer, not something that merely BEGINS like one ──────────────────
+// M10: `/^\d+$/` → `/^\d+/`. Two separate fail-opens. (a) A row whose matrix_version is `1.0` is
+// ALLOWED, because Number('1.0') === 1. (b) A garbage matrix_version in ANY OTHER row stops making
+// the ledger malformed, so a good row beside it publishes where the whole file was previously
+// refused — which breaks the documented invariant "ANY row malformed, not merely the row being
+// asked about".
+describe('matrix_version shape', () => {
+  const NOT_INTEGERS = ['1.0', '1.', '1e0', '0x1', '01x', '1_000', '1-', '+1', '1 ', ' 1', '1١', '1,0']
+  for (const v of NOT_INTEGERS) {
+    test(`REFUSES a row whose matrix_version is ${JSON.stringify(v)}`, () => {
+      const d = refuses(at(`${headerLine()}\n${rowLine({ matrix_version: v })}\n`), `matrix_version ${JSON.stringify(v)}`)
+      assert.equal(d.code, 'malformed-ledger',
+        `${JSON.stringify(v)} was not treated as a malformed matrix_version. Number(${JSON.stringify(v)}) is ` +
+        `${Number(v)}, so an unanchored shape check lets it through as a pass under the CURRENT matrix.`)
+    })
+  }
+
+  test('ONE row with a non-integer matrix_version poisons the WHOLE ledger', () => {
+    const OTHER_DIGEST = 'sha256:' + 'cd34'.repeat(16)
+    const good = rowLine()
+    const bad = rowLine({ digest: OTHER_DIGEST, matrix_version: '1.0' })
+    const d = refuses(at(`${headerLine()}\n${good}\n${bad}\n`), 'a perfect row beside a "1.0" row')
+    assert.equal(d.code, 'malformed-ledger',
+      'the queried row is perfect; it must still be refused, because a file we cannot fully parse is a ' +
+      'file whose silence about any digest means nothing')
+    // CONTROL: the same two rows with the second one's version repaired DO allow, so the refusal
+    // above is caused by "1.0" and not merely by a second row existing.
+    allows(at(`${headerLine()}\n${good}\n${rowLine({ digest: OTHER_DIGEST })}\n`), 'two well-formed rows')
+  })
+
+  test('CONTROL: a plain integer matrix_version ALLOWS', () => {
+    allows(at(GOOD), 'matrix_version 1')
+  })
+})
+
+// ── 7.7 A comment is a line that STARTS with #, not a line that contains one ─────────────────────
+// M15: `raw.startsWith('#')` → `raw.includes('#')`. A malformed row containing a '#' anywhere — a URL
+// fragment is enough — is silently treated as a comment and vanishes, so the ledger parses clean and
+// a DIFFERENT digest publishes where it was previously refused. It also deletes legitimate rows: a
+// recorded pass disappears with no diagnostic at all.
+describe('comment detection', () => {
+  const FRAG_URL = 'https://github.com/aarohkandy/auros-base/actions/runs/1234567890#step:7:42'
+  const OTHER_DIGEST = 'sha256:' + 'cd34'.repeat(16)
+
+  test('a MALFORMED row containing a # is still malformed, not a comment', () => {
+    const d = refuses(at(`${headerLine()}\n${rowLine()}\n${rowLine({
+      digest: OTHER_DIGEST, run_url: FRAG_URL, recorded_by: '',
+    })}\n`), 'a broken row wearing a URL fragment')
+    assert.equal(d.code, 'malformed-ledger')
+    assert.match(d.reason, /recorded_by/,
+      'the defect must be REPORTED. If the row is skipped as a comment it vanishes, the file parses ' +
+      'clean, and the queried digest publishes.')
+  })
+
+  test('a WELL-FORMED row containing a # is still FOUND — the other half, so this cannot pass by refusing everything', () => {
+    allows(at(`${headerLine()}\n${rowLine({ run_url: FRAG_URL })}\n`), 'a valid row whose run_url carries a fragment')
+  })
+
+  test('a row that contains a # and is malformed for some OTHER reason is still reported', () => {
+    // Each of these carries a '#' somewhere AND a defect somewhere else. If '#' anywhere makes a line
+    // a comment, the row vanishes, the file parses clean, and the QUERIED digest publishes.
+    const cases = [
+      ['a # in the recipe name', { recipe: 'lincoln#2' }],
+      ['a # in recorded_by beside an unopenable run_url', { recorded_by: 'ci#1', run_url: 'internal-build-9' }],
+      ['a # in the run_url beside a date that does not exist', { run_url: FRAG_URL, recorded_at: '2026-02-30T00:00:00Z' }],
+      ['a # in the image field', { image: `${BASE_IMAGE}#latest` }],
+    ]
+    for (const [what, over] of cases) {
+      const d = decide({ digest: DIGEST }, at(`${headerLine()}\n${rowLine()}\n${rowLine({ digest: OTHER_DIGEST, ...over })}\n`))
+      assert.equal(d.allowed, false, `a second row with ${what} was skipped as a comment, and the queried digest published`)
+      assert.equal(d.code, 'malformed-ledger', `${what}: got ${d.code}`)
+    }
+  })
+
+  test('a # in a field with NO shape rule is legal, and the row is kept, not deleted', () => {
+    // The other half of M15, and the half that matters to an operator: `includes('#')` does not only
+    // let bad rows through, it silently DELETES good ones. recorded_by has no shape rule beyond
+    // "non-empty, unpadded", so `github-actions[bot]#1` is a perfectly legal value.
+    const paths = at(`${headerLine()}\n${rowLine({ recorded_by: 'github-actions[bot]#1' })}\n`)
+    allows(paths, 'a valid row whose recorded_by contains a #')
+    const { rows, problems } = parseLedger(readFileSync(paths.ledger, 'utf8'))
+    assert.deepEqual(problems, [], 'the row is well-formed')
+    assert.equal(rows.length, 1, 'a legitimate recorded pass was deleted by the comment rule with no diagnostic at all')
+  })
+
+  test('CONTROL: a LEADING # really is a comment, at the top of the file and between rows', () => {
+    allows(at(`# written by CI, do not hand-edit\n${headerLine()}\n#  a stale row was removed here\n${rowLine()}\n`),
+      'genuine comment lines')
+  })
+})
+
+// ── 7.8 One bad row poisons the file — proven per field rule, not assumed ────────────────────────
+// M08: IMAGE_RE `)+$` → `)*$`, which accepts a bare name with no namespace. The QUERIED row is still
+// caught by the namespace check, which is exactly why every single-row test in this suite is blind to
+// it: the hole only shows when the junk is in a DIFFERENT row, where parseLedger is the only thing
+// looking.
+describe('a malformed image in any row poisons the whole ledger', () => {
+  const OTHER_DIGEST = 'sha256:' + 'cd34'.repeat(16)
+  const BAD_IMAGES = [
+    'auros-base',                                  // a bare name, no namespace at all
+    'ghcr.io',                                     // a registry and nothing else
+    `${BASE_IMAGE}/`,                              // trailing slash
+    'GHCR.io/aarohkandy/auros-base',               // uppercase
+    `${BASE_IMAGE}:hardened`,                      // a tag
+    '/aarohkandy/auros-base',                      // leading slash
+    'ghcr.io//auros-base',                         // empty segment
+    '-ghcr.io/aarohkandy/auros-base',              // leading hyphen
+  ]
+
+  for (const image of BAD_IMAGES) {
+    test(`REFUSES the queried digest when ANOTHER row's image is ${JSON.stringify(image)}`, () => {
+      const d = refuses(at(`${headerLine()}\n${rowLine()}\n${rowLine({ digest: OTHER_DIGEST, image })}\n`),
+        `a second row whose image is "${image}"`)
+      assert.equal(d.code, 'malformed-ledger')
+      assert.ok(d.reason.includes(image), `the refusal must name the offending value; got: ${d.reason}`)
+    })
+  }
+
+  test('CONTROL: the same two rows with a well-formed second image ALLOW', () => {
+    allows(at(`${headerLine()}\n${rowLine()}\n${rowLine({ digest: OTHER_DIGEST })}\n`), 'two well-formed rows')
+  })
+})
+
+// ── 7.9 The recipe-name bound, pinned on both sides ──────────────────────────────────────────────
+// M09: `{0,38}` → `{0,39}`, so a 40-character recipe name is accepted where the documented limit is
+// 39. Nothing pinned either side of the bound, so it could have drifted to {0,200} just as quietly.
+// Recipe names become image tags and filesystem paths, which is why the bound exists at all.
+describe('recipe name bounds', () => {
+  const recipeRow = (recipe) => at(`${headerLine()}\n${rowLine({ recipe, profiles_passed: 'uefi-modern/1' })}\n`)
+  const name = (len) => 'a' + 'b'.repeat(len - 1)
+
+  test('ACCEPTS a recipe name of exactly 39 characters — the documented limit', () => {
+    assert.equal(name(39).length, 39)
+    allows(recipeRow(name(39)), 'a recipe name at the limit')
+  })
+
+  test('REFUSES a recipe name of 40 characters — one past the limit', () => {
+    assert.equal(name(40).length, 40)
+    const d = refuses(recipeRow(name(40)), 'a recipe name one character over the bound')
+    assert.equal(d.code, 'malformed-ledger')
+    assert.match(d.reason, /recipe/)
+  })
+
+  test('REFUSES every length above the bound, not merely the first one', () => {
+    for (const len of [40, 41, 64, 128, 255]) {
+      assert.equal(decide({ digest: DIGEST }, recipeRow(name(len))).allowed, false,
+        `a ${len}-character recipe name was accepted`)
+    }
+  })
+
+  test('ACCEPTS a single-character recipe name — the other end of the bound', () => {
+    allows(recipeRow('a'), 'the shortest legal recipe name')
+  })
+
+  test('REFUSES recipe names outside the character class', () => {
+    for (const bad of ['-lincoln', '_lincoln', 'Lincoln', 'LINCOLN', 'lincoln_west', 'lincoln.west', 'lincoln/west', 'lincoln west']) {
+      const d = decide({ digest: DIGEST }, recipeRow(bad))
+      assert.equal(d.allowed, false, `recipe name "${bad}" was accepted`)
+      assert.equal(d.code, 'malformed-ledger', `"${bad}" refused as ${d.code}`)
+    }
+  })
+
+  test('a TRAILING hyphen is ACCEPTED today, and this test exists to make that a decision', () => {
+    // `/^[a-z0-9][a-z0-9-]{0,38}$/` permits "lincoln-". It is a legal OCI tag and a legal path
+    // component, so it is PINNED here rather than quietly fixed — tightening the class later is then
+    // a change that turns this red and gets discussed, instead of one nobody notices.
+    allows(recipeRow('lincoln-'), 'a trailing hyphen, as the regex is written today')
+  })
+
+  test('CONTROL: "-" (the base image, no recipe) is not subject to the name rules at all', () => {
+    allows(at(GOOD), 'recipe "-"')
+  })
+})
+
+// ── 7.10 assertPublishable — the API whose whole point is that the failure is structural ─────────
+// M40: `if (!d.allowed)` → `if (d.allowed === undefined)`, so it returns normally on EVERY refusal.
+// This is the function that exists precisely so a caller cannot drop a boolean, and it had zero
+// tests and zero callers. The day CI or the hook starts using it, a refusal becomes a silent success
+// and the suite still prints green.
+describe('assertPublishable', () => {
+  const REFUSAL_FIXTURES = [
+    ['a digest with no row', { digest: 'sha256:' + 'ff00'.repeat(16) }, GOOD],
+    ['a tag instead of a digest', { digest: 'not-a-digest' }, GOOD],
+    ['no digest at all', { digest: '' }, GOOD],
+    ['an uppercase spelling of a recorded digest', { digest: 'sha256:' + 'AB12'.repeat(16) }, GOOD],
+    ['an empty ledger', { digest: DIGEST }, `${headerLine()}\n`],
+    ['a malformed ledger', { digest: DIGEST }, `${headerLine()}\n${rowLine({ recorded_by: '' })}\n`],
+    ['a partial profile pass', { digest: DIGEST },
+      `${headerLine()}\n${rowLine({ recipe: 'lincoln', profiles_passed: 'uefi-modern,low-ram/3' })}\n`],
+    ['an incomplete check set', { digest: DIGEST },
+      `${headerLine()}\n${rowLine({ checks_passed: `${REQUIRED_CHECKS.slice(1).join(',')}/${REQUIRED_CHECKS.length}` })}\n`],
+    ['a foreign image', { digest: DIGEST }, `${headerLine()}\n${rowLine({ image: 'ghcr.io/somebody-else/auros-base' })}\n`],
+    ['a stale matrix version', { digest: DIGEST }, `${headerLine()}\n${rowLine({ matrix_version: '0' })}\n`],
+    ['duplicate rows', { digest: DIGEST }, `${headerLine()}\n${rowLine()}\n${rowLine()}\n`],
+    ['base profile coverage', { digest: DIGEST }, `${headerLine()}\n${rowLine({ profiles_passed: 'uefi-modern/1' })}\n`],
+  ]
+
+  for (const [what, query, ledger] of REFUSAL_FIXTURES) {
+    test(`THROWS on ${what}`, () => {
+      const paths = at(ledger)
+      const d = decide(query, paths)
+      assert.equal(d.allowed, false,
+        `the fixture "${what}" is not actually a refusal, so this test would prove nothing: ${d.reason}`)
+      assert.throws(() => assertPublishable(query, paths), (e) => {
+        assert.ok(e instanceof Error, 'assertPublishable must throw an Error, not a value')
+        assert.equal(e.code, d.code, `the thrown error must carry decide()'s code; got "${e.code}" for "${d.code}"`)
+        assert.match(e.message, /publish gate REFUSES/)
+        assert.ok(e.message.includes(query.digest || '(no digest)'),
+          `the message must name what was refused; got: ${e.message}`)
+        assert.ok(e.message.includes(d.reason),
+          'the message must carry decide()\'s reason, not merely its code — a caller that only sees a code ' +
+          'cannot tell the operator what to do')
+        return true
+      }, `assertPublishable RETURNED on ${what} instead of throwing`)
+    })
+  }
+
+  test('RETURNS the decision on a full recorded pass', () => {
+    const d = assertPublishable({ digest: DIGEST }, at(GOOD))
+    assert.equal(d.allowed, true)
+    assert.equal(d.code, 'pass-recorded')
+    assert.ok(d.row, 'the decision it returns must carry the row that justified it')
+  })
+
+  test('assertPublishable and decide() never disagree, on any fixture in this file', () => {
+    for (const [what, query, ledger] of [...REFUSAL_FIXTURES, ['a full pass', { digest: DIGEST }, GOOD]]) {
+      const paths = at(ledger)
+      const d = decide(query, paths)
+      let threw = null
+      try { assertPublishable(query, paths) } catch (e) { threw = e }
+      assert.equal(threw === null, d.allowed,
+        `decide() says allowed=${d.allowed} for "${what}" but assertPublishable ${threw ? 'threw' : 'returned'}`)
+    }
+  })
+})
+
+// ── 7.11 The ledger must be a REGULAR file, and the GUARD must be what says so ───────────────────
+// M25: `if (!st.isFile())` → `if (false)`. The directory case in section 3 passes either way — with
+// the guard it is "not a regular file", without it readFileSync throws EISDIR and the catch reports
+// "cannot read". Both are code `no-ledger`, so asserting the code alone leaves the guard itself
+// completely unexercised. For a FIFO there is no such luck: readFileSync BLOCKS on a pipe with no
+// writer, and the mutant hangs forever instead of refusing. A gate that hangs never says no, so it
+// never fails closed, and a rerun-until-green culture routes around it.
+describe('the lstat guard itself, not just the code it shares', () => {
+  test('REFUSES a directory THROUGH the lstat guard, not through the read error', () => {
+    const dir = join(tmp(), `dir-guard-${n++}`)
+    mkdirSync(dir)
+    const d = refuses({ ...DEFAULT_PATHS, ledger: dir }, 'a directory as the ledger')
+    assert.equal(d.code, 'no-ledger')
+    assert.match(d.reason, /is not a regular file/,
+      'the refusal must come from the lstat guard. "cannot read" means the guard was skipped and ' +
+      'readFileSync happened to fail instead — which for a FIFO it does not do; it blocks forever.')
+  })
+
+  test('REFUSES a FIFO at the ledger path, and refuses PROMPTLY', (t) => {
+    const fifo = join(tmp(), `ledger-fifo-${n++}`)
+    try { execFileSync('mkfifo', [fifo], { stdio: 'pipe' }) } catch {
+      return t.skip('mkfifo is unavailable on this host, so the blocking case cannot be reproduced here')
+    }
+    const probe = join(tmp(), `fifo-probe-${n++}.mjs`)
+    writeFileSync(probe,
+      `import { decide, DEFAULT_PATHS } from ${JSON.stringify(GATE)}\n` +
+      `const d = decide({ digest: ${JSON.stringify(DIGEST)} }, { ...DEFAULT_PATHS, ledger: ${JSON.stringify(fifo)} })\n` +
+      'process.stdout.write(JSON.stringify({ allowed: d.allowed, code: d.code, reason: d.reason }))\n')
+
+    const started = Date.now()
+    let out = null
+    let failure = null
+    try {
+      out = execFileSync(process.execPath, [probe], { encoding: 'utf8', stdio: 'pipe', timeout: 8000 })
+    } catch (e) { failure = e }
+    const elapsed = Date.now() - started
+
+    assert.equal(failure, null,
+      `the gate did not return within 8s against a FIFO ledger (killed by ${failure && failure.signal}). It did ` +
+      'not refuse — it HUNG. A CI job that hangs never says no, so it never fails closed; it gets cancelled ' +
+      'and rerun until something goes green.')
+    assert.ok(elapsed < 8000, `took ${elapsed}ms`)
+
+    const d = JSON.parse(out)
+    assert.equal(d.allowed, false, 'a named pipe at the ledger path was accepted as an attestation ledger')
+    assert.equal(d.code, 'no-ledger')
+    assert.match(d.reason, /is not a regular file/)
+  })
+
+  test('CONTROL: a regular file at the same path, with the same bytes, ALLOWS', () => {
+    allows(at(GOOD), 'an ordinary file')
+  })
+})
+
+// ── 7.12 The CLI's last line of defence ──────────────────────────────────────────────────────────
+// M42: in main(), `catch (e) { …; return 2 }` → `return 0`. "A gate that cannot run has not passed
+// anything" had no test at all. Exit 0 is ALLOW, and CI runs `node tools/gate.mjs <digest> &&
+// podman push` — so an internal crash reported as 0 publishes an untested image. It survived because
+// the suite had no way to make decide() throw.
+describe('the CLI fails CLOSED when the gate itself fails', () => {
+  test('every return inside main()\'s catch around decide() is a NON-ZERO literal', () => {
+    const src = readFileSync(GATE, 'utf8')
+    const m = /try\s*\{\s*d\s*=\s*decide\(args\)\s*\}\s*catch\s*\(e\)\s*\{([\s\S]*?)\n\s{2}\}/.exec(src)
+    assert.ok(m,
+      'could not find the try/catch around decide() in main(). If it was removed, an internal failure now ' +
+      'propagates as an uncaught exception — which does fail closed, but this test can no longer say so.')
+    const returns = [...m[1].matchAll(/return\s+(-?\d+)/g)].map((r) => Number(r[1]))
+    assert.ok(returns.length > 0,
+      'the catch around decide() returns nothing, so control falls through to the code below it — and the ' +
+      'line below it is the one that prints ALLOW.')
+    for (const r of returns) {
+      assert.notEqual(r, 0,
+        `main()'s catch returns ${r}. Exit 0 is the ALLOW signal; an internal crash must never be one.`)
+    }
+  })
+
+  test('the CLI exits 2 and prints REFUSED when decide() itself throws', () => {
+    // Built as a real repo, because gate.mjs resolves every path from its OWN location: the file sits
+    // at <root>/tools/gate.mjs and reads <root>/auros.config.json. A config of `null` is valid JSON
+    // that is not an object, so `config.registry` throws — a genuine internal failure, reached
+    // without editing one byte of the gate.
+    const root = join(realpathSync(tmp()), `repo-${n++}`)
+    mkdirSync(join(root, 'tools'), { recursive: true })
+    writeFileSync(join(root, 'tools', 'gate.mjs'), readFileSync(GATE, 'utf8'))
+    writeFileSync(join(root, 'auros.config.json'), 'null')
+
+    let status = 0
+    let stderr = ''
+    let stdout = ''
+    try {
+      stdout = execFileSync(process.execPath, [join(root, 'tools', 'gate.mjs'), DIGEST], { encoding: 'utf8', stdio: 'pipe' })
+    } catch (e) { status = e.status; stderr = String(e.stderr); stdout = String(e.stdout) }
+
+    assert.equal(status, 2,
+      `the gate failed internally and exited ${status}. The shell line in CI is ` +
+      '`node tools/gate.mjs <digest> && podman push`, so exit 0 here publishes an image nothing tested.')
+    assert.doesNotMatch(stdout, /ALLOW/, 'an internal failure must never print ALLOW')
+    assert.match(stderr, /REFUSED/, 'an internal failure must be reported to the operator as a refusal')
+    assert.match(stderr, /the gate itself failed/)
+  })
+
+  test('CONTROL: the same temp repo with a VALID config reaches a real verdict, not the catch', () => {
+    // Proves the test above is exercising the catch and not merely "a copied gate always exits 2".
+    const root = join(realpathSync(tmp()), `repo-ok-${n++}`)
+    mkdirSync(join(root, 'tools'), { recursive: true })
+    writeFileSync(join(root, 'tools', 'gate.mjs'), readFileSync(GATE, 'utf8'))
+    writeFileSync(join(root, 'auros.config.json'), JSON.stringify({ registry: CONFIG.registry, org: CONFIG.org }))
+    mkdirSync(join(root, 'attest'), { recursive: true })
+    writeFileSync(join(root, 'attest', 'passed-digests.tsv'), GOOD)
+
+    let status = 0
+    let stdout = ''
+    try {
+      stdout = execFileSync(process.execPath, [join(root, 'tools', 'gate.mjs'), DIGEST], { encoding: 'utf8', stdio: 'pipe' })
+    } catch (e) { status = e.status; stdout = String(e.stdout) }
+    assert.equal(status, 0, 'a full recorded pass in a well-formed temp repo must exit 0')
+    // And it must have exited 0 because it ALLOWED, not because it never ran. The first draft of the
+    // test above passed for exactly that wrong reason: node loads a module by its REALPATH, macOS
+    // hands out /var/folders/... for tmpdir(), and gate.mjs's `resolve(process.argv[1]) === SELF`
+    // guard was therefore false — so main() never executed and the process exited 0 in silence. A
+    // test whose green comes from the program not running is the thing this whole file is against.
+    assert.match(stdout, /gate: ALLOW/,
+      'the copied CLI produced no verdict at all, so the exit code above means nothing')
+  })
+})
+
+// ── 7.13 "This CLI has no subcommands" must fire for the SHORTEST subcommand call ────────────────
+// M44: `argv.length > 1` → `> 2`. Not a fail-open: `gate.mjs record x.json` still exits 2 — but with
+// "unexpected extra argument", a FLAG-shaped error for a PROGRAM-shaped mistake. The comment above
+// the guard says that exact confusion is what made a CI step look gated while never reaching the
+// gate: the author fixes the argument, the step keeps dying, and nobody learns that record-pass.mjs
+// is a different program. The existing test only covers the three-token form.
+describe('the no-subcommands message', () => {
+  const capture = (argv) => {
+    const lines = []
+    const orig = console.error
+    console.error = (...a) => lines.push(a.join(' '))
+    let code
+    try { code = main(argv) } finally { console.error = orig }
+    return { code, text: lines.join('\n') }
+  }
+
+  test('fires for a TWO-token subcommand call, not only a longer one', () => {
+    for (const argv of [['record', 'results.json'], ['check', 'x.json'], ['verify', 'out'], ['record', '--results']]) {
+      const { code, text } = capture(argv)
+      assert.equal(code, 2, `gate.mjs ${argv.join(' ')} must exit 2`)
+      assert.match(text, /no subcommands/,
+        `gate.mjs ${argv.join(' ')} reported "${text.split('\n')[0]}" — a flag-shaped error for a call to a ` +
+        'program that does not exist.')
+      assert.match(text, /record-pass\.mjs/,
+        'the message must name the program that DOES write a pass, or the next author invents another one')
+    }
+  })
+
+  test('still fires for the longer forms the suite already covered', () => {
+    const { code, text } = capture(['record', '--results', 'results.json', '--ledger', 'attest/passed-digests.tsv'])
+    assert.equal(code, 2)
+    assert.match(text, /no subcommands/)
+  })
+
+  test('CONTROL: a LONE bare word falls through to decide(), which has a better answer — it is a tag', () => {
+    const { code, text } = capture(['hardened'])
+    assert.equal(code, 1, 'a single bare word is a REFUSAL (exit 1), not an argument error (exit 2)')
+    assert.match(text, /not a content digest/)
+    assert.doesNotMatch(text, /no subcommands/, 'the guard must not swallow the one-token case')
+  })
+
+  test('CONTROL: a well-formed digest with flags is still accepted by the parser', () => {
+    const orig = console.error
+    console.error = () => {}
+    try {
+      assert.notEqual(main([DIGEST, '--image', BASE_IMAGE]), 2, 'the guard must not reject the real form')
+    } finally { console.error = orig }
   })
 })
 

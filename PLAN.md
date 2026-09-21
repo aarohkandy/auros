@@ -1,5 +1,24 @@
 # LATHE — PLAN
 
+> ## ⚠ SUPERSEDED IN PART — read `DECISIONS.md` first
+>
+> This is the plan as approved on the morning of 2026-09-20, and it is kept as the record of what was
+> proposed and why. **Several of its load-bearing assumptions turned out to be wrong**, and where this
+> document and `DECISIONS.md` disagree, DECISIONS wins. The ones most likely to mislead a reader:
+>
+> | PLAN.md says | Reality |
+> |---|---|
+> | Runners have ~14 GB free, possibly a hard blocker | **145 GB, 110 GB free after cleanup** (measured) |
+> | Deriving from Aurora keeps signature enforcement working | **False** — the base policy ends in a catch-all, so enforcement verifies nothing (D8) |
+> | greenboot ships on Universal Blue | **It does not.** We install it (D9) |
+> | Flatten with `rechunk` | Unmaintained and abandoned by ublue; we use `rpm-ostree compose build-chunked-oci` (D11) |
+> | Pinning the upstream digest is enough | Upstream **garbage-collects** it; we mirror it (D21) |
+> | `bootc-fetch-apply-updates` drives updates | `uupd` does, on this base (D22) |
+> | Apache-2.0, replaceability advertised | **Proprietary, all rights reserved** (D30/D31) |
+>
+> The spec itself lives at `docs/SPEC.md`; current state is in `GATE.md`, `TASKS.md` and `BLOCKED.md`.
+
+
 **Status:** awaiting approval. No code written. No repos created. No money spent. Nothing has touched real hardware.
 **Author:** build agent · **Date:** 2026-09-20 · **Spec:** `LATHE — BUILD SPEC` (§ references below are to it)
 
