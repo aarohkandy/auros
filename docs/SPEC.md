@@ -101,7 +101,7 @@ meta/control repo holding state, docs and `hardware/compat.tsv`.
 - Single `Containerfile` inheriting from a **pinned Universal Blue digest**, plus hardening and policy.
 - Nightly GitHub Action: rebase on upstream, rebuild, run the VM check matrix, publish to GHCR **only on
   a full pass**.
-- Images signed (cosign, keyless). Signature verification enforced at install time.
+- Images signed (cosign, keyless). Signature verification enforced at install time. **[AMENDED → D8/D17]** signing is keyed, with a key pair (`auros-base/signing/README.md` §1). <!-- auros-allow: original contract wording, amended inline -->
 - Machine-side update agent: pulls on boot, stages, keeps the previous image on disk, **rolls back
   automatically if the new image fails to reach a login prompt twice.**
 - Policy declarative and switchable per-recipe: `open` / `managed` / `locked` / `kiosk`. Kiosk means **no
@@ -230,7 +230,7 @@ pulsing gradients, particles, custom cursors, scroll-jacking, anything that exis
 **The overcorrection against generic design is adding visual noise; restraint is the correction.**
 
 **The build console** replaces every decorative animation impulse. It streams genuine build output —
-`pruning 214 packages`, `booting test vm`, `✓ wifi associates`, `signed · cosign keyless`. It is more
+`pruning 214 packages`, `booting test vm`, `✓ wifi associates`, `signed · cosign keyless` **[AMENDED → D8/D17: keyed]**. <!-- auros-allow: original contract wording, amended inline --> It is more
 interesting than any animation and it is true.
 
 **Accessibility.** `prefers-reduced-motion`: static render, no parallax. `prefers-color-scheme` respected

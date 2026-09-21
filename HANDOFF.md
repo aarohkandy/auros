@@ -15,8 +15,8 @@ wins wherever they conflict.**
 Three sentences that govern everything:
 1. The maintained image is the product, not the OS.
 2. Craft here is **subtraction** — anything not asked for is deleted, not hidden.
-3. *(Amended by D30/D31)* We are **proprietary, all rights reserved**. The site's old "fork it
-   yourself" argument is gone; the replacement is a **wind-down handover**.
+3. *(Amended by D30/D31)* We are **proprietary, all rights reserved**. The site's old fork-and-rebuild
+   argument is gone; the replacement is a **wind-down handover**.
 
 ## 2. Where things are
 

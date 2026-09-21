@@ -211,12 +211,34 @@ function runVerify (dir) {
 // is what stops this file passing against a verify that simply always exits 1.
 // ─────────────────────────────────────────────────────────────────────────────────────────────────
 
+/** A git-initialised sandbox holding the real claims-evidence tool and one tracked file. */
+function claimsSandbox (s, text) {
+  s.tool('claims-evidence.mjs').stubTest('tools/claims-evidence.test.mjs', true).write('NOTES.md', text)
+  execFileSync('git', ['init', '-q', s.dir])
+  execFileSync('git', ['-C', s.dir, 'add', 'NOTES.md'])
+  return s
+}
+
 const CASES = [
   {
     gate: 'honesty gate (spec §4.4)',
     real: true,
     green: (s) => s.tool('honesty-gate.mjs').write('auros-web/src/copy.md', 'Every recipe inherits from one base image.\n'),
     red: (s) => s.tool('honesty-gate.mjs').write('auros-web/src/copy.md', 'Trusted by schools across three districts.\n'),
+  },
+  {
+    gate: 'claims evidence: DESIGN rows cite code, withdrawn phrases absent (H12/H13)',
+    real: true,
+    // The tool lists files with `git ls-files`, so the sandbox becomes a repository. Its own test
+    // file runs under the same `if`, so it is stubbed green in both halves.
+    green: (s) => claimsSandbox(s, 'Every recipe inherits from one base image.\n'),
+    red: (s) => claimsSandbox(s, 'This repository is public on purpose.\n'),
+  },
+  {
+    gate: 'claims evidence, both directions',
+    green: (s) => s.write('tools/claims-evidence.mjs', "console.log('stand-in ok')\n").stubTest('tools/claims-evidence.test.mjs', true),
+    red: (s) => s.write('tools/claims-evidence.mjs', "console.log('stand-in ok')\n").stubTest('tools/claims-evidence.test.mjs', false),
+    standIn: true,
   },
   {
     gate: 'honesty regressions (2026-09-20 audit)',

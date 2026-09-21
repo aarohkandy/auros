@@ -16,10 +16,12 @@ rebuilt every night so it is still patched in four years.
 | [auros-installer](https://github.com/aarohkandy/auros-installer) | Windows-side migration, Linux-side restore. |
 | [auros-web](https://github.com/aarohkandy/auros-web) | Site, configurator, order intake. |
 
-## We are replaceable on purpose
+## If we stop
 
-Every recipe is a public git repo. If we vanish tomorrow, a customer rebuilds their exact operating
-system from a ten-line file. That is not a concession — it is the reason to trust us with a fleet.
+The repositories are public so that CI is free, and they are all rights reserved (DECISIONS.md D30,
+D31). A customer's machines keep booting the image they have whatever happens to us. The trust story
+D31 chose is a wind-down handover of each customer's build files; its terms are a draft
+(`docs/legal/WIND-DOWN-TERMS.DRAFT.md`) and are not offered to anyone yet.
 
 ## What's in here
 
