@@ -322,3 +322,35 @@ sequence needs a step that fails the deploy if the built page still carries
 `1x00000000000000000000AA`** — the Worker refuses a test SECRET on a reachable host, so a forgotten
 sitekey does not open the door, it refuses every single visitor, and Gate 4 fails on day one for a
 reason nothing in the repository would have named.
+
+## B19 — The Linux restore cannot switch Wi-Fi on or add a printer queue, because both need root · OPEN · degrades §6C, blocks nothing
+`cmd/auros-restore` (phase 7) runs as the user, at first login. It restores files, and for the two
+things that are not files it goes as far as an unprivileged process honestly can:
+
+- **Wi-Fi.** Each migrated network is written as a NetworkManager keyfile with mode `0600` into
+  `~/.local/share/auros-restore/network/`. The mode is **read back off the disk** and the file is
+  deleted if it is not 0600 — a world-readable PSK is a real disclosure *and* a silent failure,
+  because NetworkManager refuses to load such a file. Moving them to
+  `/etc/NetworkManager/system-connections` with root ownership needs root.
+- **Printers.** The queues that can honestly become driverless IPP are written to
+  `~/.local/state/auros-restore/printers.plan` **as data, never as a script** — a script staged in a
+  home directory that root runs later is a privilege-escalation hole wearing a convenience costume.
+  `lpadmin` needs root.
+
+The note on the desktop says in plain words, for both, that they are saved and **not yet switched
+on**, and nothing anywhere reports either as migrated (§4.2). An administrator running
+`auros-restore` as root *does* write the keyfiles straight into `/etc`; that path is implemented and
+its permission check is tested in both directions.
+
+**Why the privileged half is not in the branch, rather than rushed into it.** It is the only
+component in the product where **root reads a file a non-root user controls**, on a shared school
+laptop. Doing it safely needs `O_NOFOLLOW`, an owner check through `syscall.Stat_t`, and a strict
+allow-list parser that *rebuilds* the connection from validated keys rather than copying the file —
+and the first two are forbidden outside `internal/winenv` and `internal/sysdisk` by
+`TestWall_SyscallIsConstantsOnly`, whose own comment says widening it is an architecture change to
+argue for in a pull request of its own. Writing that program at the end of a long change, to make a
+report line read better, is how the wall stops meaning anything.
+
+*Not blocked on a human, blocked on a design review it deserves.* Until it exists the degradation is
+visible to the user rather than hidden from them, which is the property that matters. Details:
+`auros-installer/packaging/systemd/README.md`.
