@@ -39,8 +39,10 @@ auros-base/tools/capture-compat.sh --facts-out ~/t440s.facts
 ```
 
 It reads DMI, `/proc/cpuinfo`, `/proc/meminfo`, `/sys/firmware/efi`, `/sys/class/tpm` and the PCI/USB
-trees, and prints a partial row with `source=physical` plus a **facts file naming the path behind every
-single value**. It does not need `lspci`, `dmidecode` or root, and it does not need the network.
+trees, and prints a partial row plus a **facts file naming the path behind every single value**.
+`source` is observed too: `physical` on real hardware, `vm` when `/sys/hypervisor/type`, the cpuinfo
+`hypervisor` flag or a hypervisor DMI vendor/product is seen — and on a guest the tool refuses
+`--wifi`/`--trackpad`/`--suspend`/`--brightness`/`--webcam`, printing the path and value that said so. It does not need `lspci`, `dmidecode` or root, and it does not need the network.
 (`--ask` does all of this and then puts the seven questions — see step 5.)
 
 The identifying columns are numeric by construction: `wifi=pci:8086:08b1;gpu=pci:8086:0a16`. **"Intel

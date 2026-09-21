@@ -15,6 +15,19 @@ no webcam — it cannot produce an honest verdict for those columns. So:
 Filling a VM row's physical columns would manufacture exactly the unearned confidence that spec §4 exists
 to prevent, and we would then quote customers from it.
 
+`source` is an **observation**, not a default. `auros-base/tools/capture-compat.sh` writes `vm` when it
+sees a hypervisor (`/sys/hypervisor/type`, the `hypervisor` CPU flag, or a hypervisor DMI vendor or
+product string) and refuses the five physical-only columns on such a machine, printing what it read. It
+also writes `vm` unconditionally under `AUROS_TEST_ROOT`, so a synthetic test tree can never produce a
+row that reaches a quote. It used to write the literal `physical` whatever it ran on.
+
+## A physical row is signed and dated
+
+A `physical` row must carry a `tester` and a `tested_on` (`YYYY-MM-DD`). An observation with nobody's
+name on it cannot be followed up, and one with no date cannot be weighed against a newer kernel. The
+lint refuses the row; the quoting tool will not call it **tested and works** even if the lint was never
+run. `vm` rows are exempt — they are written by CI and never quoted from.
+
 ## Values
 
 | Column | Values |

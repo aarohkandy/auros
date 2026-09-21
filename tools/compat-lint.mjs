@@ -34,8 +34,12 @@ try { text = readFileSync(PATH, 'utf8') } catch (e) {
 const lines = text.split('\n').filter(l => l.trim() !== '')
 if (lines.length === 0) { console.error('compat-lint: file is empty, not even a header — failing closed'); process.exit(2) }
 
-const header = lines[0].split('\t')
-for (const required of ['model', 'year', 'source', 'verdict', 'ids', 'tpm', ...PHYSICAL_ONLY]) {
+// Trimmed, so a CRLF file's CR does not land on the header's last column. That was harmless while
+// the last column (`tester`) was not required; it is required now (provenance, below), and an
+// untrimmed header would refuse every CRLF file as "missing required column tester" — a true
+// refusal of a file that is fine. quote-from-compat.mjs has always trimmed its header.
+const header = lines[0].split('\t').map(h => h.trim())
+for (const required of ['model', 'year', 'source', 'verdict', 'ids', 'tpm', 'tester', 'tested_on', ...PHYSICAL_ONLY]) {
   if (!header.includes(required)) { console.error(`compat-lint: header is missing required column "${required}"`); process.exit(2) }
 }
 const idx = Object.fromEntries(header.map((h, i) => [h, i]))
@@ -70,6 +74,31 @@ rows.forEach((raw, n) => {
           '(e.g. wifi=pci:8086:08b1, webcam=usb:04f2:b39a, two cards as role=a,b). A marketing name matches ' +
           'nothing four years from now, which is when this file has to earn its keep.')
       }
+    }
+  }
+
+  // ── provenance: whose observation, and when ──────────────────────────────────────────────────
+  // A physical row with seven `ok`s and nobody's name on it passed this file as "all honest", and
+  // auros-base/tools/quote-from-compat.mjs then said, in full, "We have imaged this model and every
+  // one of wifi, trackpad, suspend, brightness, gpu, audio, webcam worked" — over an evidence line
+  // reading "tested (no date) by (no tester)". The strongest sentence either tool can say needed no
+  // human's name and no date. An unsigned, undated row is an anecdote, the word the ids rule above
+  // already uses for a row we cannot match.
+  //
+  // vm rows are exempt on purpose: a vm row is never quoted from, and CI writes them.
+  if (source === 'physical') {
+    const tester = (c[idx.tester] ?? '').trim()
+    const testedOn = (c[idx.tested_on] ?? '').trim()
+    if (tester === '') {
+      problems.push(`${PATH}:${lineNo}  a physical row with an empty tester. Somebody shut the lid and pressed the ` +
+        'brightness key; this column is who, so the next person can ask them. A row nobody signed is an anecdote.')
+    }
+    if (testedOn === '') {
+      problems.push(`${PATH}:${lineNo}  a physical row with an empty tested_on. A driver that worked on one kernel ` +
+        'can break on the next, so an observation with no date cannot be weighed against a newer one.')
+    } else if (!/^\d{4}-\d{2}-\d{2}$/.test(testedOn) || !Number.isFinite(Date.parse(`${testedOn}T00:00:00Z`))) {
+      problems.push(`${PATH}:${lineNo}  tested_on="${testedOn}" is not a YYYY-MM-DD date. ` +
+        'auros-base/tools/capture-compat.sh writes `date +%F`; anything else is a string somebody typed, and it does not sort.')
     }
   }
 

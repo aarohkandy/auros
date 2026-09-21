@@ -203,7 +203,8 @@ describe('the source column is what makes every other rule enforceable', () => {
       const kind = padded.trim()
       // ids is required on a physical row (see the ids suite below), so the fixture carries one;
       // a vm row is allowed to have none. This loop is about the source column, not about ids.
-      const r = accepts(lint(file(row({ model: 'x', source: padded, verdict: 'ok', ids: 'wifi=pci:8086:08b1' }))), `source="${padded}"`)
+      // …and a tester and a date, which a physical row needs too (provenance suite below).
+      const r = accepts(lint(file(row({ model: 'x', source: padded, verdict: 'ok', ids: 'wifi=pci:8086:08b1', tested_on: '2026-09-21', tester: 'aaroh' }))), `source="${padded}"`)
       assert.match(r.out, new RegExp(`1 ${kind}`),
         `source="${padded}" was accepted but counted as something else:\n${r.out}`)
     }
@@ -261,9 +262,10 @@ describe('malformed files fail CLOSED — exit 2, never a quiet pass', () => {
 
   // ── CRLF: what actually happens, and why it is safe rather than merely untested ────────────────
   // A CR always lands on the LAST field of a line. In this header that field is `tester`, which is
-  // not a required column and is not physical-only — so a CRLF file is read cleanly and every
-  // row-level rule still runs. These assert the property that matters (a line ending cannot smuggle
-  // a claim past the lint) rather than a line-ending policy this tool does not have.
+  // now REQUIRED — a physical row must carry a name and a date (provenance suite, below). So the
+  // header is trimmed like every row cell already was; without that, every CRLF file would have been
+  // refused as "missing required column tester". These assert the property that matters (a line
+  // ending cannot smuggle a claim past the lint) and that a CRLF file is still read.
   test('a CRLF file is accepted, and its rows are still checked', () => {
     const r = lint(`${HEADER}\r\n${VM_HONEST}\r\n`)
     assert.equal(r.exit, 0, `a CRLF file with an honest vm row should pass; got exit ${r.exit}:\n${r.out}`)
@@ -278,14 +280,20 @@ describe('malformed files fail CLOSED — exit 2, never a quiet pass', () => {
     assert.match(r.out, /vm row claims wifi/)
   })
 
-  test('REFUSES a CRLF file when a REQUIRED column is last in the header', () => {
-    // The one CRLF shape that does break parsing: the CR lands on a column the header check
-    // requires, so `includes()` misses it and the lint fails closed. Right outcome, confusing
-    // message — recorded so that if somebody adds explicit CRLF handling, this says what changed.
+  test('a CRLF header ending in a REQUIRED column is read — and one genuinely missing it is not', () => {
+    // This test used to assert the opposite and said why: "Right outcome, confusing message —
+    // recorded so that if somebody adds explicit CRLF handling, this says what changed." Explicit
+    // CRLF handling was added (the header is trimmed) because `tester` became required and is the
+    // last column. So: what changed is that a CRLF header ending in `verdict` is now READ…
     const reordered = [...COLS.filter((c) => c !== 'verdict'), 'verdict'].join('\t')
     const r = lint(`${reordered}\r\n`)
-    assert.equal(r.exit, 2, 'a CRLF header ending in a required column must fail closed')
-    assert.match(r.out, /missing required column "verdict"/)
+    assert.equal(r.exit, 0, `a CRLF header ending in a required column was refused:\n${r.out}`)
+    // …and the red half, so trimming is not a way to make the header check go away: a header that
+    // really lacks the column still fails closed, CRLF or not.
+    const missing = COLS.filter((c) => c !== 'verdict').join('\t')
+    const m = lint(`${missing}\r\n`)
+    assert.equal(m.exit, 2, 'a header with no verdict column at all was accepted')
+    assert.match(m.out, /missing required column "verdict"/)
   })
 
   test('REFUSES a row with fewer fields than the header, without crashing', () => {
@@ -357,7 +365,7 @@ describe('ids must be numeric bus:vendor:device — a marketing name matches not
 describe('tpm is one of exactly two generations, or nothing', () => {
   const physical = (tpm) => file(row({
     model: 'x', year: '2014', source: 'physical', verdict: 'supported',
-    ids: 'wifi=pci:8086:08b1', tpm,
+    ids: 'wifi=pci:8086:08b1', tested_on: '2026-09-21', tester: 'aaroh', tpm,
   }))
 
   test('ACCEPTS 2.0, 1.2, none, and empty', () => {
@@ -377,6 +385,55 @@ describe('tpm is one of exactly two generations, or nothing', () => {
   test('the tpm rule applies to vm rows too — a QEMU profile HAS a declared TPM version', () => {
     accepts(lint(file(row({ model: 'qemu-tpm12', source: 'vm', verdict: 'boots', tpm: '1.2' }))), 'vm tpm=1.2')
     rejects(lint(file(row({ model: 'qemu-tpm12', source: 'vm', verdict: 'boots', tpm: 'swtpm' }))), 'vm tpm=swtpm')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+// PROVENANCE — a physical row carries a person's name and a date, or it is an anecdote.
+//
+// The attack this answers: a physical row for ThinkPad-T440s with all seven capabilities `ok`,
+// verdict `supported`, valid ids, and `tester` and `tested_on` both EMPTY. This lint said
+// "1 row(s), all honest." and exited 0; quote-from-compat then said "TESTED · WORKS — We have imaged
+// this model and every one of … worked", over an evidence line reading "tested (no date) by (no
+// tester)". The strongest sentence either tool can say required no human's name and no date.
+describe('a physical row must say who observed it, and when', () => {
+  const physical = (fields) => file(row({
+    model: 'ThinkPad-T440s', year: '2014', source: 'physical', verdict: 'supported',
+    ids: 'wifi=pci:8086:08b1', tpm: '1.2',
+    wifi: 'ok', trackpad: 'ok', suspend: 'ok', brightness: 'ok', gpu: 'ok', audio: 'ok', webcam: 'ok',
+    tested_on: '2026-09-21', tester: 'aaroh', ...fields,
+  }))
+
+  test('the control: a signed, dated physical row is accepted', () => {
+    accepts(lint(physical({})), 'a physical row with a tester and a date')
+  })
+
+  test('REJECTS the attack exactly as it was run: no tester AND no date', () => {
+    const r = rejects(lint(physical({ tester: '', tested_on: '' })), 'an unsigned, undated physical row')
+    assert.match(r.out, /empty tester/, `the refusal did not name the missing tester:\n${r.out}`)
+    assert.match(r.out, /empty tested_on/, `the refusal did not name the missing date:\n${r.out}`)
+  })
+
+  test('REJECTS each half on its own — neither is a substitute for the other', () => {
+    assert.match(rejects(lint(physical({ tester: '' })), 'no tester').out, /empty tester/)
+    assert.match(rejects(lint(physical({ tested_on: '' })), 'no date').out, /empty tested_on/)
+  })
+
+  test('REJECTS whitespace, which is empty wearing a costume', () => {
+    rejects(lint(physical({ tester: '   ' })), 'a tester of only spaces')
+  })
+
+  test('REJECTS a tested_on that is not a date', () => {
+    for (const d of ['last week', '2026', '21/09/2026', '2026-9-21', 'yesterday']) {
+      const r = rejects(lint(physical({ tested_on: d })), `tested_on="${d}"`)
+      assert.match(r.out, /not a YYYY-MM-DD date/, `Got:\n${r.out}`)
+    }
+  })
+
+  test('a vm row needs neither — it is never quoted from, and CI writes them', () => {
+    // The control on the other side: requiring a human signature on a CI-written vm row would make
+    // every vm row a lie about who ran it.
+    accepts(lint(file(row({ model: 'qemu', source: 'vm', verdict: 'boots' }))), 'an unsigned vm row')
   })
 })
 
