@@ -25,8 +25,14 @@ themselves, on their own machines, after paying, will never believe the table ag
 ## Before the machines arrive
 
 - [ ] Gate 1 passed: a signed base image exists and boots in a VM.
-- [ ] An installable ISO exists from `bootc-image-builder`, written to a USB stick **by a Linux machine**
-      — per D13 the Windows tool does not write boot media.
+- [ ] Install media made by **running this**, with the digest copied from `attest/passed-digests.tsv`:
+      `sudo AUROS_CONTROL_REPO=<this repo> auros-base/tools/make-install-media.sh ghcr.io/<org>/<repo>@sha256:<digest>`
+      It refuses a tag, a digest with no full recorded pass, an edited ledger, a missing or development
+      signing key and a failed `cosign verify`, then builds an ISO with a digest-pinned
+      bootc-image-builder. It **never writes a device**: it prints one `dd` line with `/dev/DEVICE` as a
+      placeholder, which a human runs **on a Linux machine** — per D13 the Windows tool does not write
+      boot media. Record the digest against each machine's row; the ISO is an unattended installer that
+      erases the first disk it finds (step 3 first).
 - [ ] A recipe for these three machines, built from an actual conversation about what they are for. Not a
       generic one. The pilot is the conversation; the recipe is its output.
 - [ ] `tools/compat-lint.mjs` passing, so a dishonest row cannot be committed.
