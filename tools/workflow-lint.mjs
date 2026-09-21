@@ -155,6 +155,16 @@ const check = (file) => {
       'defaults.run.shell: bash -euo pipefail {0}.', text: '(whole file)' })
   }
 
+  // D23: `ubuntu-latest` migrates to 26.04 between 2026-10-19 and 2026-11-19, under us, with no
+  // commit to point at. Any non-comment occurrence fires — `runs-on: ubuntu-latest`, a quoted or
+  // list form, or a matrix value that later feeds `runs-on: ${{ matrix.os }}`.
+  lines.forEach((line, i) => {
+    if (!/\bubuntu-latest\b/.test(line.replace(/(^|\s)#.*$/, ''))) return
+    problems.push({ file, line: i + 1, why:
+      'ubuntu-latest is forbidden (D23): it moves to 26.04 from 2026-10-19, so the OS under this job ' +
+      'changes with no commit. Pin runs-on: ubuntu-24.04 and move it deliberately.', text: line.trim().slice(0, 120) })
+  })
+
   // The parse-failure symptom itself: a file with no name: is one GitHub will show by path.
   if (!topLevel.includes('name')) {
     problems.push({ file, line: 1, why: 'no top-level `name:` — GitHub will list this workflow by its file path.', text: '(whole file)' })
