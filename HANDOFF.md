@@ -50,8 +50,18 @@ that makes the S7 failure **name its own cause**. It will print either:
 It also prints the differing files by path/size/mtime and a count per directory.
 
 ```
-gh run view 35548421189 --repo aarohkandy/auros-base --log | grep -A40 "S7 FAIL"
+gh run view <newest build run> --repo aarohkandy/auros-base --log | grep -A40 "S7 FAIL"
 ```
+
+> **Do not trust run `35548421189`'s verdict.** It reported `PACKAGE SETS ARE IDENTICAL (0 packages)` —
+> a comparison of two empty lists, called agreement. The build removed each raw image immediately after
+> flattening to save disk, so the diagnostic had nothing left to inspect. That is the fifth vacuous pass
+> found in this repository, and this one was inside the tool built to prevent vacuous passes.
+>
+> **Fixed** (commit after `de3a367`): the raw images now survive until after the comparison, and the
+> diagnostic refuses to conclude anything from implausible data — a Fedora KDE image has thousands of
+> packages, so fewer than a hundred means the read failed, not that the image is small. **Take the
+> verdict from the NEXT build run, not that one.**
 
 ### In flight at handoff (results may arrive after you start)
 - **4 Workflow runs** — check `/workflows`. Covering: exercising the check matrix against a real image
