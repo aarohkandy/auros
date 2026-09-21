@@ -113,3 +113,21 @@ words cannot drift; a transformation between two merely-similar things can.
 Worth keeping because the first fix was written explicitly to avoid hardcoding, and the second bug was
 caused by taking that principle one step too far. A principle applied without asking what it is true
 *of* is just a different way to be wrong.
+
+## R6 — S7 doubles every base build, including the ones that can never publish · OPEN · propose after Gate 1
+**Measured:** the build job has been running 48 minutes and is not finished. It builds the image twice
+and flattens twice, because S7 (determinism) compares the content digests of two builds from identical
+inputs. Chunking a ~10 GB image into 127 layers is the expensive half, and it happens twice.
+
+Roughly eight base builds were run on 2026-09-20 while debugging. At ~50 minutes rather than ~25, that
+is around three hours spent re-proving determinism on builds that were going to fail at step four
+anyway.
+
+**Proposal, to make once Gate 1 is green — not now, because changing the pipeline mid-debug turns one
+unknown into two:** run S7 where a publish can actually happen (main, nightly, and the release path) and
+run a single build on other pushes. Determinism would still be proven every night and before every
+publish, which is where the property is load-bearing. Feedback on a broken build script would halve.
+
+The counter-argument, which deserves a hearing: a determinism break introduced on a branch would then be
+found at merge rather than at push. Given S7 compares content digests and the usual cause is an
+unpinned input, that is a cheap thing to find late — but it IS later.
