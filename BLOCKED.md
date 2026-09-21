@@ -203,3 +203,26 @@ stand between that and "live", and they are easy to conflate:
 
 Order of operations when the owner is ready: B12 terms → Cloudflare account + token → explicit go-ahead
 to publish → deploy → a stranger's order opens a PR.
+
+## B15 — The Linux-side restore did not exist · **IN PROGRESS 2026-09-20** · was blocking Gate 3's other half and check R1
+Found by auditing deliverables against the spec rather than against the task list — the task list said
+W-C was largely done.
+
+Spec §6C: *"Linux side: restore from the verified archive on first boot, re-verify, report the count to
+the user on the desktop."* Nothing implemented it. Check **R1** in `auros-base/matrix/checks.yaml`
+depends on it and could never have passed.
+
+**Why it matters more than its size suggests.** The Windows half copies a school's files off and
+verifies them. Without the Linux half, that archive sits on a USB stick and the machine they are handed
+back has none of their work on it. Half a migration is not a migration; it is a laptop with a stranger's
+operating system on it and everything they had somewhere else.
+
+It also runs at the single most dangerous moment in the product: the archive is the user's **only** copy,
+because the old disk has been overwritten by then. A bug there destroys data that a correct Windows-side
+run had successfully preserved.
+
+Being built now on branch `feat/linux-restore`, with the abort paths attacked before anything else.
+
+**The process lesson:** `TASKS.md` said this workstream was nearly done, because it tracked the tasks
+someone had written down rather than the deliverables the spec demands. Audit against the contract,
+not against your own list.
