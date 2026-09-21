@@ -51,7 +51,21 @@ const root = () => (ROOT ??= mkdtempSync(join(tmpdir(), 'auros-verify-meta-')))
 let seq = 0
 
 /** Every gate that is UNCONDITIONAL in verify, and therefore runs in every sandbox. */
-const ALWAYS_RUN_TOOLS = ['workflow-lint.mjs', 'compat-lint.mjs']
+const ALWAYS_RUN_TOOLS = ['workflow-lint.mjs', 'compat-lint.mjs', 'licence-consistency.mjs']
+
+/**
+ * The five repositories `licence-consistency.mjs` reads, and the terms it expects to find.
+ *
+ * That gate is deliberately UNCONDITIONAL and fails closed — `checked 0 repos` exits 2 — because a
+ * public repository that states no terms is the defect it exists to catch. Correct, and it means an
+ * empty sandbox cannot be all-skip: until 2026-09-20 every GREEN case in this file, and the all-skip
+ * baseline itself, failed on it, which made the whole suite red and hid whatever else was wrong.
+ * The sandbox now supplies what the gate honestly needs.
+ */
+const LICENCE_REPOS = ['.', 'auros-base', 'auros-recipes', 'auros-installer', 'auros-web']
+const RESERVED_LICENCE =
+  'Copyright (c) 2026. All rights reserved.\n\nNO LICENCE IS GRANTED to copy, modify or redistribute this software.\n'
+const CONSISTENT_README = '# sandbox\n\nAll rights reserved. No licence is granted.\n'
 
 const CLEAN_WORKFLOW = `name: sandbox
 on:
@@ -84,6 +98,11 @@ function sandbox (populate) {
   copyFileSync(join(REPO, 'hardware', 'compat.tsv'), join(dir, 'hardware', 'compat.tsv'))
   writeFileSync(join(dir, '.github', 'workflows', 'ok.yml'), CLEAN_WORKFLOW)
   for (const t of ALWAYS_RUN_TOOLS) copyFileSync(join(REPO, 'tools', t), join(dir, 'tools', t))
+  for (const r of LICENCE_REPOS) {
+    mkdirSync(join(dir, r), { recursive: true })
+    writeFileSync(join(dir, r, 'LICENSE'), RESERVED_LICENCE)
+    writeFileSync(join(dir, r, 'README.md'), CONSISTENT_README)
+  }
 
   mkdirSync(join(dir, 'bin'), { recursive: true })
 
@@ -379,6 +398,28 @@ const CASES = [
     gate: 'compat quoting refuses vm rows and empty cells (spec §8)',
     green: (s) => s.stubTest('auros-base/tools/quote-from-compat.test.mjs', true),
     red: (s) => s.stubTest('auros-base/tools/quote-from-compat.test.mjs', false),
+    standIn: true,
+  },
+  {
+    // The gate that made this whole file red. Its RED population is the exact published defect it
+    // was written for: a README that advertises Apache-2.0 over a LICENSE that reserves everything
+    // (D30). Real tool, real files, no stand-in.
+    gate: 'licence consistency (README vs LICENSE)',
+    real: true,
+    green: () => {},                      // the base sandbox ships five consistent pairs
+    red: (s) => s.write('auros-web/README.md',
+      '# auros-web\n\nThis project is open-source and Apache-2.0 licensed. Fork away.\n'),
+  },
+  {
+    // Guarded by `[ -f auros-web/worker/package.json ]`, so it skips in the base sandbox and had no
+    // case. The bug it exists to catch is the one in its own comment in verify — a suite that died
+    // with MODULE_NOT_FOUND before a test ran — so what matters is that a non-zero exit reaches
+    // verify, which is what the stand-in asserts.
+    gate: 'order Worker (spec §6D)',
+    green: (s) => s.write('auros-web/worker/package.json', '{"name":"stub-worker"}\n')
+      .stubTest('auros-web/worker/test/stub.test.js', true),
+    red: (s) => s.write('auros-web/worker/package.json', '{"name":"stub-worker"}\n')
+      .stubTest('auros-web/worker/test/stub.test.js', false),
     standIn: true,
   },
   {
