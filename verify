@@ -174,6 +174,12 @@ run "compat.tsv honesty (no vm row claims a physical column)" node tools/compat-
 # fabricated row, and a quote tool that reads an empty cell as a pass sells a school a laptop nobody
 # tested. Both suites are paired — every refusal has a control that must still be accepted — and the
 # capture suite MUTATES the shipping script to watch its guard fire.
+#
+# COST, measured rather than guessed: the capture suite is ~47 s of CPU but **3m47s of wall clock on
+# macOS**, because it is ~2,500 short-lived processes and this laptop spends most of that in process
+# creation (20% CPU utilisation for the whole run). On a Linux runner, where spawning is roughly two
+# orders of magnitude cheaper, it is seconds. Recorded here so that a slow local `./verify` is read
+# as what it is and not as something hanging.
 if [ -x auros-base/tests/capture-compat.test.sh ]; then
   run "compat capture leaves the human columns empty (spec §8)" auros-base/tests/capture-compat.test.sh
 else skip "compat capture (spec §8)" "auros-base not checked out here"; fi

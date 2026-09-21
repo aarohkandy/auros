@@ -771,3 +771,61 @@ publishes, driven into all six of its failure branches today against synthetic f
 publishes nothing:
 
     gh workflow run examples.yml -f base_image=ghcr.io/aarohkandy/auros-base@sha256:<digest>
+
+## D39 — `compat.tsv` gains `ids` and `tpm`, because the runbook demanded facts the schema could not hold · 2026-09-20 · AGENT
+
+`GATE5-RUNBOOK.md` step 1 and the `driver-triage` skill have both said the same thing since they
+were written: **"Intel Wireless" is not a model**, record the *numeric* PCI/USB IDs, because a row
+carrying a marketing name is a row we cannot match against the next machine — and matching against
+the next machine is the entire reason spec §8 calls this file the asset competitors cannot copy.
+
+There was no column for them. The instruction and the schema had been in contradiction since hour
+one, and it had never surfaced because no row had ever been written. The first thing that writes one
+found it immediately.
+
+**`ids`** — `role=bus:vvvv:dddd`, roles separated by `;`, several devices in one role by `,`:
+`wifi=pci:8086:08b1;gpu=pci:8086:0a16;webcam=usb:04f2:b39a`. The point of the pattern is that **a
+marketing name cannot satisfy it**: `tools/compat-lint.mjs` rejects `wifi=Intel Wireless-AC 7260`
+at the door rather than four years from now when it matches nothing. A physical row must carry one;
+a `vm` row has no hardware to identify and must not invent one.
+
+**`tpm`** — `2.0` | `1.2` | `none` | *empty*. Empty is not laziness: a TPM that is present but whose
+version cannot be read is a **third state**, and collapsing it into `none` would be the claim "there
+is no TPM" manufactured out of a failed read. The column also selects work: GATE5-RUNBOOK defers
+BitLocker-suspension testing to physical TPM 1.2 machines (D27), and this is how we find them.
+
+Inserted after `firmware`, which keeps `tester` the last column — `tools/compat-lint.test.mjs` has a
+CRLF case that turns on that fact, and moving it would have made a passing test pass for a new
+reason.
+
+**What no tool will write.** `firmware=uefi+csm` stays a legal value and stays human-only. Whether a
+UEFI-capable firmware booted the machine through a compatibility module is not observable from
+inside a running Linux system, and `capture-compat.sh` stops at `uefi` / `uefi-sb` / `bios`. A probe
+emitting it would be a guess wearing the costume of an observation — the same category as
+`verdict=unsupported`, which remains §9-reserved.
+
+**The line the two new tools are built along**, and it is the whole point of them:
+
+| filled by a probe | left empty for a person |
+|---|---|
+| model, year, cpu, ram_gb, firmware, ids, tpm | wifi, trackpad, suspend, brightness, gpu, audio, webcam |
+
+`wpa_supplicant is loaded` is not `the wifi works`. `ACPI reports a backlight interface` is not `the
+brightness key changes the screen`. Every one of those inferences is available, cheap, and wrong,
+and a table full of them **reads exactly like a table full of observations** until a school finds
+out. So `capture-compat.sh` prints the seven questions instead, and `emit_row()` refuses to print a
+row at all if anything other than a human answer has reached one of the five physical-only columns —
+a refusal the test suite watches fire by mutating the shipping script, because a guard nobody has
+seen fire is a comment with an `if` around it (D34).
+
+**Four bugs, all silent, found by writing the tests rather than by running the code:** a facts
+accumulator held in a shell variable and discarded by the `$( )` subshell every probe runs in, so
+the evidence file came out empty while the script looked like it was recording everything; a TPM 1.2
+branch that was unreachable because `caps` is the one multi-line file read here and the version is
+on line 2; `cd` + `pwd -P` resolving symlinks in the *path* so the wifi lookup silently fell through
+to a weaker fallback under any symlinked test root; and `System manufacturer` missing from the DMI
+placeholder list, so the refusal never fired on the whitebox half of the commonest placeholder pair.
+
+**`compat.tsv` still has zero rows and that is asserted, not assumed.** Both suites fail if a
+`physical` row appears while BLOCKED.md B5 is open. No hardware data was invented, and none of this
+has met real firmware yet.
