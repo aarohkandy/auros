@@ -390,7 +390,7 @@ shell scripts.
 ## B20 — The landing page misses §6D's Lighthouse floor: 91 against 95 · OPEN · the gate is red on purpose
 **Measured, on a GitHub `ubuntu-24.04` runner, Lighthouse 12.8.2 mobile, median of three**
 (`auros-web/.github/workflows/lighthouse.yml`; reports are the run's `lighthouse-reports` artifact).
-Eight of nine pages pass. `/` does not:
+Eight of nine pages pass. `/` does not, and `/how-it-works` sits on the line — 95, 95, then 94 across three consecutive CI runs (the build console again: it is the other page that carries the full log):
 
 | page | perf | a11y | LCP (stable) | DOM | fonts fetched |
 |---|---|---|---|---|---|
