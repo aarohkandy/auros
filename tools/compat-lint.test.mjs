@@ -63,7 +63,8 @@ const file = (...rows) => `${HEADER}\n${rows.join('\n')}\n`
 /** A physical row may claim anything; it is the control that proves the lint is not simply strict. */
 const PHYSICAL_FULL = row({
   model: 'ThinkPad-T440s', year: '2014', source: 'physical', cpu: 'i5-4300U', ram_gb: '8',
-  firmware: 'uefi', wifi: 'ok', trackpad: 'ok', suspend: 'ok', brightness: 'ok', gpu: 'ok',
+  firmware: 'uefi', ids: 'wifi=pci:8086:08b1;gpu=pci:8086:0a16;webcam=usb:04f2:b39a', tpm: '1.2',
+  wifi: 'ok', trackpad: 'ok', suspend: 'ok', brightness: 'ok', gpu: 'ok',
   audio: 'ok', webcam: 'ok', verdict: 'supported', notes: '-', tested_on: '2026-09-21', tester: 'aaroh',
 })
 /** A vm row with every physical column left empty. Empty is the truth: we did not observe them. */
@@ -168,6 +169,7 @@ describe('unsupported is a §9 decision, and a VM may not make it', () => {
   test('ACCEPTS a PHYSICAL row declaring a model unsupported — the control for the rule above', () => {
     accepts(lint(file(row({
       model: 'Latitude-E6420', year: '2011', source: 'physical', verdict: 'unsupported',
+      ids: 'wifi=pci:8086:0085', tpm: 'none',
       notes: '32 GB eMMC, below the 20 GiB root + two deployments floor (D26)',
       tested_on: '2026-09-21', tester: 'aaroh',
     }))), 'a human on a real machine may declare a model unsupported')
@@ -199,7 +201,9 @@ describe('the source column is what makes every other rule enforceable', () => {
     // 2026-09-20; compat-lint now fails closed if the counts do not reconcile with the row count.
     for (const padded of ['vm ', ' vm', 'physical ', ' physical']) {
       const kind = padded.trim()
-      const r = accepts(lint(file(row({ model: 'x', source: padded, verdict: 'ok' }))), `source="${padded}"`)
+      // ids is required on a physical row (see the ids suite below), so the fixture carries one;
+      // a vm row is allowed to have none. This loop is about the source column, not about ids.
+      const r = accepts(lint(file(row({ model: 'x', source: padded, verdict: 'ok', ids: 'wifi=pci:8086:08b1' }))), `source="${padded}"`)
       assert.match(r.out, new RegExp(`1 ${kind}`),
         `source="${padded}" was accepted but counted as something else:\n${r.out}`)
     }
@@ -245,7 +249,7 @@ describe('malformed files fail CLOSED — exit 2, never a quiet pass', () => {
   })
 
   test('REFUSES a file missing a required column, one column at a time', () => {
-    for (const drop of ['model', 'year', 'source', 'verdict', ...PHYSICAL_ONLY]) {
+    for (const drop of ['model', 'year', 'source', 'verdict', 'ids', 'tpm', ...PHYSICAL_ONLY]) {
       const kept = COLS.filter((c) => c !== drop)
       const text = `${kept.join('\t')}\n`
       const r = lint(text)
@@ -287,6 +291,92 @@ describe('malformed files fail CLOSED — exit 2, never a quiet pass', () => {
   test('REFUSES a row with fewer fields than the header, without crashing', () => {
     const r = lint(`${HEADER}\nqemu\tvm\n`)
     assert.notEqual(r.exit, 0, 'a short row was accepted')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+// `ids` — the column that exists so a row can be MATCHED against the next machine.
+//
+// GATE5-RUNBOOK step 1 and the driver-triage skill both say "Intel Wireless" is not a model. The
+// runbook demanded numeric IDs while the schema had nowhere to put them, so auros-base/tools/
+// capture-compat.sh reads them out of sysfs and this is the rule that keeps them numeric.
+//
+// Each test pairs a rejection with the control that makes it attributable, because a lint that
+// rejected everything would pass every rejection test in this file and be useless.
+describe('ids must be numeric bus:vendor:device — a marketing name matches nothing in four years', () => {
+  const physical = (fields) => file(row({
+    model: 'x', year: '2014', source: 'physical', verdict: 'supported',
+    tested_on: '2026-09-21', tester: 'aaroh', tpm: 'none', ...fields,
+  }))
+
+  test('ACCEPTS the shapes capture-compat.sh actually emits', () => {
+    for (const ids of [
+      'wifi=pci:8086:08b1',
+      'wifi=pci:8086:08b1;gpu=pci:8086:0a16;audio=pci:8086:0a0c;eth=pci:8086:1559;webcam=usb:04f2:b39a',
+      'gpu=pci:8086:0a16,pci:10de:0fe4',            // two GPUs, which is an Optimus laptop
+      'webcam=usb:04f2:b39a',
+    ]) accepts(lint(physical({ ids })), `ids="${ids}"`)
+  })
+
+  test('REJECTS a marketing name in the ids column — the whole point of the column', () => {
+    for (const ids of [
+      'wifi=Intel Wireless-AC 7260',
+      'wifi=Intel Centrino Advanced-N 6205',
+      'gpu=Intel HD Graphics 4400',
+      'wifi=iwlwifi',
+      'Intel Wireless',
+    ]) {
+      const r = rejects(lint(physical({ ids })), `ids="${ids}"`)
+      assert.match(r.out, /role=bus:vvvv:dddd/,
+        `the message must say what the column wants. Got:\n${r.out}`)
+    }
+  })
+
+  test('REJECTS malformed numeric ids, one malformation at a time', () => {
+    for (const ids of [
+      'wifi=8086:08b1',        // no bus
+      'wifi=pci:8086',         // no device id
+      'wifi=pci:8086:08b1:00', // one field too many
+      'wifi=pci:8086:08B1',    // uppercase hex sorts and compares differently from lowercase
+      'wifi=pci:806:08b1',     // three hex digits
+      'wifi=eisa:8086:08b1',   // a bus we do not read
+      'pci:8086:08b1',         // no role
+      'wifi=pci:8086:08b1;',   // trailing separator, which yields an empty entry
+    ]) rejects(lint(physical({ ids })), `ids="${ids}"`)
+  })
+
+  test('REJECTS a physical row with NO ids at all, and ACCEPTS a vm row with none', () => {
+    const r = rejects(lint(physical({ ids: '' })), 'a physical row with no ids')
+    assert.match(r.out, /empty ids column/)
+    // The control. A vm row has no hardware to identify, so requiring ids there would be requiring
+    // a fiction — which is the failure mode this entire file exists to prevent.
+    accepts(lint(file(row({ model: 'qemu', source: 'vm', verdict: 'boots' }))), 'a vm row needs no ids')
+  })
+})
+
+describe('tpm is one of exactly two generations, or nothing', () => {
+  const physical = (tpm) => file(row({
+    model: 'x', year: '2014', source: 'physical', verdict: 'supported',
+    ids: 'wifi=pci:8086:08b1', tpm,
+  }))
+
+  test('ACCEPTS 2.0, 1.2, none, and empty', () => {
+    // Empty is not laziness here: capture-compat.sh emits it when /sys/class/tpm/tpm0 exists but
+    // neither tpm_version_major nor caps gives a version. "There is one and we could not read it"
+    // is a different fact from "there is not one", and the schema has to be able to hold both.
+    for (const t of ['2.0', '1.2', 'none', '']) accepts(lint(physical(t)), `tpm="${t}"`)
+  })
+
+  test('REJECTS the spellings that mean the same thing to a human and nothing to a sort', () => {
+    for (const t of ['2', '1', 'TPM 2.0', 'v2.0', '2.0.1', 'yes', 'present', 'fTPM', '1.2.0']) {
+      const r = rejects(lint(physical(t)), `tpm="${t}"`)
+      assert.match(r.out, /must be one of/, `Got:\n${r.out}`)
+    }
+  })
+
+  test('the tpm rule applies to vm rows too — a QEMU profile HAS a declared TPM version', () => {
+    accepts(lint(file(row({ model: 'qemu-tpm12', source: 'vm', verdict: 'boots', tpm: '1.2' }))), 'vm tpm=1.2')
+    rejects(lint(file(row({ model: 'qemu-tpm12', source: 'vm', verdict: 'boots', tpm: 'swtpm' }))), 'vm tpm=swtpm')
   })
 })
 

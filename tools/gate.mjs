@@ -363,7 +363,7 @@ export function decide (query, paths = DEFAULT_PATHS) {
 /** Throws on refusal. For callers that want the failure to be structural rather than a boolean they might drop. */
 export function assertPublishable (query, paths = DEFAULT_PATHS) {
   const d = decide(query, paths)
-  if (d.allowed === undefined) {
+  if (!d.allowed) {
     const e = new Error(`publish gate REFUSES ${query && query.digest ? query.digest : '(no digest)'} [${d.code}]: ${d.reason}`)
     e.code = d.code
     throw e
