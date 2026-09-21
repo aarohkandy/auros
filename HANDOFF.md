@@ -36,7 +36,22 @@ and VM boot happens in GitHub Actions. This is settled; don't re-litigate it.
 Containerfile steps, every build script, `bootc container lint`. It then fails at **S7 determinism**:
 two builds from identical inputs give different content digests.
 
-**THE ONE THING TO CHECK FIRST:** run `35548421189` in `auros-base`. It carries a diagnostic I added
+### ⚠ FIRST: B16 — the upstream pin cannot move. This outranks S7.
+
+The end-to-end system review found that `auros-base/tools/resolve-upstream.sh:269-270` dispatches
+`cmd_drift` and `cmd_update`, and **neither function is defined**. Verified by running it:
+`cmd_update: command not found`. That script is the ONLY path that moves `base.lock` to a newer
+upstream digest, and its callers are `nightly.yml:97` and `build.yml:185`.
+
+So the nightly fails every night, `base.lock` is frozen at `sha256:911281f2…` permanently, and
+**spec §3's "CVE response is one rebuild" is currently "a CVE fix has no route into our build graph."**
+`bash -n` passes, workflow-lint does not check shell symbols, and nothing in `verify` runs this script —
+which is why a full day of testing never saw it. **Fix this before S7.** Details and what the two
+functions must do: `BLOCKED.md` B16. Read `docs/SYSTEM-REVIEW.md` for the rest of the review, including
+a second fatal: nothing in the system reads a CVE feed, so a fix in OUR layer never triggers a rebuild
+and an upstream stall reports green forever.
+
+**THEN:** run `35548421189` in `auros-base`. It carries a diagnostic I added
 that makes the S7 failure **name its own cause**. It will print either:
 - `PACKAGE SETS DIFFER` → cause (a): `pkg_ensure` installs from live Fedora repos with no pinning
   (`build/00-common.sh:113`), so two builds minutes apart resolve differently. Fix: pin resolution

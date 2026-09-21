@@ -829,3 +829,103 @@ placeholder list, so the refusal never fired on the whitebox half of the commone
 **`compat.tsv` still has zero rows and that is asserted, not assumed.** Both suites fail if a
 `physical` row appears while BLOCKED.md B5 is open. No hardware data was invented, and none of this
 has met real firmware yet.
+
+## D40 — §6D's last three sentences were never executed. Executing them found four defects. · 2026-09-20 · AGENT (measured)
+
+Spec §6D ends: *"Lighthouse ≥ 95 on mobile. Full keyboard operation. Works with JS disabled down to
+a mailto fallback."* The keyboard pass had been done. **The other two had never been run once** —
+not in CI, not locally, not by hand. The site had 205 tests, 1,554 measured contrast pairs, a
+1,614-pair re-measure after this change, a palette lint, an ink lint, a terrain invariant suite and
+a configurator accessibility suite. None of them was the one that catches this class of thing.
+
+**The first Lighthouse run against `dist/` found, on nine pages:**
+
+| what | cost | why nobody saw it |
+|---|---|---|
+| no icon link, so every page requested `/favicon.ico` and got a 404 | best-practices **96** on all nine pages, nine console errors | a 404 for an icon is invisible in a browser that draws a blank square |
+| `role="log"` on an `<ol>` | `aria-allowed-role` **0** and `listitem` **0** on three pages; accessibility **96** | ARIA does not permit `log` on `<ol>`, and overriding the implicit `list` role orphaned every `<li>` as well. The comment above it explained, correctly, why a log region wants `role="log"` with `aria-live="off"` — the reasoning was right and the element was wrong |
+| the configurator's one `<select>` had a `<legend>` and a hint and **no `<label>`** | `select-name` **0**; accessibility **97** on `/configure` | it is the only control on the form without one. A screen reader announced "combo box" with no name |
+| the measurement server was serving uncompressed HTML | performance **93** → **97** on `/` once gzip matched production | not a site defect — a *measurement* defect, and the more interesting one, because it would have made us "fix" a 90 KB page that a visitor receives as 19 KB |
+
+After the three real fixes, every page is **≥ 96 on performance and 100 on accessibility,
+best-practices and SEO**, measured — the per-page table is in the run output and the JSON reports
+are uploaded as an artifact on every run.
+
+**The gate is `performance` and `accessibility` only.** best-practices and SEO are measured and
+printed, so a regression is visible, but they are not gates: both contain audits that move with
+Chrome's deprecation list, and a gate that goes red because a browser deprecated an API is a gate
+people learn to ignore — and then the gate that matters is ignored alongside it.
+
+**Lighthouse is pinned exactly** (12.8.2, in `devDependencies` and the lockfile). Lighthouse
+re-weights its scoring between minors. On a floating version, *"we regressed"* and *"they
+reweighted"* produce the identical red, and a gate that cannot distinguish those two teaches the
+team that red means nothing.
+
+**The server is ours, and that is a correctness requirement, not a preference.** A score is only
+worth reporting if the serving behaviour matches production. Cloudflare Pages serves `faq.html` at
+`/faq`, compresses text, and sets long lifetimes on hashed assets. `tools/serve-dist.mjs` does all
+three. Compression is the one that matters most: uncompressed, Lighthouse's simulated 4G charged
+`index.html` ~450 ms of TTFB that nobody ever pays, and the dishonest choice there is the
+*uncompressed* one.
+
+### The no-JS path, and what "verify it for real" had to mean
+
+`tools/nojs.mjs` fetches every built page over HTTP from that same server and **parses** it.
+Nothing executes it. A headless browser with scripting disabled would still be trusting a browser
+to report what a browser does; parsing the bytes is the only implementation that cannot be fooled
+by one. Seven assertions (N1–N7): a `<main>` with a non-empty `<h1>`; a committed floor on the
+words of `<main>` that survive after `<script>`, `<template>` and `hidden` elements are removed;
+no single hidden element holding more than 25 words; a `mailto:` to the address `copy.ts` owns
+reachable within two hops **using only links present in the served bytes** — links inside a
+`<template>` are deleted before the graph is built, because otherwise the fallback would be
+"reachable" through a link only a script inserts, which is the exact lie the check exists to catch;
+every mailto well-formed and equal to the declared address; a `<noscript>` mailto on any page whose
+`<main>` ships a `<template>`; and, while `contactEmailIsPlaceholder` is true, §4.4's requirement
+that the page offering that address says on the page that it is not live.
+
+It passes today: **9 pages, 35 to 5,687 words of argument each surviving with JavaScript off, every
+page within two hops of the mailto**, and the route is printed per page so "reachable" is something
+you read rather than a boolean somebody asserted.
+
+### §6D's "no client-side framework for content pages", asserted
+
+True since the first commit, because nobody added React. That is not the same as enforced.
+`tools/content-js.mjs` signature-matches ten framework runtimes against the built bundles **and**
+the inline scripts, refuses a render-blocking `<script src>`, refuses a `<canvas>` in the served
+HTML — §7's terrain is generated after parse precisely so it cannot be laid out before first paint,
+and that is now a check rather than a property of how one file happens to be written today — and
+holds each page to a committed gzipped budget. Measured: **7.4 KB of gzipped JavaScript on a
+content page**, 9.3 KB where the build console runs, 35.7 KB on the configurator, which is an
+application.
+
+### The fonts, checked in both directions
+
+`font-display: swap` on all eight faces; `preload` on exactly the two that draw the first screen.
+The existing check proved every character in `dist` has a face that covers it. The **inverse** —
+a face shipped that no page ever triggers — had never been checked, so it was run: all eight are
+triggered by at least one character in the built output, including the 261 KB Devanagari subset,
+which exists for one Marathi line on the landing page and is `unicode-range`-gated so no other page
+downloads it.
+
+### What was NOT changed, and why that is the honest answer
+
+Two back-to-back A/B runs suggested that **removing** both font preloads is worth about +2 points
+(`/` 97→99, `/configure` 92→94): under simulated 4G the two `as=font` preloads are fetched at top
+priority and delay the render-blocking CSS, while `font-display: swap` means neither is needed to
+paint. That is a real effect and it contradicts `src/styles/FONTS.md`'s documented reasoning. **It
+is not changed here**, because both A/Bs were run on a laptop carrying eight other agents' builds —
+load average above 300 for the whole session — and a scoring change of 2 points measured under that
+contention is not evidence, it is a hint. The clean place to settle it is the CI job this decision
+adds, on a dedicated runner. Recorded so the next person does not re-derive it from scratch.
+
+### D34, applied to the new gates before they were trusted
+
+`tools/prove-red.mjs`: **thirteen mutations**, each breaking one thing and requiring the gate that
+owns it to exit non-zero **and** to print the reason stated in the mutation — red for the wrong
+reason is not scored as a catch. Plus all three gates run unmutated and required green, which is
+D34's direction audit. A Lighthouse gate is an unusually easy one to write green-forever: point it
+at the wrong directory, at a route list that resolves to nothing, or compare a score against
+`undefined`, and it passes every build on any site at all. All thirteen pass, including both
+Lighthouse directions (a page given three real accessibility defects goes red on `accessibility`;
+a page given a 1.5 MB render-blocking script that also burns the main thread goes red on
+`performance`).

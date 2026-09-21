@@ -354,3 +354,35 @@ report line read better, is how the wall stops meaning anything.
 *Not blocked on a human, blocked on a design review it deserves.* Until it exists the degradation is
 visible to the user rather than hidden from them, which is the property that matters. Details:
 `auros-installer/packaging/systemd/README.md`.
+
+## B16 — The only code path that moves the upstream pin does not exist · **FATAL** · OPEN · breaks the core promise
+Found by the end-to-end system review (`docs/SYSTEM-REVIEW.md`), not by any test.
+
+`auros-base/tools/resolve-upstream.sh:269-270` dispatches `drift) cmd_drift ;;` and
+`update) cmd_update ;;`. **Neither function is defined.** Only `cmd_resolve` (line 191) and
+`cmd_assert` (line 206) exist. Verified by running it: `cmd_update: command not found`.
+
+Its two callers are the two that matter:
+- `nightly.yml:97` — `./tools/resolve-upstream.sh update`, the nightly step that moves the pin.
+- `build.yml:185` — `./tools/resolve-upstream.sh drift`.
+
+**Consequence.** This is the *only* mechanism that moves `base.lock` to a newer upstream digest. It
+fails every night. The `drift` job goes red, `build` is skipped by `needs`, and `base.lock` stays at
+`sha256:911281f2…` forever. Spec §3's "CVE response is one rebuild" is currently **"a CVE fix has no
+route into our build graph at all."** Every customer on every image, if there were any.
+
+**Why nothing caught it.** `bash -n` passes — the file is syntactically valid, the functions are simply
+absent. `tools/workflow-lint.mjs` checks pipefail and env interpolation, not shell symbols. No suite in
+`verify` invokes this script. And `build.yml:211` already carries a comment naming *this exact failure
+class* — *"this is how the publish step silently stopped running: it called subcommands that do not
+exist"* — which was fixed for `gate.mjs` with `tools/gate.refusals.test.mjs` and never applied to the
+shell scripts.
+
+**What the fix must do** (for whoever implements it):
+- `cmd_drift` — re-resolve `UPSTREAM_IMAGE:UPSTREAM_TAG` to a digest, compare with `base.lock`'s
+  `UPSTREAM_DIGEST`, emit `moved=true|false` plus the new digest to `$GITHUB_OUTPUT`. `nightly.yml:149`
+  gates the rebuild on `needs.drift.outputs.moved == 'true'`.
+- `cmd_update` — do that, then rewrite `base.lock` (digest, resolved-at, created, pull size) and leave
+  the tree committable.
+- **Then add a test that every dispatched subcommand is a defined function**, for every shell script in
+  the repo. That is the generalisable fix; the two functions are the instance.

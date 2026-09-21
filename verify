@@ -165,6 +165,24 @@ if [ -f auros-web/src/terrain/terrain.test.ts ]; then
   run "terrain invariants (spec §7)" bash -euo pipefail -c 'cd auros-web && node --experimental-strip-types --test src/terrain/terrain.test.ts'
 else skip "terrain invariants (spec §7)" "auros-web/src/terrain/terrain.test.ts not present yet"; fi
 
+# ── §6D — the two sentences at the end of §6D that had never been executed ──────────────────────────
+# "Works with JS disabled down to a mailto fallback" and "No client-side framework for content
+# pages." Both were true and neither was checked, which is the state D19 names: a requirement that
+# cannot fail is a sentence. Both read the BUILT pages, so they run after the build; both fail closed
+# on an empty or wrong directory rather than reporting a pass over nothing.
+#
+# The third sentence, "Lighthouse ≥ 95 on mobile", is NOT here. It needs Chrome and about four
+# minutes, so it lives in auros-web/.github/workflows/lighthouse.yml where it runs on every pull
+# request, with `pnpm --dir auros-web lighthouse` for anyone who wants it locally. Putting a
+# four-minute Chrome run in `verify` is how `verify` stops being run.
+if [ -f auros-web/tools/nojs.mjs ]; then
+  run "no-JS path: argument survives, mailto reachable (spec §6D)" bash -euo pipefail -c 'cd auros-web && node tools/nojs.mjs'
+else skip "no-JS path (spec §6D)" "auros-web/tools/nojs.mjs not present yet"; fi
+
+if [ -f auros-web/tools/content-js.mjs ]; then
+  run "no framework, no blocking script, JS budget (spec §6D)" bash -euo pipefail -c 'cd auros-web && node tools/content-js.mjs'
+else skip "content-page JavaScript (spec §6D)" "auros-web/tools/content-js.mjs not present yet"; fi
+
 # ── The honesty check on our own state files ────────────────────────────────────────────────────────
 run "compat.tsv honesty (no vm row claims a physical column)" node tools/compat-lint.mjs
 
