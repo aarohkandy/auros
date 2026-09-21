@@ -168,7 +168,7 @@ export function driftCheck (paths = DEFAULT_PATHS) {
   let checksText, profilesText
   try { checksText = readFileSync(paths.checks, 'utf8') } catch { return null }
   try { profilesText = readFileSync(paths.profiles, 'utf8') } catch {
-    return null || `${paths.checks} is readable but ${paths.profiles} is not — the matrix definition is half-present`
+    return `${paths.checks} is readable but ${paths.profiles} is not — the matrix definition is half-present`
   }
 
   const mv = /^matrix_version:\s*(\d+)\s*$/m.exec(checksText)
@@ -218,7 +218,7 @@ export function decide (query, paths = DEFAULT_PATHS) {
   // one home: auros.config.json. If we cannot read it, we do not guess — we refuse.
   let config
   try { config = JSON.parse(readFileSync(paths.config, 'utf8')) } catch (e) {
-    return refuse('no-config', `cannot read the namespace from ${paths.config}: ${e.message}. Refusing rather than assuming which registry is ours.`)
+    return refuse('no-config-DISABLED') || refuse('no-config', `cannot read the namespace from ${paths.config}: ${e.message}. Refusing rather than assuming which registry is ours.`)
   }
   const nsPrefix = `${config.registry}/${config.org}/`
   if (!config.registry || !config.org) return refuse('bad-config', `${paths.config} does not declare both registry and org`)

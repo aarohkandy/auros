@@ -1153,4 +1153,102 @@ describe('the no-subcommands message', () => {
   })
 })
 
+// ═════════════════════════════════════════════════════════════════════════════════════════════════
+// 8. A SECOND-ORDER SWEEP — MUTATIONS NOBODY REPORTED
+//
+// The eighteen blocks above were written against a supplied list of survivors. A suite patched at
+// exactly the eighteen points it was told about is a checklist, not a net, so 27 further mutations
+// were generated independently and run against the suite as it stood after section 7. Twenty-two
+// died. Five did not, and this section is the three of those five that were real. (The other two
+// were EQUIVALENT MUTANTS — no input can distinguish them — and are recorded in the report rather
+// than papered over with a test that would pass either way.)
+// ═════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('second-order survivors', () => {
+  const capture = (argv) => {
+    const lines = []
+    const orig = console.error
+    console.error = (...a) => lines.push(a.join(' '))
+    let code
+    try { code = main(argv) } finally { console.error = orig }
+    return { code, text: lines.join('\n') }
+  }
+
+  // ── 8.1 The digest length bound ────────────────────────────────────────────────────────────────
+  // `/^sha256:[a-f0-9]{64}$/` → `{63,64}` survived everything. Nothing in this repo pinned the
+  // length, and DIGEST_RE is used BOTH to validate the query and to validate the rows, so loosening
+  // it loosens both ends at once: a 63-character digest becomes a legal attestation AND a legal
+  // thing to ask about, and they match each other. A truncated digest is then a recorded pass.
+  test('DIGEST_RE accepts exactly 64 hex characters, and no other length', () => {
+    for (const len of [0, 1, 8, 32, 62, 63, 65, 66, 128]) {
+      assert.equal(DIGEST_RE.test('sha256:' + 'a'.repeat(len)), false,
+        `a digest of ${len} hex characters matched DIGEST_RE. The bound is what makes a digest the whole hash.`)
+    }
+    assert.equal(DIGEST_RE.test('sha256:' + 'a'.repeat(64)), true, 'the real length must still match')
+  })
+
+  test('REFUSES a 63-character digest even when a row is recorded under the SAME 63 characters', () => {
+    // Both halves loosen together, so the truncated query and the truncated row match each other.
+    // This is the only shape that catches it: a short query against a full-length row merely misses.
+    const short = 'sha256:' + 'ab12'.repeat(15) + 'abc'
+    assert.equal(short.length - 'sha256:'.length, 63)
+    const d = decide({ digest: short }, at(`${headerLine()}\n${rowLine({ digest: short })}\n`))
+    assert.equal(d.allowed, false, 'a 63-character digest matched a row recorded under the same 63 characters')
+    assert.equal(d.code, 'not-a-digest')
+  })
+
+  test('REFUSES the whole ledger when ANOTHER row records a wrong-length digest', () => {
+    for (const bad of ['sha256:' + 'ab12'.repeat(15) + 'abc', 'sha256:' + 'ab12'.repeat(16) + 'ab', 'sha256:ab12']) {
+      const d = refuses(at(`${headerLine()}\n${rowLine()}\n${rowLine({ digest: bad })}\n`), `a row whose digest is ${bad.length - 7} hex`)
+      assert.equal(d.code, 'malformed-ledger')
+    }
+    allows(at(`${headerLine()}\n${rowLine()}\n${rowLine({ digest: 'sha256:' + 'cd34'.repeat(16) })}\n`), 'two full-length digests')
+  })
+
+  // ── 8.2 The timestamp anchor ───────────────────────────────────────────────────────────────────
+  // TIMESTAMP_RE `…Z$/` → `…Z/` survived, because trailing junk makes Date.parse return NaN and the
+  // row is refused anyway — by accident, one line further down. The VERDICT is the same; the RULE is
+  // not. Asserting the code alone cannot tell the two apart, so this asserts the reason, which is
+  // the only place the difference is visible.
+  test('REFUSES a recorded_at with trailing junk as a SHAPE error, not as an unparseable instant', () => {
+    for (const suffix of ['junk', 'Z', '+01:00', '.000', ' UTC'.trim()]) {
+      const ts = `${NOW}${suffix}`
+      const d = refuses(at(`${headerLine()}\n${rowLine({ recorded_at: ts })}\n`), `recorded_at "${ts}"`)
+      assert.equal(d.code, 'malformed-ledger')
+      assert.match(d.reason, /is not UTC YYYY-MM-DDTHH:MM:SSZ/,
+        'an unanchored TIMESTAMP_RE lets the shape through and leaves Date.parse to reject it by accident. ' +
+        `Today the verdict is the same; the rule is not, and the next edit to that line has no test. Got: ${d.reason}`)
+    }
+  })
+
+  test('CONTROL: a correctly shaped recorded_at ALLOWS', () => {
+    allows(at(GOOD), 'a well-formed UTC timestamp')
+  })
+
+  // ── 8.3 An unrecognised flag must be rejected AS A FLAG ────────────────────────────────────────
+  // `else if (a.startsWith('-'))` → `else if (false)` survived: an unknown flag falls through to the
+  // positional branch and still exits 2, so every existing test is satisfied. What is lost is the
+  // sentence — the one that tells the operator this gate has no flags that change its answer. That
+  // sentence is the whole anti-bypass message; "unexpected extra argument" invites another try.
+  test('an unrecognised FLAG is rejected as a flag, with the message that says there is no bypass', () => {
+    for (const flag of ['--force', '--skip-gate', '-f', '--allow', '--i-know-what-im-doing']) {
+      const { code, text } = capture([DIGEST, flag])
+      assert.equal(code, 2, `"${flag}" must be fatal`)
+      assert.match(text, /unrecognised argument/,
+        `"${flag}" was reported as "${text.split('\n')[0]}". An extra-positional error reads as "wrong ` +
+        'number of arguments", so the author edits the arguments instead of reading the sentence below.')
+      assert.match(text, /no flags that change its answer/,
+        'the refusal must state that no flag can change the verdict, or the next person looks for the one that can')
+    }
+  })
+
+  test('CONTROL: a second POSITIONAL really is an extra-argument error, and says so', () => {
+    const { code, text } = capture([DIGEST, 'sha256:' + 'cd34'.repeat(16)])
+    assert.equal(code, 2)
+    assert.match(text, /unexpected extra argument/)
+    assert.doesNotMatch(text, /unrecognised argument/, 'the two errors must stay distinguishable')
+  })
+})
+
+
 test.after(() => { if (TMP) rmSync(TMP, { recursive: true, force: true }) })

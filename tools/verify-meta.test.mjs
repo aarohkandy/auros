@@ -356,6 +356,32 @@ const CASES = [
     standIn: true,
   },
   {
+    // The build console's own suite. It needs no network and no `dist/`, so the stand-in proves the
+    // one thing a stand-in can prove and the one thing that matters here: that its non-zero exit
+    // reaches verify's. The suite's real assertions are exercised by running it directly, where it
+    // breaks the committed snapshots on purpose and watches the refusals fire.
+    gate: 'build console shows only real runs (spec §7)',
+    green: (s) => s.stubTest('auros-web/tools/build-console.test.mjs', true),
+    red: (s) => s.stubTest('auros-web/tools/build-console.test.mjs', false),
+    standIn: true,
+  },
+  {
+    // The capture tool's suite. A stand-in proves the one thing a stand-in can prove — that a
+    // non-zero exit reaches verify's — and the real suite's own red behaviour is demonstrated where
+    // it belongs: inside itself, by mutating auros-base/tools/capture-compat.sh to fill a
+    // physical-only column from a probe and requiring the guard to refuse the row.
+    gate: 'compat capture leaves the human columns empty (spec §8)',
+    green: (s) => s.write('auros-base/tests/capture-compat.test.sh', '#!/usr/bin/env bash\necho "stand-in ok"\nexit 0\n', 0o755),
+    red: (s) => s.write('auros-base/tests/capture-compat.test.sh', '#!/usr/bin/env bash\necho "STAND-IN FAILED" >&2\nexit 1\n', 0o755),
+    standIn: true,
+  },
+  {
+    gate: 'compat quoting refuses vm rows and empty cells (spec §8)',
+    green: (s) => s.stubTest('auros-base/tools/quote-from-compat.test.mjs', true),
+    red: (s) => s.stubTest('auros-base/tools/quote-from-compat.test.mjs', false),
+    standIn: true,
+  },
+  {
     gate: 'compat.tsv honesty (no vm row claims a physical column)',
     real: true,
     green: () => {},                       // the base sandbox ships the repo's real, honest compat.tsv

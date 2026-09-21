@@ -37,7 +37,15 @@ plan; a task list nobody updates is a second PLAN.md that is wrong.
 - [x] Prune engine with a measured floor and a ratchet; `explain` becomes the PR body
 - [x] 433 node tests + 65 Python refusals; PR gate with read-only permissions
 - [x] Propagation: poll fallback until a dispatch credential exists (B2)
+- [x] Three example recipes COMPILED and DIFFED — `test/differ.test.ts`, 7 red-state mutations.
+      Found three fields that reached the image as nothing and one that changes the report and not
+      the machine (D38). Prune sets measured: 57/52/8, **nested** workstation ⊂ school ⊂ kiosk.
+- [x] `examples.yml` — `workflow_dispatch -f base_image=…` builds all three and compares their
+      package databases. One command the moment the hardened base publishes.
 - [ ] Three example recipes BUILT and BOOTED — needs the hardened base first
+- [H] **§9: does a customer's `updates.install_between` window win, or does U1's twenty-minute
+      propagation deadline?** They are in direct tension and the field is disclosed as not applied
+      until somebody decides (D38).
 
 ## W-C — auros-installer (Gate 3)
 - [x] Safety core: `VerifiedArchive` unforgeable, the wall enforced by an import-graph test

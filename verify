@@ -140,6 +140,15 @@ if [ -f auros-web/tools/contrast.mjs ]; then
   run "WCAG AA contrast, measured (spec §7)" bash -euo pipefail -c 'cd auros-web && node tools/contrast.mjs'
 else skip "contrast (spec §7)" "auros-web/tools/contrast.mjs not present yet"; fi
 
+# ── §7 — the build console shows real runs, and refuses to show anything else ───────────────────────
+# Needs no network and no dist/: it reads the two committed snapshots and then breaks each property
+# on purpose — an all-green record, a run with no link, a line stamped outside its own run — and
+# asserts the thing responsible for noticing goes red. D37's lesson applied to the one element on
+# the site whose whole argument is that it is true.
+if [ -f auros-web/tools/build-console.test.mjs ]; then
+  run "build console shows only real runs (spec §7)" bash -euo pipefail -c 'cd auros-web && node --test tools/build-console.test.mjs'
+else skip "build console (spec §7)" "auros-web/tools/build-console.test.mjs not present yet"; fi
+
 # ── §6D — the configurator's accessibility and honesty claims, as permanent assertions ──────────────
 # The 2026-09-20 §7/a11y audit, one named test per fatal and major finding. Reads the BUILT pages,
 # so it runs after the build for the same reason contrast does.
@@ -158,6 +167,20 @@ else skip "terrain invariants (spec §7)" "auros-web/src/terrain/terrain.test.ts
 
 # ── The honesty check on our own state files ────────────────────────────────────────────────────────
 run "compat.tsv honesty (no vm row claims a physical column)" node tools/compat-lint.mjs
+
+# ── §8 — the two tools that put rows INTO compat.tsv and take answers back OUT of it ────────────────
+# compat-lint guards the file. These guard the two things that touch it, and they are where the
+# damage would actually be done: a capture tool that fills `wifi` from a loaded module writes a
+# fabricated row, and a quote tool that reads an empty cell as a pass sells a school a laptop nobody
+# tested. Both suites are paired — every refusal has a control that must still be accepted — and the
+# capture suite MUTATES the shipping script to watch its guard fire.
+if [ -x auros-base/tests/capture-compat.test.sh ]; then
+  run "compat capture leaves the human columns empty (spec §8)" auros-base/tests/capture-compat.test.sh
+else skip "compat capture (spec §8)" "auros-base not checked out here"; fi
+
+if [ -f auros-base/tools/quote-from-compat.test.mjs ]; then
+  run "compat quoting refuses vm rows and empty cells (spec §8)" node --test auros-base/tools/quote-from-compat.test.mjs
+else skip "compat quoting (spec §8)" "auros-base not checked out here"; fi
 
 # ── THE AGGREGATE ITSELF ────────────────────────────────────────────────────────────────────────────
 # Everything above is theatre if THIS script can report success while one of them failed, and that

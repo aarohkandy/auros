@@ -184,9 +184,24 @@ let scanned = 0
 const CADENCE = /\b(?:every |each )?(?:Mondays?|Tuesdays?|Wednesdays?|Thursdays?|Fridays?|Saturdays?|Sundays?|nightly|every night|daily|weekly|hourly|every (?:hour|day|week))\b/i
 const WORKFLOW_PATH = /((?:[A-Za-z0-9._-]+\/)*\.github\/workflows\/[A-Za-z0-9._-]+\.ya?ml)/g
 
-/** True when the file has a `schedule:` trigger that is not commented out. */
+/**
+ * True when the file has a `schedule:` trigger that is not commented out AND at least one `cron:`
+ * under it that is not commented out either.
+ *
+ * The cron half was missing until 2026-09-20, and its absence was the same bug this rule exists to
+ * catch. `replaceable.yml` happened to have the whole `schedule:` key commented, so the rule looked
+ * like it worked — but a workflow with a live `schedule:` and every `cron:` commented out runs on
+ * nothing, and the rule called it scheduled. Demonstrated by commenting the cron in
+ * `auros-web/.github/workflows/build-log-snapshot.yml` and watching the gate stay green.
+ *
+ * A `cron:` can only appear under `schedule:` in an Actions workflow, so requiring both is exact
+ * rather than approximate.
+ */
 function hasActiveSchedule (yamlText) {
-  return yamlText.split('\n').some(l => /^\s*schedule\s*:/.test(l) && !/^\s*#/.test(l))
+  const live = l => !/^\s*#/.test(l)
+  const lines = yamlText.split('\n')
+  return lines.some(l => /^\s*schedule\s*:/.test(l) && live(l)) &&
+         lines.some(l => /^\s*-\s*cron\s*:/.test(l) && live(l))
 }
 
 function checkCitedWorkflows (file, root, text, lines) {

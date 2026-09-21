@@ -696,3 +696,78 @@ everywhere. The rule was written down, repeated, and violated by its author in t
 most. What actually protects against that is not the rule — it is a test that breaks the thing on
 purpose and watches the aggregate go red. D34 says every check must be watched failing; `verify` is a
 check, and until the meta-test existed, nobody had ever watched it fail.
+
+## D38 — Three fields reached the image as nothing, and the third one hid behind a real difference · 2026-09-20 · AGENT (measured)
+
+Spec §6B's exit condition has three clauses and only two of them had ever been checked. "Build from
+the same base" and "boot" belong to the check matrix. **"Differ in every way the YAML says they
+should and in no way it doesn't"** belongs to nothing — every test in `auros-recipes/test/` compares
+one recipe to itself, and a difference between two images is not observable from inside a test that
+only holds one.
+
+`test/differ.test.ts` states it as two properties over the three example recipes:
+
+- **forward** — take one recipe, overwrite every top-level key with another recipe's value except the
+  folder-bound `name`, compile, and the result must BE the other recipe's image definition. Anything
+  left over is the compiler reading something that is not in the file.
+- **inverse** — for each field that differs between two recipes, swap that one field. The output must
+  change, or the swap must be refused with a sentence. Accepted-and-identical is a field the machine
+  ignores.
+
+The inverse found three, in a repository with 448 passing tests:
+
+1. **`updates.install_between`.** Three recipes, three different windows, and the field reached the
+   image as nothing at all. Only `explain` printed it — into the pull request body the customer reads
+   and agrees to. And it is not simply unbuilt: `auros-base/update-agent/systemd/
+   bootc-fetch-apply-updates.timer.d/10-auros.conf` deliberately CLEARS `OnCalendar=` and checks on a
+   fixed cadence instead, because U1 requires a fleet to take a rebuild within twenty minutes of it
+   publishing, at whatever hour it publishes. A quiet window and that guarantee are in direct
+   tension, and **which wins is §9-reserved** — it is a product decision, not a validator's. Until
+   somebody makes it: a disclosure note on every build report and PR, `explain` prints `RECORDED, NOT
+   YET APPLIED` instead of a time, and schema/README.md §4 says so next to "no staged rollout".
+2. **`hardware.also_test`.** Sold in two READMEs as the reason "it cannot ask for less testing", and
+   read by nothing. A recipe asking for `uefi-secureboot` got the same build and the same tests as
+   one asking for nothing. It is now `auros.test-profiles` on the image, and CI reads it back off the
+   built artifact — the thing under test supplies the parameters of its own test, so a workflow
+   cannot drift from the recipe it is testing.
+3. **`prune.also_keep` under `keep_only_the_apps_above: false`.** Nothing is swept, so nothing needs
+   rescuing. The line protected nothing while reading exactly like protection. Refused.
+
+**And one the differ test could not have found, which is the important one.** Under
+`keep_only_the_apps_above: true`, `prune.also_remove` removes ZERO further packages — proven by
+emptying it: example-school 52 → 52, example-kiosk 57 → 57. It is a property of `planPrune`, not of
+these fixtures: the keep-only universe is every group member plus every catalogue application, and
+`also_remove` draws from group members. The field still changes the compiled bytes, because every
+removal carries a `reason` string, so the byte comparison sees a difference and the machine does not.
+Subtraction is the product (§2); "the prune list is first-class" (§6B). The customer writes *also
+remove: bluetooth, office suite, webcam* and their build report credits that decision for something
+the "and nothing else" line had already done. Disclosed in a note, and `test/differ.test.ts` asserts
+the SET rather than the bytes so this cannot come back quietly.
+
+**What the prune sets actually are, measured:** kiosk 57, school 52, workstation 8, and they form a
+**nested chain — workstation ⊂ school ⊂ kiosk**. No fleet in this repository subtracts anything
+another fleet keeps. The two the spec calls most different — a 180-machine Marathi classroom and a
+40-machine walk-up kiosk — are separated by five KDE applications (`dolphin`, `gwenview`, `kcalc`,
+`kwrite`, `okular`) and nothing else. That is pinned exactly, as a tripwire rather than as an
+inequality somebody invented a threshold for, so the day it changes a person has to look.
+
+**Separately, and worse: the check matrix on a customer recipe had never run and could not have.**
+`auros-recipes/.github/workflows/build-recipe.yml` called
+
+    .auros-base/matrix/run/run-static.sh "localhost/${RECIPE}:candidate"
+
+and two more like it. All three scripts take named flags; run by hand against a real ref each answers
+`FATAL: unknown argument` and exits 2. It failed CLOSED, so nothing shipped behind it, but "the
+matrix gates every recipe" was not true. The real entry point is `matrix/run.sh --phase …`, and even
+a matrix that started would have tested a customer image as if it were the base, because no
+`--policy`, `--locale`, `--keymap`, `--flatpak-ref` or `--remove-pkg` was being passed either. This is
+rule 2 — never guess a path, a unit name or a flag — in the place it costs most.
+
+**New in `auros-recipes`:** `test/differ.test.ts` (22 tests), `scripts/prove-red-differ.mjs` (7
+mutations, each required to redden the suite *for its own stated reason*), `scripts/compare-images.mjs`
+plus `test/compare-images.test.ts` (the `rpm -qa` comparison that can only run once the hardened base
+publishes, driven into all six of its failure branches today against synthetic facts), and
+`.github/workflows/examples.yml` — `workflow_dispatch`, one `base_image` input, builds all three,
+publishes nothing:
+
+    gh workflow run examples.yml -f base_image=ghcr.io/aarohkandy/auros-base@sha256:<digest>
