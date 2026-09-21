@@ -5,6 +5,29 @@ Written by the outgoing agent for the next one. **Read this file, then `DECISION
 
 ---
 
+## 0. UPDATE 2026-09-21 ~06:30 UTC — read this before §3, which is now history
+
+- **B16 fixed** (auros-base `c849612`): `cmd_drift`/`cmd_update` exist; a test fails on any dispatched
+  function that isn't defined, and on any workflow calling a subcommand its script doesn't have.
+- **S7 is GREEN, honestly** (D41): the cause was dnf5's SQLite journal, 2 of 169,977 files. Two earlier
+  "passes" were vacuous (empty lists; then a build served entirely from layer cache). Builds are now
+  `--no-cache` and a cache hit fails the step.
+- **Boot matrix:** 17 commits of harness fixes (in-guest deadlock, plasmalogin not sddm) had never been
+  merged; they are now. Run 35566336512 is the first boot matrix that can finish.
+- **Static phase** now fails only on three owner decisions (S5, S6, S10). **Everything waiting on the
+  owner is in one table: BLOCKED.md B21.** The top one: `tools/gate.mjs` must learn S11 (protected
+  from agents), or the gate refuses every digest.
+- ~25 agent branches landed via integration branches; see `git log` in each repo. New docs:
+  `docs/DESKTOP-LAYOUTS.md`, `FLEET-VIEW.md`, `MIGRATION-GUI.md`, `APPDATA-SCOPE.md`.
+- **Installer:** nothing on `main` (owner pushes it). Feature branches pushed to origin:
+  `agent/label-seam` (the restore + browser-profile routing fix; the only safe copy of that code),
+  `agent/honesty`, `agent/gate3-continue`, `agent/gate3-appdata` (junctions verified on real Windows).
+  Unpushed local branches: `agent/wifi-printers`, `agent/ci-pins`, `agent/appdata-junctions`, `agent/r1-fixture`.
+- **The nightly has never completed a scheduled run** (first two runs were a YAML error, since fixed).
+  The control-repo watchdog now opens an issue for exactly this.
+
+---
+
 ## 1. What this is
 
 Auros sells custom Fedora **bootc** OS images to schools and nonprofits with 2012–2018 laptops that

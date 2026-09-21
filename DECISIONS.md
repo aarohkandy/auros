@@ -967,3 +967,35 @@ Then the two landing-page defects the runner found and the laptop could not:
 **`/` still measures 91 against §6D's 95. The gate stays at 95 and stays red** — BLOCKED.md B20
 has the numbers, what was tried and measured, and why what is left (the build console's 770 of
 1,116 elements, and the landing page's font mix) is a design decision rather than a tweak.
+
+## D41 — S7 was one SQLite journal, and S7 as specified holds · 2026-09-21 · AGENT (measured)
+
+Two S7 "verdicts" before this were vacuous: 35548421189 compared two empty package lists, and
+35557609009 compared an image with itself — podman served all 29 of build b's steps from build a's
+layer cache. Both builds now run `--no-cache`, and a build whose log shows any cache hit fails
+the step (the guard was run against both real logs: it refuses the cached one, accepts the real one).
+
+The first honest run (35564325340) named the cause by content-hashing every file of both images:
+**2 of 169,977 files differed** — `/usr/lib/sysimage/libdnf5/transaction_history.sqlite-wal` and
+`-shm`. Package sets were identical (2,179). The rpmdb, the handoff's prime suspect, was identical.
+The WAL holds this build's dnf transactions with timestamps. `90-cleanup.sh` already removed dnf
+history — at dnf4's `/var/lib/dnf`, a remembered path; dnf5 keeps it under `/usr/lib/sysimage`.
+
+Fixed by removing the WAL and SHM without a checkpoint, so the database stays at its last
+checkpoint (consistent, byte-identical); a surviving journal fails the build. Cost: `dnf history`
+does not list build-time installs; the rpmdb is the record. **Run 35566336512: S7 PASS, zero cache
+hits, both builds identical at `c42806aef10f027b1f72127a14aba3ebb59912b83fa3e66e9d53ebea2848f436`.**
+S7 did not need redefining.
+
+## D42 — The migration is command-line only, against D4. Recorded, not resolved · 2026-09-21 · AGENT
+
+D4.1 (HUMAN, binding): a task the product promises gets a GUI or stops being a promise. Both halves
+of the migration are command-line programs; the operator types `--i-understand-programs-do-not-migrate`
+before the list it acknowledges is shown to them in a form they must read. This was a silent
+deviation (SYSTEM-REVIEW §2.24); it is now a written one, the way D13 is.
+
+**Until a GUI exists, migrations are run by staff or trained operators, not by end users**, and
+nothing we publish may imply otherwise. A design exists — `docs/MIGRATION-GUI.md`: raw Win32 through
+Go's `syscall`, no new dependency (the wall cannot see a library's Windows calls), ~1.5 MB, the
+disclosure checkbox disabled until every row has been on screen, ~15–23 engineer-days. Building it
+is the owner's call (BLOCKED B21).
