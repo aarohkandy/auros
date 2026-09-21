@@ -14,6 +14,8 @@
 //      governing this whole file: a step that cannot fail is not a check.
 //   3. No top-level `name:`. Which is also what a rejected workflow looks like, so a workflow with
 //      no name is a workflow whose parse failures are indistinguishable from its normal appearance.
+//   4. `ubuntu-latest` (D23). It migrates to 26.04 from 2026-10-19; SYSTEM-REVIEW H21 found
+//      propagate.yml on it with nothing enforcing the decision.
 //
 // THE DISCIPLINE. For every "must fire" there is a near-identical "must not fire" that differs by
 // one character — a quote, a brace, a line. A linter that flagged every `${{ }}` would satisfy every
@@ -217,6 +219,25 @@ describe('rule 3 — a top-level name', () => {
   test('FIRES when ONLY a job is named — an indented name: does not count', () => {
     const jobNameOnly = OK.replace(/^name: build-base\n/, '').replace('  build:\n', '  build:\n    name: Build the base\n')
     flags(one(jobNameOnly), 'only a job name')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+describe('rule 4 — no ubuntu-latest (D23)', () => {
+  test('FIRES on runs-on: ubuntu-latest, and in quoted, list and matrix forms', () => {
+    const r = flags(one(OK.replace('runs-on: ubuntu-24.04', 'runs-on: ubuntu-latest')), 'runs-on: ubuntu-latest')
+    assert.match(r.out, /D23/)
+    assert.match(r.out, /w\.yml:11/, 'the finding must point at the runs-on line')
+    flags(one(OK.replace('runs-on: ubuntu-24.04', "runs-on: 'ubuntu-latest'")), 'quoted')
+    flags(one(OK.replace('runs-on: ubuntu-24.04', 'runs-on: [ubuntu-latest]')), 'list')
+    flags(one(OK.replace('runs-on: ubuntu-24.04',
+      'strategy:\n      matrix:\n        os: [ubuntu-latest, ubuntu-24.04]\n    runs-on: ${{ matrix.os }}')), 'matrix value')
+  })
+
+  test('QUIET on ubuntu-24.04, and on ubuntu-latest mentioned only in a comment', () => {
+    clean(one(OK), 'pinned runner')
+    clean(one(OK.replace('runs-on: ubuntu-24.04', 'runs-on: ubuntu-24.04  # not ubuntu-latest (D23)')), 'trailing comment')
+    clean(one(OK.replace('jobs:\n', '# ubuntu-latest moves to 26.04 in October\njobs:\n')), 'whole-line comment')
   })
 })
 
