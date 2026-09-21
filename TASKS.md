@@ -74,9 +74,14 @@ plan; a task list nobody updates is a second PLAN.md that is wrong.
       7.4 KB gzipped JS on a content page, committed budgets, no canvas in the document
 - [x] Both new gates watched failing — `tools/prove-red.mjs`, 13 mutations, each red for its
       stated reason (D34/D37)
-- [ ] Settle the font-preload question on a dedicated runner (D40) — two contended A/Bs suggest
-      dropping both `as=font` preloads is worth ~+2, which contradicts `src/styles/FONTS.md`.
-      Not changed on that evidence. The CI job is the clean place to decide it.
+- [x] Landing-page defects the RUNNER found and the laptop could not (D40 addendum): 267 KB
+      Devanagari face for one greeting → 75 KB, HarfBuzz-verified (`/` 85 → 91); first-boot
+      figure off its panel at 1.94:1 once the terrain mounts (`/` a11y 97 → 100)
+- [x] auros-web's own `pnpm build` made runnable in its own CI — it had never been (D40)
+- [H] **`/` measures 91 against §6D's 95 on a runner** — B20. The gate stays at 95 and stays red.
+      What is left is the build console's size on the landing page (770 of 1,116 elements) and the
+      font mix on one screen: a D29 design decision, with the numbers in B20.
+- [ ] Settle the font-preload question on the runner (D40) — two contended A/Bs suggested ~+2.
 - [H] Wind-down terms document — B12. **Blocks publishing.** Draft exists; needs a lawyer.
 - [H] Cloudflare account + explicit go-ahead to publish — B14
 - [H] $0 self-serve tier — B9, pricing is §9

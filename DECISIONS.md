@@ -929,3 +929,41 @@ at the wrong directory, at a route list that resolves to nothing, or compare a s
 Lighthouse directions (a page given three real accessibility defects goes red on `accessibility`;
 a page given a 1.5 MB render-blocking script that also burns the main thread goes red on
 `performance`).
+
+### Addendum, same evening — the runner disagreed with the laptop, and the runner was right
+
+Everything above was measured on this laptop. **The first CI run of the gate put `/` at 85
+performance and 97 accessibility** — on a page this laptop had scored 97–99 and 100, repeatedly.
+The laptop was carrying other agents' builds all session; the runner is a clean, dedicated machine.
+The gate is the runner.
+
+Getting the gate to execute at all found two things no workflow in auros-web had ever exercised,
+because no workflow in auros-web had ever run `pnpm build`:
+- `tools/configurator-a11y.test.mjs` resolved the control repository as `..`, which on a runner is
+  an empty directory — so **the site's own build could not run in its own CI.** It now looks in
+  `.auros-meta/` first (the convention `auros-recipes/src/config.ts` already used) and every job
+  checks the control repo out there. The failure message now prints what IS in the directory it
+  resolved, not only what is missing.
+- the glyph-coverage check needs fontTools, which a runner lacks. It failed closed, correctly. Now
+  pinned to 4.60.2, the version `MANIFEST.json` records the subsets were cut with.
+- and `actions/upload-artifact` skips dot-directories by default, so the first run that produced
+  reports uploaded none of them.
+
+Then the two landing-page defects the runner found and the laptop could not:
+
+1. **267 KB of the landing page's 585 KB was one Devanagari face for one Marathi greeting.** Subset
+   to the characters the site renders: 267,528 → 74,704 bytes. Every Devanagari run on the site
+   was shaped with HarfBuzz against the original TTF and against the subset — identical glyph
+   counts, clusters, advances and offsets, zero `.notdef` — and the coverage check, which could
+   never fire for Devanagari against the block range, was watched failing on `घ` and `औ`.
+   `/` 85 → 91.
+2. **The first-boot figure was the one block of reading text on `/` not on a panel.** Once the
+   terrain mounts, `parallax.ts` makes `body` transparent and paints `<html>` bedrock (#24231F); four
+   paragraphs of `--ink-muted` then measured **1.94:1**. A race: axe sees it only if the terrain
+   mounted first, which on this laptop it never had and on the runner it always had. The site's
+   contrast tool (1,632 pairs) cannot see it either, because it reads the static cascade and this
+   background is installed by JavaScript. Now on a `<Panel>`, as §7 requires. `/` 97 → 100.
+
+**`/` still measures 91 against §6D's 95. The gate stays at 95 and stays red** — BLOCKED.md B20
+has the numbers, what was tried and measured, and why what is left (the build console's 770 of
+1,116 elements, and the landing page's font mix) is a design decision rather than a tweak.

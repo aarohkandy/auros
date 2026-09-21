@@ -386,3 +386,44 @@ shell scripts.
   the tree committable.
 - **Then add a test that every dispatched subcommand is a defined function**, for every shell script in
   the repo. That is the generalisable fix; the two functions are the instance.
+
+## B20 — The landing page misses §6D's Lighthouse floor: 91 against 95 · OPEN · the gate is red on purpose
+**Measured, on a GitHub `ubuntu-24.04` runner, Lighthouse 12.8.2 mobile, median of three**
+(`auros-web/.github/workflows/lighthouse.yml`; reports are the run's `lighthouse-reports` artifact).
+Eight of nine pages pass. `/` does not:
+
+| page | perf | a11y | LCP (stable) | DOM | fonts fetched |
+|---|---|---|---|---|---|
+| `/faq` | 99 | 100 | 2.1 s | 202 | 218 KB |
+| `/order` | 95 | 100 | 2.9 s | 905 | 290 KB |
+| **`/`** | **91** | 100 | **3.5 s** | **1,116** | **365 KB** |
+
+**What was already fixed on the way to 91** (D40): `/` started at **85** performance and **97**
+accessibility. 267 KB of a 585 KB page was one Devanagari face drawing one Marathi greeting — now
+75 KB, shaping verified identical with HarfBuzz (85 → 91). And the first-boot figure was the one
+block of reading text not on a panel, so once the terrain mounted it sat at 1.94:1 on bedrock —
+now on a `<Panel>` as §7 requires (97 → 100).
+
+**What Lighthouse names as the remaining cost.** Its `network-dependency-tree-insight` puts the
+longest chain at document → `Panel.css` → the seven font files that stylesheet discovers, and the
+LCP element (the hero standfirst, plain text) waits on that chain in Lantern's model even though
+every face is `font-display: swap`. Behind it: a 1,116-element DOM, **770 of which are the build
+console** — 482 in the live log at rest and 266 in the pinned-runs record.
+
+**Tried, measured, and NOT adopted:**
+- *Inlining every stylesheet* (`build.inlineStylesheets: 'always'`): the document grew from 19 KB to
+  28 KB gzipped and `/` went **down** to 83 locally. Reverted.
+- *Merging `/`'s four stylesheets into one*: 92 locally, inside this laptop's noise. Not adopted on
+  that evidence.
+- *Dropping both font preloads*: two contended A/Bs suggested +2 (D40). Not settled; this laptop's
+  load average was above 300 for the whole session and cannot separate 2 points from noise.
+
+**Why this is written here and not fixed.** What is left is the build console's size on the
+landing page, which is D29's "living element" and was deliberately made large, and the landing
+page's font mix (four Latin faces plus Devanagari plus symbols on one screen). Shrinking either is
+a design decision about what the first page shows, not a performance tweak, and it should be made
+by whoever owns D29 with these numbers in front of them.
+
+**The gate stays at 95 and stays red.** Lowering it to make `/` pass would be D19 in reverse — a
+check tuned until it cannot fail. The spec says 95; the site measures 91; now, for the first time,
+everybody knows.
