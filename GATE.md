@@ -10,7 +10,7 @@ anyone can reopen. **"It should work" is not evidence** (spec §4.3).
 | 1 | `auros-base:hardened` builds in CI and boots in a VM | **IN PROGRESS — image builds; S7 determinism fails** | The hardened image builds end to end (30/30 steps, every build script, `bootc container lint`). S7 then fails: two builds from identical inputs differ. Run `35548421189` carries a diagnostic that names the cause. See HANDOFF.md §3. |
 | 2 | A recipe inherits from it; a base change propagates to it and to a running VM with no human action | pending | propagation built (`auros-recipes/.github/workflows/propagate.yml`); needs Gate 1 first |
 | 3 | 100/100 clean migrations and 20/20 clean aborts | **UNBLOCKED** | harness built (`auros-installer/.github/workflows/gate3.yml`); needs the tool to compile |
-| 4 | Site live; a stranger's configuration opens a valid PR | pending | content + schema done; configurator and Worker in build |
+| 4 | Site live; a stranger's configuration opens a valid PR | pending | content + schema done; configurator and Worker in build. **§6D's three unmeasured sentences are now measured** (D40): Lighthouse mobile ≥ 95 on all 9 pages, the no-JS path, and "no client-side framework on content pages" — three real defects found and fixed on the first run |
 | 5 | Three laptops imaged; `compat.tsv` has three rows and one honest ✗ | **blocked — hardware** | runbook ready (`docs/GATE5-RUNBOOK.md`) |
 | 6 | A nonprofit has three working laptops they did not have last week | **blocked — human** | outreach drafted, not sent (`docs/outreach/`) |
 
@@ -32,6 +32,11 @@ anyone can reopen. **"It should work" is not evidence** (spec §4.3).
 - `compat.tsv` — a `vm` row cannot claim a physical-only column (`tools/compat-lint.mjs`).
 - The installer's wall — a Go test parses the import graph and fails if any package outside
   `internal/safety` can reach the system disk, and asserts it is not vacuous.
+- §6D — Lighthouse mobile ≥ 95 on every built page, the no-JavaScript path, and the absence of a
+  client-side framework on content pages (`auros-web/.github/workflows/lighthouse.yml`, Lighthouse
+  pinned at 12.8.2). `auros-web/tools/prove-red.mjs` breaks thirteen specific things and requires
+  each gate to go red **for the stated reason**; red-by-accident is scored as a failure of the
+  prover, not as a catch.
 
 **Not proven, and not claimed:**
 - That **our hardened base** boots. The probe booted a *minimal derivative* — one marker file. Gate 1

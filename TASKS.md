@@ -3,7 +3,7 @@
 The queue. Re-read at the start of every work session (spec §8).
 `[x]` done · `[~]` in progress · `[ ]` queued · `[B]` blocked (BLOCKED.md) · `[H]` needs the owner.
 
-Last reconciled against reality: 2026-09-20, late. The previous version still described the morning's
+Last reconciled against reality: 2026-09-20, late evening (W-D, after D40). The previous version still described the morning's
 plan; a task list nobody updates is a second PLAN.md that is wrong.
 
 ## W0 — Foundations
@@ -62,6 +62,21 @@ plan; a task list nobody updates is a second PLAN.md that is wrong.
 - [x] Voice pass (D29); fabricated lab and notes removed; 1,554 contrast pairs measured
 - [x] Licence claims rewritten to D31 — 105 files, honesty gate clean
 - [x] Turnstile exemption ratified (D33)
+- [x] **§6D Lighthouse ≥ 95 on mobile, measured for the first time** (D40) —
+      `.github/workflows/lighthouse.yml`, Lighthouse pinned at 12.8.2, gate on performance and
+      accessibility, reports uploaded per run. Three real defects found and fixed: no icon link
+      (nine console 404s), `role="log"` on an `<ol>` (two axe audits red on three pages), and the
+      configurator's one unlabelled `<select>`.
+- [x] **§6D no-JS path verified for real** (D40) — `tools/nojs.mjs` fetches every built page and
+      parses it without executing anything; N1–N7, including mailto reachability over links that
+      exist in the served bytes
+- [x] **§6D "no client-side framework for content pages" asserted** (D40) — `tools/content-js.mjs`;
+      7.4 KB gzipped JS on a content page, committed budgets, no canvas in the document
+- [x] Both new gates watched failing — `tools/prove-red.mjs`, 13 mutations, each red for its
+      stated reason (D34/D37)
+- [ ] Settle the font-preload question on a dedicated runner (D40) — two contended A/Bs suggest
+      dropping both `as=font` preloads is worth ~+2, which contradicts `src/styles/FONTS.md`.
+      Not changed on that evidence. The CI job is the clean place to decide it.
 - [H] Wind-down terms document — B12. **Blocks publishing.** Draft exists; needs a lawyer.
 - [H] Cloudflare account + explicit go-ahead to publish — B14
 - [H] $0 self-serve tier — B9, pricing is §9
