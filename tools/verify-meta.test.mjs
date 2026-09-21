@@ -300,6 +300,15 @@ const CASES = [
           "'no jobs and no log, not an error. Quote the value, or use block style.', text: line.trim().slice(0, 120) })")),
   },
   {
+    gate: 'nightly watchdog, both directions',
+    real: true,
+    green: (s) => s.tool('watchdog.test.mjs').tool('watchdog.mjs'),
+    red: (s) => s.tool('watchdog.test.mjs').tool('watchdog.mjs')
+      // Blind the watchdog to a failed nightly; the suite's (b) cases go red immediately.
+      .write('tools/watchdog.mjs', readFileSync(join(REPO, 'tools', 'watchdog.mjs'), 'utf8')
+        .replace("last.conclusion !== 'success'", 'false')),
+  },
+  {
     gate: 'recipe validator + compiler (spec §6B)',
     green: (s) => s.stubPkg('auros-recipes', 'test', true),
     red: (s) => s.stubPkg('auros-recipes', 'test', false),
