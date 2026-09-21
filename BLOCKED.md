@@ -450,10 +450,10 @@ in the named doc or commit.
 
 | # | Decision | Blocks | Where |
 |---|---|---|---|
-| 1 | `tools/gate.mjs`: `MATRIX_VERSION = 2` and add `'S11'` to `REQUIRED_CHECKS`. The file is protected from agents on purpose. Until then the gate refuses every digest and `gates` CI is red — or revert the removal floor from auros-base. | every publish; `gates` CI | auros-base `4a8cc7b` (S11) |
-| 2 | S6 size budget for the base (measured 4,207,427,618 bytes; suggestion: measured + 10% ≈ 4.63 GB) | Gate 1 static phase | run 35566336512 |
-| 3 | S10: `uupd.timer` and `bootc-fetch-apply-updates.timer` are both enabled; keep one (the latter carries our rollback wiring) or change the check | Gate 1 static phase | `build/30-update-agent.sh:192-195` |
-| 4 | S5 on the base: should the base write a removal report, or does S5 not apply to a base build? And what S5 compares a recipe against (auros-base vs upstream) | Gate 1 static phase; recipes | agent/s5-claims notes |
+| 1 | ~~RESOLVED (D44)~~ `tools/gate.mjs`: `MATRIX_VERSION = 2` and add `'S11'` to `REQUIRED_CHECKS`. The file is protected from agents on purpose. Until then the gate refuses every digest and `gates` CI is red — or revert the removal floor from auros-base. | every publish; `gates` CI | auros-base `4a8cc7b` (S11) |
+| 2 | ~~RESOLVED (D44): 4.63 GB~~ S6 size budget for the base (measured 4,207,427,618 bytes; suggestion: measured + 10% ≈ 4.63 GB) | Gate 1 static phase | run 35566336512 |
+| 3 | ~~RESOLVED (D44): bootc timer~~ S10: `uupd.timer` and `bootc-fetch-apply-updates.timer` are both enabled; keep one (the latter carries our rollback wiring) or change the check | Gate 1 static phase | `build/30-update-agent.sh:192-195` |
+| 4 | ~~RESOLVED (D44): S5 skips base~~ S5 on the base: should the base write a removal report, or does S5 not apply to a base build? And what S5 compares a recipe against (auros-base vs upstream) | Gate 1 static phase; recipes | agent/s5-claims notes |
 | 5 | Staleness thresholds: upstream 21 d, forced rebuild 7 d, laptop freshness 21 d | heartbeat branch (not merged) | `agent/heartbeat`, `agent/freshness` |
 | 6 | Production signing key (B10); then pin its fingerprint in the publish check | every publish | `tools/signing-key.sh` |
 | 7 | Wi-Fi passwords sit on the USB stick in plain text during migration (FAT has no permissions): accept with disclosure / encrypt that file / drop Wi-Fi keys | merging `agent/wifi-printers` | installer `df013fe` |
@@ -462,3 +462,6 @@ in the named doc or commit.
 | 10 | Fleet view: amend SPEC §6E, change the published "no telemetry" line, Cloudflare account (B14) | knowing a fleet stopped updating | `docs/FLEET-VIEW.md` |
 | 11 | Push/release `feat/linux-restore` so the image can pin the restore binary | R1, §6C | auros-base `1dd8e18` (45-restore, off) |
 | 12 | Floors (1100 / 240) recalibrated from the first real S11 measurement | recipe builds | auros-recipes `f924660` |
+| 13 | First boot shows two setup wizards with overlapping questions (KDE plasma-setup, then our auros-first-run): suppress KDE's, trim ours, or brand KDE's | D4.4 "clean end to end" | agent/plasma-setup report |
+| 14 | Gate 3 measurement: switch from observing "no change on C:" (a treadmill against Windows servicing) to ENFORCING it with a deny-write ACL for the migration account + installer-tree attribution | Gate 3 | gate3 runs 35639286740 etc. |
+| 15 | SELinux: bootc's own chcon self-test is denied when our units run bootc; ship a policy module, or read status via rpm-ostree | B11 | agent/b5-selinux report |

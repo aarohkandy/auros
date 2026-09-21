@@ -727,11 +727,11 @@ test('REFUSES when checks.yaml LACKS a check the gate requires — a deletion, i
 })
 
 test('REFUSES when checks.yaml DEFINES a check the gate does not require — an addition, one direction only', () => {
-  const added = `${realChecks()}\n  - id: S11\n    name: A check this gate has never heard of\n`
+  const added = `${realChecks()}\n  - id: S99\n    name: A check this gate has never heard of\n`
   const d = decide({ digest: DIGEST }, matrixFixture(ledgerWith(row()), { checks: added, profiles: realProfiles() }))
   refused(d, 'matrix-drift')
   assert.match(d.reason, /matrix defines but gate does not require/, d.reason)
-  assert.match(d.reason, /S11/, `the refusal must name the extra check; got: ${d.reason}`)
+  assert.match(d.reason, /S99/, `the refusal must name the extra check; got: ${d.reason}`)
 })
 
 test('REFUSES when profiles.yaml defines a profile the gate does not know', () => {

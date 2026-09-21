@@ -50,10 +50,10 @@ export const DEFAULT_PATHS = {
 // and refuses everything on disagreement rather than silently gating on the weaker of the two.
 // auros-base is a separate repo (DECISIONS.md D6) and is not always checked out beside us, which is
 // why the constants live here as well as there.
-export const MATRIX_VERSION = 1
+export const MATRIX_VERSION = 2 // v2 adds S11, the measured removal floor (owner-authorized 2026-09-21, D44)
 
 export const REQUIRED_CHECKS = Object.freeze([
-  'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10',
+  'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11',
   'B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10', 'B11', 'B12',
   'U1', 'U2', 'U3', 'U4', 'U5',
   'R1',

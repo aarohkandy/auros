@@ -999,3 +999,18 @@ nothing we publish may imply otherwise. A design exists — `docs/MIGRATION-GUI.
 Go's `syscall`, no new dependency (the wall cannot see a library's Windows calls), ~1.5 MB, the
 disclosure checkbox disabled until every row has been on screen, ~15–23 engineer-days. Building it
 is the owner's call (BLOCKED B21).
+
+## D44 — Four Gate 1 static-phase decisions · 2026-09-21 · HUMAN
+Answered by the owner, each as recommended. They were all that stood between the static phase and
+`sign` → U1–U5 → `record`, because `sign` needs `static`.
+
+1. **S10 — bootc's timer drives OS updates.** `bootc-fetch-apply-updates.timer` (which carries our
+   rollback wiring and U1's cadence) is the one OS updater. Aurora's `uupd` must stop updating the OS;
+   it keeps updating Flatpaks, where customer apps live, so it is reconfigured rather than removed.
+2. **S6 — base budget 4,628,170,380 bytes compressed**: the measured 4,207,427,618 B + 10%, S6's own
+   regression rule. Raising it is a decision, not a fix.
+3. **S5 does not apply to a base build.** Removal reports are a recipe property; the base records its
+   removals in its build manifest. A recipe with no removal report still fails.
+4. **`tools/gate.mjs` requires S11** (the measured removal floor): `MATRIX_VERSION = 2`,
+   `S11` in `REQUIRED_CHECKS`. The owner authorized the agent to make this change to a file that is
+   otherwise protected from agents.

@@ -94,7 +94,7 @@ describe('the control: the gate CAN go green, so the refusals below are not vacu
   test('the unmodified control ledger ALLOWS its digest', () => {
     const d = allows(at(GOOD), 'a complete, current, unambiguous recorded pass')
     assert.match(d.reason, /\d+\/\d+ profiles/)
-    assert.match(d.reason, /matrix v1/)
+    assert.match(d.reason, new RegExp(`matrix v${MATRIX_VERSION}`))
   })
 
   test('the control ledger still REFUSES a digest it does not name', () => {
