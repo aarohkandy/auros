@@ -4,6 +4,42 @@ Newest first. One entry per meaningful step, with evidence. Re-read at session s
 
 ---
 
+### 2026-09-21 ~01:00 · HANDOFF POINT — read `HANDOFF.md`
+
+**Gate 1 is one bug away.** The hardened base image **builds end to end** for the first time — all 30
+Containerfile steps, every build script (pinning, hardening, four policy modes, greenboot + rollback,
+signature enforcement, Windows-shaped desktop, guided first boot, cleanup), and `bootc container lint`.
+
+It then fails **S7 determinism**: two builds from identical inputs produce different content digests.
+That is the check working. Run `35548421189` carries a diagnostic that makes the failure name its own
+cause — unpinned dnf resolution, or the RPM database's inherent non-reproducibility. **Read that run
+first.**
+
+**~1,500 tests now exist and found ~27 real bugs.** The three worth remembering, because all three were
+*permanently green* and none was found by re-reading: a SELinux check whose `tr -d '[:space:]'` ate the
+newlines; `grep -c … || echo 0` emitting `"0\n0"`, which would have failed B8 and B11 on **every
+perfect image**; and `verify` itself reporting PASS on failing suites (D37) — written by the author who
+had recorded that exact rule as D19 hours earlier.
+
+**The licence reversed mid-build** (D30/D31) on the owner's instruction: Apache-2.0 out, all rights
+reserved in, zero forks during the ~90 minutes it was up. The site's central trust argument was rebuilt
+around a wind-down handover, and drafting the terms exposed a gap in D31 itself — handing someone files
+they have no licence to use gives them nothing, so it must be a *licence that vests on a trigger*.
+
+**A whole deliverable was missing:** the Linux-side restore (B15), found by auditing against the spec
+rather than against `TASKS.md`. Without it the Windows half copies a school's files off and the machine
+comes back with none of their work on it. Being built now.
+
+**In flight at handoff:** four Workflow runs (check-matrix debugging, Lighthouse, security review,
+recipe-differ, mutation testing, Linux restore, build-console data, Gate 5 tooling, `docs/TESTING.md`,
+and a system review that will write `docs/SYSTEM-REVIEW.md`) plus two background agents on
+`fix/gate3-real-cli` and `feat/linux-restore`.
+
+**Also fixed at the end:** 85 failed CI runs emailed the owner today, 36 from `gates` alone. Bursts now
+collapse via `cancel-in-progress`, and `gates` no longer runs on narrative-file commits.
+
+---
+
 ### 2026-09-20 (late) · Licensing reversed · testing campaign · Gate 1 close
 
 **The licence changed, on the owner's instruction (D30/D31).** Apache-2.0 removed from all five repos;

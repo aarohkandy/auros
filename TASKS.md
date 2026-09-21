@@ -68,6 +68,16 @@ plan; a task list nobody updates is a second PLAN.md that is wrong.
 
 ## Gates 5 and 6
 - [B] Three donated laptops — B5. Runbook ready (`docs/GATE5-RUNBOOK.md`).
+- [x] Gate 5 **tooling**, so the runbook is not the only thing waiting for the machines:
+      `auros-base/tools/capture-compat.sh` fills the observable columns from sysfs (DMI, cpu, ram,
+      firmware + Secure Boot, TPM, numeric PCI/USB ids) and **refuses to fill the seven a person has
+      to answer**; `auros-base/tools/quote-from-compat.mjs` reads the table back as *works* /
+      *caveat* / *never seen* / *unsupported*, refusing `vm` rows and empty cells. `ids` and `tpm`
+      columns added so the runbook's "numeric IDs, never a marketing name" has somewhere to go (D39).
+      112 shell assertions incl. mutating the shipping script, 52 node tests, both directions.
+- [ ] Run `capture-compat.sh` against a real machine. **Everything above was exercised against
+      synthetic sysfs trees only** — no probe has met real firmware, and that is the one thing that
+      cannot be tested before B5 clears.
 - [H] A nonprofit pilot — B4. Outreach drafted, not sent.
 
 ## W-E — auros-console

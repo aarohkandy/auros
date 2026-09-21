@@ -7,7 +7,7 @@ anyone can reopen. **"It should work" is not evidence** (spec §4.3).
 
 | Gate | Criterion (binary) | Status | Evidence |
 |---|---|---|---|
-| 1 | `auros-base:hardened` builds in CI and boots in a VM | **IN PROGRESS — image builds** | **The hardened image built for the first time** (all 30 Containerfile steps, every build script, `bootc container lint`). Failing next at the D11 flatten on a doubled transport prefix; fixed. Boot not yet reached on the hardened image — the [boot path is proven](docs/evidence/2026-09-20-boot-path.md) on a minimal derivative. |
+| 1 | `auros-base:hardened` builds in CI and boots in a VM | **IN PROGRESS — image builds; S7 determinism fails** | The hardened image builds end to end (30/30 steps, every build script, `bootc container lint`). S7 then fails: two builds from identical inputs differ. Run `35548421189` carries a diagnostic that names the cause. See HANDOFF.md §3. |
 | 2 | A recipe inherits from it; a base change propagates to it and to a running VM with no human action | pending | propagation built (`auros-recipes/.github/workflows/propagate.yml`); needs Gate 1 first |
 | 3 | 100/100 clean migrations and 20/20 clean aborts | **UNBLOCKED** | harness built (`auros-installer/.github/workflows/gate3.yml`); needs the tool to compile |
 | 4 | Site live; a stranger's configuration opens a valid PR | pending | content + schema done; configurator and Worker in build |

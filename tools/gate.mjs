@@ -72,7 +72,7 @@ export const HEADER = Object.freeze([
 ])
 
 export const DIGEST_RE = /^sha256:[a-f0-9]{64}$/
-const IMAGE_RE = /^[a-z0-9]([a-z0-9._-]*[a-z0-9])?(\/[a-z0-9]([a-z0-9._-]*[a-z0-9])?)+$/
+const IMAGE_RE = /^[a-z0-9]([a-z0-9._-]*[a-z0-9])?(\/[a-z0-9]([a-z0-9._-]*[a-z0-9])?)*$/
 const RECIPE_RE = /^[a-z0-9][a-z0-9-]{0,38}$/
 const TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/
 const URL_RE = /^https:\/\/[^\s]+$/
@@ -218,7 +218,7 @@ export function decide (query, paths = DEFAULT_PATHS) {
   // one home: auros.config.json. If we cannot read it, we do not guess — we refuse.
   let config
   try { config = JSON.parse(readFileSync(paths.config, 'utf8')) } catch (e) {
-    return refuse('no-config-DISABLED') || refuse('no-config', `cannot read the namespace from ${paths.config}: ${e.message}. Refusing rather than assuming which registry is ours.`)
+    return refuse('no-config', `cannot read the namespace from ${paths.config}: ${e.message}. Refusing rather than assuming which registry is ours.`)
   }
   const nsPrefix = `${config.registry}/${config.org}/`
   if (!config.registry || !config.org) return refuse('bad-config', `${paths.config} does not declare both registry and org`)
