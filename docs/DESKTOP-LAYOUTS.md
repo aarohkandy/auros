@@ -13,8 +13,12 @@ Short answer:
 - Two more layouts now ship in the base as config only: **browser-first ("shelf")** and **simple (three
   big buttons)**.
 - "Always full screen" already exists as `policy: kiosk`.
-- The Mac layout is a cheap later addition. Its ids are verified (see §4), but I found no demand
-  evidence from our segment.
+- **Mac-style (top bar and dock) now ships too** (`org.auros.mac.desktop`), because the owner asked
+  for it by name. I still found no demand evidence for it in our segment (§2.8).
+- **One image-level setting picks the default layout**: `RUN /usr/libexec/auros/set-desktop-layout
+  <windows|browser-first|simple|mac>` in a recipe's layer. Without it, every user gets Windows (§3.2).
+- **Both Windows-layout defects from §2.1 are fixed**: the taskbar no longer floats, and every layout
+  now adds the input-method indicator for Marathi, Hindi and the other upstream languages.
 - Guest wipe-on-logout and exam mode are what schools and libraries ask for most after the shape of the
   desktop. Neither is a layout. Both are policy/session work.
 
@@ -36,7 +40,7 @@ how cheaply we can make it true. **[J]** for the ranking itself.
 | 5 | **Exam mode** | policy (kiosk variant) + a vendor app | kiosk exists; no exam integration | high, partly outside our control |
 | 6 | **Kiosk**: one app, full screen, no desktop | policy | ships (`policy: kiosk`, D12) | done |
 | 7 | **Accessibility**: large text, high contrast, screen reader | orthogonal toggle | partly: `theme.text_scale`, `theme.preset: high contrast`, AT tools unprunable | low |
-| 8 | **Mac-style**: top bar and a centred dock | layout | not built; ids verified (§4) | low |
+| 8 | **Mac-style**: top bar and a centred dock | layout | **ships** (`org.auros.mac.desktop`), built on the owner's request | done |
 | 9 | **Maximize everything** | KWin window rule | not built | low–medium (can't go in a look-and-feel package, see §3.9) |
 | 10 | **Touch / tablet** | Plasma built-in plus an on-screen keyboard | nothing to do for layout; OSK is the real work | medium, little matching hardware |
 
@@ -51,15 +55,26 @@ how cheaply we can make it true. **[J]** for the ranking itself.
 - **Plasma:** bottom panel with `kickoff`, `icontasks`, `marginsseparator`, `systemtray`,
   `digitalclock`, `showdesktop`. See
   `auros-base/desktop/lookandfeel/org.auros.windows.desktop/contents/layouts/org.kde.plasma.desktop-layout.js`.
-- **Two findings from checking it against KDE source.** Neither is changed here.
-  - The script never sets `panel.floating`. The scripting default is `true`
+- **Two findings from checking it against KDE source. Both are fixed on base branch
+  `agent/desktop-layouts-2` (§5).**
+  - The script never set `panel.floating`. The scripting default is `true`
     (`plasma-workspace/shell/scripting/panel.cpp`, `readEntry("floating", true)`), so Windows users get
-    a floating panel with a gap under it. Windows' taskbar sits flush on the screen edge. One line
-    fixes it (`panel.floating = false;`), but it needs someone to look at it on a real screen.
+    a floating panel with a gap under it. Windows' taskbar sits flush on the screen edge.
+    **Fixed:** `panel.floating = false;`. `PanelView::defaultFloating()` returns `true` as well, so the
+    default holds for the view too, not only for the script. The build now fails if the line is missing.
+    It still needs someone to look at it on a real screen.
   - Upstream's own default panel (`plasma-desktop/layout-templates/org.kde.plasma.desktop.defaultPanel`)
     adds `org.kde.plasma.kimpanel` when the language is Marathi, Hindi, Tamil and ~30 others. Ours
-    never adds it. The example recipe is a Marathi school. Whoever owns `second_script` should check
-    whether switching scripts still has a visible indicator without it. Unverified either way.
+    never added it. The example recipe is a Marathi school.
+    **Fixed:** every Auros layout now runs upstream's exact test, `langIds.indexOf(languageId) != -1`, with
+    the 31-entry list copied verbatim. `languageId` is a scripting global,
+    `QLocale::system().bcp47Name()` up to the first `-` (`shell/scripting/appinterface.cpp`).
+    The build fails if any layout lacks the `addWidget("org.kde.plasma.kimpanel")` call.
+    - We copied upstream's quirk too. `languageId` never contains `_`, so the list's `zh_CN` and
+      `zh_TW` entries can't match. That doesn't matter for our segment.
+    - **Unverified:** whether the input method actually starts for a Marathi user on our image. The
+      indicator only shows what an input-method framework reports. Whoever owns `second_script` still
+      needs to confirm that on a VM.
 
 ### 2.2 Browser-first ("shelf", Chromebook-shaped): built
 
@@ -167,7 +182,7 @@ how cheaply we can make it true. **[J]** for the ranking itself.
 - **[J]:** keep it a toggle. Making it a layout would force a choice between "simple" and "accessible",
   and those two audiences overlap heavily.
 
-### 2.8 Mac-style (not built; ranked by evidence, not by the owner's list order)
+### 2.8 Mac-style (built on the owner's request; ranked by evidence, not by the owner's list order)
 
 - **Who:** users coming from a Mac.
   - I found no evidence of Mac users as a meaningful group in our segment. `hardware/compat.tsv` has no
@@ -178,7 +193,9 @@ how cheaply we can make it true. **[J]** for the ranking itself.
   - That puts orphaned Macs exactly in our hardware window. If a customer brings a Mac fleet, the
     layout is the cheap part and the hardware is the hard part (e.g. Broadcom Wi-Fi), which is a
     `driver-triage` question first.
-- **Why it didn't make the top two [J]:** this job was two layouts. The browser-first and simple
+- **Built anyway, as `org.auros.mac.desktop`**, because the owner asked for it by name. See §5. The
+  ranking below is unchanged. It reflects evidence, not the build order.
+- **Why it didn't make the top two [J]:** that job was two layouts. The browser-first and simple
   layouts each serve a group with cited evidence and a clear place in our first-customer profile. The
   Mac layout serves a group I couldn't find in the segment. It's cheap and ready to build. §4 has the
   verified recipe for it.
@@ -210,7 +227,7 @@ how cheaply we can make it true. **[J]** for the ranking itself.
 
 ---
 
-## 3. How a recipe would select a layout (proposal; auros-recipes NOT edited)
+## 3. How a recipe selects a layout (base side built; recipe field still a proposal; auros-recipes NOT edited)
 
 ### 3.1 The field
 
@@ -219,7 +236,7 @@ optional, and it defaults to today's behaviour:
 
 ```yaml
 desktop:
-  layout: windows        # windows | browser-first | simple
+  layout: windows        # windows | browser-first | simple | mac
 ```
 
 | value | package |
@@ -227,13 +244,14 @@ desktop:
 | `windows` (default) | `org.auros.windows.desktop` |
 | `browser-first` | `org.auros.shelf.desktop` |
 | `simple` | `org.auros.simple.desktop` |
+| `mac` | `org.auros.mac.desktop` |
 
 Schema fragment, in the style of the existing `desktop` properties:
 
 ```json
 "layout": {
-  "description": "Where things are on screen. windows — a taskbar with a start menu, the default. browser-first — the launcher at the left and pinned apps centred, the shape pupils know from school laptops. simple — one tall bar with three big buttons, for young children and first-time users. Every layout keeps the menu, the Wi-Fi and the clock; none of them is a lockdown — that is what policy is for.",
-  "enum": ["windows", "browser-first", "simple"],
+  "description": "Where things are on screen. windows — a taskbar with a start menu, the default. browser-first — the launcher at the left and pinned apps centred, the shape pupils know from school laptops. simple — one tall bar with three big buttons, for young children and first-time users. mac — a bar along the top with the menu, the running app's own menus and the clock, and a centred dock of apps along the bottom, for people coming from a Mac. Every layout keeps the menu, the Wi-Fi and the clock; none of them is a lockdown — that is what policy is for.",
+  "enum": ["windows", "browser-first", "simple", "mac"],
   "default": "windows"
 }
 ```
@@ -248,7 +266,7 @@ Validation rules, all rejections that teach:
 - No free-form ids, and no file paths. The value is one of our shipped, tested packages, the same way
   `policy` is one of four words.
 
-### 3.2 What the compiler emits, and the base change it needs
+### 3.2 What the compiler emits, and the base helper (now built)
 
 Selection currently lives in two places in the base, both hardcoded to Windows:
 
@@ -262,15 +280,24 @@ Proposal. It follows the `apply-policy` pattern, one line in the derived Contain
 RUN /usr/libexec/auros/set-desktop-layout simple
 ```
 
-A small base helper (not written yet) would:
+The helper is **built** (base `desktop/set-desktop-layout` → `/usr/libexec/auros/set-desktop-layout`).
+It takes the recipe's word, not a package id, and it:
 
-- check the id against `LNF_IDS`
-- rewrite only the `LookAndFeelPackage` key in `[KDE]` of `/etc/xdg/kdeglobals`, merging, never
-  overwriting, the same rule `apply-policy` follows for that file
-- write the id to `/etc/auros/desktop-layout`
+- maps `windows | browser-first | simple | mac` to the package ids in the table above. Anything else,
+  including a raw package id or a path, exits 1 with the list of valid names, so the image build fails.
+- refuses a name whose package isn't in the image, because every new user would get no panel.
+- rewrites only `LookAndFeelPackage` inside `[KDE]` of `/etc/xdg/kdeglobals`. It replaces the key where it
+  stands, or adds it under the header. The rest of that shared file is left byte-for-byte alone.
+- writes the id to `/etc/auros/desktop-layout`.
 
-`auros-first-run` would read that file, defaulting to `org.auros.windows.desktop`, instead of its
-hardcoded constant.
+`auros-first-run` reads that file. Three cases fall back to `org.auros.windows.desktop` and log a line:
+no file, a value that isn't `org.auros.<word>.desktop`, and a package the image doesn't ship. The base
+never calls the helper, so the base stays Windows (D4).
+
+The build also fails if a shipped package has no name in the helper, because no recipe could choose it.
+
+The compiler side is still a proposal: `desktop.layout: X` emits that one `RUN` line, and
+`windows` can emit nothing at all.
 
 - The first-run stamp doesn't need bumping for new machines.
 - Existing users keep their panel. That's correct: first-run must never rebuild a panel a user has
@@ -340,7 +367,7 @@ That GUI path is standard Plasma behaviour. It has **not** been exercised on an 
 - `org.kde.plasma.kickerdash` (the full-screen Application Dashboard). `kicker/main.qml` checks for
   that plugin name, but I couldn't find where current master registers it, so neither layout uses it.
 
-### Mac-style, ready to build (ids verified above, not built)
+### Mac-style sketch (as first written; the built version is in §5)
 
 ```js
 // top bar: menu, global app menu, spacer, tray, clock
@@ -364,6 +391,51 @@ dock.addWidget("org.kde.plasma.icontasks");
 - It keeps `kickoff` and `icontasks`, so B12's windows-shape check still passes.
 
 ---
+
+## 5. What was built on 2026-09-20 (second pass)
+
+Base branch `agent/desktop-layouts-2`, commit `42f0028`, on top of `agent/desktop-layouts` (`78a1519`).
+Not pushed. No Containerfile or workflow change, and no new packages.
+
+- **`org.auros.mac.desktop`**:
+  - **Top bar:** 32px, not floating. It holds `kickoff`, `appmenu`, a `panelspacer`, `kimpanel` (under
+    the upstream language condition), `systemtray`, and `digitalclock` with `dateDisplayFormat`
+    `BesideTime` (a valid choice in main.xml).
+  - **Dock:** bottom, 56px, `alignment = "center"`, `lengthMode = "fit"`, `floating = true`, holding
+    `icontasks` with the browser, files and software pins.
+  - **Window buttons:** `defaults` sets `ButtonsOnLeft=XIA` and `ButtonsOnRight=_`. Button letters are
+    checked against `kwin/src/decorations/settings.cpp`.
+  - **Global menu:** `org.kde.plasma.appmenu` gets menus from the appmenu kded module, which autoloads
+    (`plasma-workspace/appmenu/appmenu.json`, `X-KDE-Kded-autoload: true`).
+  - **Name:** the visible name is "Auros Top Bar and Dock". "mac" appears only in the internal id and in
+    the recipe word.
+- **Selection**: `set-desktop-layout` and `auros-first-run` work as described in §3.2.
+- **Windows fixes**: see §2.1.
+  - `kimpanel` was added to the shelf and simple layouts too. A Marathi school on any layout has the
+    same need.
+- **Tests:**
+  - `tests/40-windows-feel.test.sh` went from 109 to 159 checks.
+  - The new `layout.choose` group runs the real helper against a fake root holding the real payload.
+    Each of the four names is green. Six refusals are red: an unknown name, no name, a raw id, a path,
+    a missing package, and no kdeglobals.
+  - Two edge cases are green: the key being absent from `[KDE]`, and a decoy in `[General]`.
+    Re-running is idempotent.
+  - The same group runs first-run's selection block against six file states.
+  - `tests/prove-red.sh` adds W10–W15 and updates W08: mac left out of validation, the floating check
+    dropped, kimpanel dropped from the widget list, the helper accepting unknown names, a group-blind
+    key rewrite, and first-run trusting the file. 70/70 are caught, and `run-all.sh` passes 16/16.
+
+**Still unverified, and none of it has been seen on a screen:**
+
+- Whether the dock actually centres and fits to its contents.
+- Whether two panels (top and bottom) coexist without overlap on 1366×768.
+- Which applications fill the global menu. Many GTK, Electron and Flatpak apps don't export their menus;
+  those keep the menus in their own window.
+- Whether `ButtonsOnRight=_` really draws nothing.
+- The whole first-run path with a non-Windows layout.
+- **B12 on a mac-layout image.** `assert-zero-terminal.sh` greps the appletsrc for `kickoff` and
+  `icontasks`, and both are present, just in two panels.
+- The input-method indicator, as noted in §2.1.
 
 ## Sources
 
