@@ -1,0 +1,130 @@
+# HANDOFF — Auros, 2026-09-21 ~01:00 UTC
+
+Written by the outgoing agent for the next one. **Read this file, then `DECISIONS.md`, then
+`BLOCKED.md`, then `GATE.md`.** Everything else is detail you can look up when you need it.
+
+---
+
+## 1. What this is
+
+Auros sells custom Fedora **bootc** OS images to schools and nonprofits with 2012–2018 laptops that
+modern Windows abandoned. One hardened base image, one ~10-line `recipe.yaml` per customer, rebuilt
+nightly so it stays patched. The contract is `docs/SPEC.md`. **`DECISIONS.md` (D1–D37) amends it and
+wins wherever they conflict.**
+
+Three sentences that govern everything:
+1. The maintained image is the product, not the OS.
+2. Craft here is **subtraction** — anything not asked for is deleted, not hidden.
+3. *(Amended by D30/D31)* We are **proprietary, all rights reserved**. The site's old "fork it
+   yourself" argument is gone; the replacement is a **wind-down handover**.
+
+## 2. Where things are
+
+| | |
+|---|---|
+| Working root | `/Users/aaroh/auros` (this is the meta/control repo → `github.com/aarohkandy/auros`) |
+| Product repos | `auros-base`, `auros-recipes`, `auros-installer`, `auros-web` — nested dirs, each its own git repo, all **public, all rights reserved** |
+| Private repo | `github.com/aarohkandy/auros_private` at `/Users/aaroh/auros-private` — for anything with no public benefit |
+| Run everything | `./verify` at the meta root. CI calls the same script. |
+
+**Local machine cannot build or boot anything** — macOS arm64, no podman/qemu/cosign/Go. Every build
+and VM boot happens in GitHub Actions. This is settled; don't re-litigate it.
+
+## 3. State as of handoff
+
+**Gate 1 (base builds + boots in a VM): very close.** The hardened image **builds end to end** — all 30
+Containerfile steps, every build script, `bootc container lint`. It then fails at **S7 determinism**:
+two builds from identical inputs give different content digests.
+
+**THE ONE THING TO CHECK FIRST:** run `35548421189` in `auros-base`. It carries a diagnostic I added
+that makes the S7 failure **name its own cause**. It will print either:
+- `PACKAGE SETS DIFFER` → cause (a): `pkg_ensure` installs from live Fedora repos with no pinning
+  (`build/00-common.sh:113`), so two builds minutes apart resolve differently. Fix: pin resolution
+  (share a primed dnf cache between the two builds, or pin NEVRAs in the base only).
+- `PACKAGE SETS ARE IDENTICAL` → cause (b): same packages, different bytes — almost certainly the RPM
+  database, a sqlite file with per-package install times that `90-cleanup.sh` already flags as not
+  byte-reproducible. Fix: S7 must compare a content digest over files we control, excluding a
+  documented exclusion list. **This would mean S7 as specified is unachievable and must be redefined —
+  say so plainly rather than weakening it quietly.**
+
+It also prints the differing files by path/size/mtime and a count per directory.
+
+```
+gh run view 35548421189 --repo aarohkandy/auros-base --log | grep -A40 "S7 FAIL"
+```
+
+### In flight at handoff (results may arrive after you start)
+- **4 Workflow runs** — check `/workflows`. Covering: exercising the check matrix against a real image
+  (`probe-matrix.yml`, never run before, on the critical path); Lighthouse ≥95 mobile (a spec
+  requirement never measured); a security review of the order path; recipe-differ tests; mutation
+  testing on the Worker/web-lib/base-scripts; **the Linux-side restore** (see §5); real build-console
+  data; Gate 5 capture tooling; `docs/TESTING.md`; and a **system review** tracing the four core
+  promises end to end → will write `docs/SYSTEM-REVIEW.md`. **Read that one when it lands.**
+- **2 background agents**: one on `auros-installer` branch `fix/gate3-real-cli` (Gate 3 harness), one
+  on `feat/linux-restore`.
+- **Uncommitted work exists** in several repos from live agents. Check `git status` in each before
+  committing; prefer `git add -A -- ':!advertising'` habits and **read what you commit**.
+
+## 4. Rules that are NOT negotiable
+
+1. **Do not push `auros-installer` `main`.** The owner is doing it personally. Local `main` is at
+   verified-green `4b944cb`, 3 ahead of origin. A subagent's push was blocked by the permission
+   system and it asked me to push instead — that is permission laundering; I refused, and so should you.
+2. **Do not touch branches `fix/gate3-real-cli` or `feat/linux-restore`** — other agents own them.
+3. **Never write to real hardware, spend money, email a real person, or create an account.**
+4. **§9-reserved for the owner:** prices, any website claim we cannot evidence, declaring a hardware
+   model unsupported, anything touching a card or an inbox.
+5. **Do not publish the site.** See B12/B14 — it states a commitment with no document behind it.
+
+## 5. What the owner owes a decision on (all recorded in `BLOCKED.md`)
+
+| | |
+|---|---|
+| **B9** | The `$0` self-serve tier lost its product when the licence changed. Held out of the price table, price untouched, three options recorded. Pricing is §9. |
+| **B10** | A production signing key, before any customer. A development key (D32) builds and boots but is **refused at publish** by reading the key kind back out of the image. |
+| **B12** | Wind-down terms. Draft at `docs/legal/WIND-DOWN-TERMS.DRAFT.md`. **Blocks publishing the site.** Drafting it exposed a gap in D31: handing someone files they have no licence to use gives them nothing, so the commitment must be a *licence that vests on a trigger*, not a delivery. |
+| **B14** | Cloudflare account + **explicit permission to publish**. |
+| **B13** | Purge `advertising/` from public git history — deferred; needs a force-push when the repo is quiet. |
+| **B4 / B5** | A nonprofit pilot (outreach drafted, not sent) and three donated laptops. |
+
+## 6. The lessons that cost the most today — do not re-learn them
+
+- **A check that cannot fail is not a check.** Three separate checks were *permanently green*: a
+  SELinux check (`tr -d '[:space:]'` ate the newlines), `grep -c … || echo 0` (emits `"0\n0"`, which
+  would have failed **B8 and B11 on every perfect image**), and **`verify` itself** reported PASS on
+  failing suites because a pipe through `tail` lost the exit code (**D37** — written by the same author
+  who had recorded that exact rule as D19 hours earlier). **For anything you write, break it on purpose
+  and watch it go red.**
+- **Never guess a path, unit name or flag.** Four ~50-minute build cycles were lost to remembered
+  greenboot layouts and a CLI that did not exist. Probe it, or make the failure print what IS there.
+- **Two of my own guards failed their own canaries** — one regex stopped at `|`, another anchored at
+  line start. Both reported "clean" while the bug was present.
+- **A commit to a public repo is a publication.** `git add -A` published a 48-file go-to-market strategy
+  nobody had read. Now in `auros_private` (D36).
+- **Derived is safer than hardcoded only when it derives from the same thing.** `.wants` vs `WantedBy`.
+- **Audit against the contract, not your task list.** `TASKS.md` said the installer was nearly done; the
+  entire **Linux-side restore did not exist** (B15) — the half that puts a school's files *back*.
+- **CI hygiene:** the base build takes ~50 min (S7 builds and flattens twice — see R6) and **queues**.
+  Several agents pushing = an hour of delay for everyone. `paths-ignore` and `cancel-in-progress` are
+  now set; the image build deliberately does not cancel, since a run on main may be mid-publish.
+  85 failed runs emailed the owner today — **watch the volume you generate.**
+
+## 7. Suggested order of work
+
+1. **Read `35548421189`'s S7 verdict** and fix determinism accordingly. This is Gate 1's last blocker.
+2. **Read `docs/SYSTEM-REVIEW.md`** when it lands — it ranks what actually breaks for a real school.
+3. Land the in-flight workflow results; commit carefully (agents are editing).
+4. Get the check matrix (`probe-matrix.yml`) running clean — it fires the moment the base builds.
+5. Then Gate 2: `gate1-exit.yml` already publishes fixtures to a separate repo with a run-scoped key
+   and never touches `:hardened`, so it does **not** need B10.
+6. Gate 3 (100 clean + 20 aborts on ephemeral Windows runners, D27) — agent in progress.
+7. Propose R6/R7 (halve build cost, make superseded builds cancellable) **only after Gate 1 is green** —
+   changing the pipeline mid-debug turns one unknown into two.
+
+## 8. Honest status
+
+Nothing has touched real hardware. No image has been published. No customer exists. The boot path is
+proven on a *minimal* derivative, not on the hardened image. `hardware/compat.tsv` is a header row, and
+the honesty gate enforces that we may not claim hands-on experience until it has physical rows.
+
+Roughly 1,500 tests exist; ~27 real bugs were found by writing them. Every claim on the site is gated.
