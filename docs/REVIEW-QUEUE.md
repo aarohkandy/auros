@@ -131,3 +131,22 @@ publish, which is where the property is load-bearing. Feedback on a broken build
 The counter-argument, which deserves a hearing: a determinism break introduced on a branch would then be
 found at merge rather than at push. Given S7 compares content digests and the usual cause is an
 unpinned input, that is a cheap thing to find late — but it IS later.
+
+## R7 — The base build queue is now the throughput bottleneck · OPEN
+Three agents push to `auros-base`. Every push runs `build.yml`, which takes ~50 minutes (S7 builds and
+flattens twice, see R6) and **queues** rather than cancelling, because main runs are deliberately not
+cancellable — a run on main may be mid-publish.
+
+The result, observed twice within half an hour: a README push and a probe-workflow push each put the
+build everyone was waiting on an hour further away. Two runs were cancelled by hand to recover.
+
+Mitigated so far: `paths-ignore` for markdown, docs, LICENSE and `probe-*.yml`.
+
+Still open, and worth deciding together with R6 once Gate 1 is green:
+- Make main runs cancellable **except** while the publish job is live, rather than never. Cancelling a
+  superseded build is almost always right; the exception is narrow and detectable.
+- Or move the expensive half (S7's second build and flatten) to nightly and the release path.
+
+Minor, deliberately left: the `pull_request` trigger's `paths-ignore` does not include `probe-*.yml`,
+only the `push` one does. Fixing it means editing `build.yml`, which correctly queues another
+fifty-minute build for a cosmetic asymmetry. It goes in with the next real change to that file.
