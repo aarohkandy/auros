@@ -26,6 +26,14 @@ run "licence consistency (README vs LICENSE)" node tools/licence-consistency.mjs
 if [ -d auros-web/src ]; then run "honesty gate (spec §4.4)" node tools/honesty-gate.mjs auros-web/src
 else skip "honesty gate (spec §4.4)" "auros-web not checked out here"; fi
 
+# ── SYSTEM-REVIEW H12/H13: a DESIGN row must name the file that implements it, and the claims D8/D30/D31
+# withdrew must be gone from all five repos, not only from auros-web/src. The Wi-Fi row passed the gate
+# above for weeks with the promise itself as its evidence. The test proves both checks can go red.
+if [ -f tools/claims-evidence.mjs ]; then
+  run "claims evidence: DESIGN rows cite code, withdrawn phrases absent (H12/H13)" node tools/claims-evidence.mjs
+  run "claims evidence, both directions" node --test tools/claims-evidence.test.mjs
+else skip "claims evidence (H12/H13)" "tools/claims-evidence.mjs not present"; fi
+
 # ── The 2026-09-20 honesty audit, as permanent assertions ───────────────────────────────────────────
 # Each fatal and major finding from that audit is one named test here. A finding fixed only in prose
 # comes back the next time somebody rewrites the paragraph; a finding fixed as an assertion does not.

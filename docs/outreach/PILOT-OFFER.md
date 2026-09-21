@@ -54,14 +54,15 @@ customer or a complaint at month two.
 - **Windows programs do not come across.** Not some of them — none of them. If the office runs a piece of
   Windows-only software, that machine keeps Windows or the software has to be replaced with something
   browser-based. We will tell you exactly which programs are on each machine before we touch it.
-- **Files, bookmarks, Wi-Fi and printers do come across**, and we verify every file by hash before we
-  change anything on the disk.
+- **Files and bookmarks come across**, and we verify every file by hash before we change anything on
+  the disk. **Wi-Fi networks, printers and the account name do not**: the installer does not export
+  them, so they are set up again on each machine.
 - **Some machines need one firmware setting changed by hand.** Mostly the 2012–2015 ones. We will know
   which before we start and we will tell you.
-- **We are new.** We have no other customers to point at. What we have instead is that every recipe is a
-  public file in a public repository — **if we disappear tomorrow, you can rebuild your exact operating
-  system from that file without us.** That is the reason to risk three laptops on us, and it is the only
-  reassurance we are entitled to offer right now.
+- **We are new.** We have no other customers to point at. What we can say is that the machines keep booting
+  the image they have whatever happens to us, and that you can read your recipe and see exactly what is
+  on them. What happens to patching if we stop is a wind-down handover we have drafted and not yet
+  offered; ask us about it.
 
 ## Who to approach first, and why
 
