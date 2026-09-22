@@ -5,6 +5,47 @@ Written by the outgoing agent for the next one. **Read this file, then `DECISION
 
 ---
 
+## 0a. UPDATE 2026-09-21 ~18:30 UTC — session ended by the owner; nothing is running
+
+**Read this first, then §0 below.** Everything is committed; the last base build was cancelled at
+the owner's request. Local `main` in each repo is what origin has.
+
+**State of Gate 1 (auros-base main = batch 8, `15dc4a3`):**
+- S7 green (honest). **Static phase fully green** (S1–S11) as of batch 7, run 35668716088.
+- `sign` / U1–U5 have STILL never run: `sign` needs `boot`, and boot still fails on exactly two
+  checks (uefi-modern, run 35668716088): **B11** — 11 SELinux denials, all UPSTREAM's now (tuned's
+  and bootloader-update's bootc calls; ours are 0, taint 0, zfs/v4l2loopback not loaded); **B12** —
+  Discover fails to start in the GPU-less VM (Mesa/ZINK), the three KCMs pass. Fix those two and the
+  chain runs. Next batch (accounts + layout screenshots) is on main but its build was cancelled —
+  rerun `build.yml` on main to get it.
+- Four agents were started on: B11 upstream denials (extend `update-agent/selinux/auros_bootc.cil`
+  to tuned_t etc. with a named allowlist), B12 Discover (software GL for the probe only),
+  `auros-recipes` examples.yml (needs the `.auros-meta` checkout — run 35672463313), and Gate 3's
+  window-station grant. All were stopped before writing anything; their worktrees under
+  `/Users/aaroh/auros-wt/` are clean. Start them again from those briefs.
+
+**Gate 3 (installer branch `agent/gate3-continue`, pushed):** enforcement is now a STANDARD-user token
+plus deny ACEs on the ~43k directories the token can write (scan ~7 min), profile AppData exempt.
+On real runners C1 (nothing written to C:) and C2 pass; the ONE remaining failure is the installer
+failing to load shell32 when launched as a non-admin user — no window-station/desktop access
+(STATUS_DLL_INIT_FAILED). Documented fix: grant WinSta0/Default to the user before launch. Then
+Gate 3 should be green. `integration/installer` (6 feature branches) is green in CI and ready for the
+owner to merge into installer main.
+
+**Decisions made by the agent this session, all reversible — owner may overturn any:**
+D44 (owner-answered), plus agent calls: Gate 3 enforcement replaces the disk diff (D27 amendment —
+write D45); first-login password change is a mandatory welcome-flow step (plasmalogin cannot do
+expired passwords); locked-mode users may change only their own password; accounts come from the
+recipe + first-boot unit with the hash on the install media (docs/ACCOUNTS.md, branch agent/accounts
+merged); mcelog skipped on CPUs it does not support; zfs/v4l2loopback blacklisted (D43).
+
+**CI email spam (the owner's complaint):** ~40 of today's failure emails came from Gate 3 pushes on
+two branches. Fix next: make `auros-installer/.github/workflows/gate3.yml` NOT trigger on push for
+`agent/*` branches (workflow_dispatch only), and prefer one combined branch. Account-side: GitHub →
+Settings → Notifications → Actions.
+
+**Server:** homebase disk was 96% full (not ours; ~0.5 GB of Go caches under ~/work are ours).
+
 ## 0. UPDATE 2026-09-21 ~06:30 UTC — read this before §3, which is now history
 
 - **B16 fixed** (auros-base `c849612`): `cmd_drift`/`cmd_update` exist; a test fails on any dispatched

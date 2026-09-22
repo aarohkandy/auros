@@ -465,3 +465,7 @@ in the named doc or commit.
 | 13 | First boot shows two setup wizards with overlapping questions (KDE plasma-setup, then our auros-first-run): suppress KDE's, trim ours, or brand KDE's | D4.4 "clean end to end" | agent/plasma-setup report |
 | 14 | Gate 3 measurement: switch from observing "no change on C:" (a treadmill against Windows servicing) to ENFORCING it with a deny-write ACL for the migration account + installer-tree attribution | Gate 3 | gate3 runs 35639286740 etc. |
 | 15 | SELinux: bootc's own chcon self-test is denied when our units run bootc; ship a policy module, or read status via rpm-ostree | B11 | agent/b5-selinux report |
+| 16 | Gate 3 last blocker: grant the standard-user migration account window-station/desktop access before launch (shell32 DllMain fails without it) | Gate 3 | run 35672736107, F07 artifact |
+| 17 | B11 upstream denials (tuned_t, bootloader-update) and B12 Discover-in-VM are the last two boot failures; `sign`/U1–U5 have never run | Gate 1 | run 35668716088 fragments |
+| 18 | Merge `integration/installer` into installer main (owner pushes main) | installer | CI run 35668658587 green |
+| 19 | Stop Gate 3 push-triggered runs on agent/* branches (email volume) | owner's inbox | gate3.yml `on:` |
