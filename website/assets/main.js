@@ -71,4 +71,185 @@
     setTimeout(function () { root.classList.remove("boot-anim"); base = null; update(); }, 2400);
     update();
   }
+  /* ── 2. the one restart, driven by scrolling ───────────────────── */
+  var R = window.AurOSRestart, aurEl = $("#aur");
+  if (R && aurEl && motion) {
+    var screen = new R.Screen(aurEl);
+    var track = $(".restart-track"), fig = $(".r-screen");
+    var nEl = $("#r-n"), lEl = $("#r-label");
+    var segWin = $("#seg-win"), segAur = $("#seg-aur"), dWin = $("#d-win"), dAur = $("#d-aur");
+    // the illustration: a 256 GB drive (238.4 GiB); EFI 0.1, recovery 1.0,
+    // Windows 237.3 of which 61.2 used (the fixture's shrunk size)
+    var WIN = 237.3, USED = 61.2, FREED = WIN - USED;
+    var lastKey = "";
+    var paintRestart = function () {
+      var r = track.getBoundingClientRect();
+      var span = track.offsetHeight - window.innerHeight;
+      var p = Math.min(1, Math.max(0, -r.top / Math.max(1, span)));
+      // 84% of the track is the install; the rest is the first start
+      var q = Math.min(1, p / 0.84);
+      var st = R.stateAt(q * R.TOTAL);
+      var key = q.toFixed(4);
+      if (key !== lastKey) {
+        lastKey = key;
+        screen.paint(st);
+        var step = st.handover ? 6 : st.step;
+        nEl.textContent = String(step + 1);
+        lEl.textContent = st.handover ? "AurOS is installed" : R.STEP[step][1];
+        // the drive: shrink while "Making room", fill while "Copying"
+        var shrink = st.step > 2 || st.handover ? 1 : st.step === 2 ? 0.999 : 0;
+        if (st.step === 2) {
+          // how far through "Making room" are we, by scroll
+          shrink = Math.min(1, Math.max(0, (q - 0.30) / 0.10));
+        }
+        var copy = st.handover || st.step > 3 ? 100 : st.step === 3 ? Math.max(0, st.pct) : 0;
+        var win = WIN - FREED * shrink, aur = FREED * shrink;
+        segWin.style.setProperty("--w", win.toFixed(2));
+        segWin.style.setProperty("--used", (USED / win * 100).toFixed(2) + "%");
+        segAur.style.setProperty("--w", aur.toFixed(2));
+        segAur.style.setProperty("--fill", copy + "%");
+        dWin.textContent = win.toFixed(1);
+        dAur.textContent = aur.toFixed(1);
+      }
+      fig.classList.toggle("welcome", p > 0.88);
+    };
+    var rt = false;
+    window.addEventListener("scroll", function () { if (!rt) { rt = true; requestAnimationFrame(function () { rt = false; paintRestart(); }); } }, { passive: true });
+    window.addEventListener("resize", function () { screen.fit(); lastKey = ""; paintRestart(); });
+    paintRestart();
+  }
+
+  /* ── 3. the power cuts: read what the test checked at each ─────── */
+  var tl = $("#tl"), trBody = $("#tr-body"), trName = $("#tr-name");
+  if (tl) {
+    var facts = null;
+    var show = function (i) {
+      if (!facts) return;
+      var it = facts.powercut.list[i];
+      trName.textContent = "── " + it.name;
+      trBody.textContent = "";
+      it.checks.forEach(function (c) {
+        var line = document.createElement("span");
+        var pad = c[0].length < 58 ? new Array(59 - c[0].length).join(" ") : " ";
+        line.textContent = "    " + c[0] + pad;
+        var ok = document.createElement("span");
+        ok.className = c[1] === "ok" ? "ok" : "fail";
+        ok.textContent = c[1];
+        trBody.appendChild(line); trBody.appendChild(ok); trBody.appendChild(document.createTextNode("\n"));
+      });
+      Array.prototype.forEach.call(tl.querySelectorAll("button"), function (b, j) {
+        b.setAttribute("aria-pressed", j === i ? "true" : "false");
+      });
+    };
+    fetch("assets/data/facts.json").then(function (r) { return r.json(); }).then(function (f) {
+      facts = f;
+      var start = 0;
+      f.powercut.list.forEach(function (it, i) { if (it.name === "shrink-end") start = i; });
+      show(start);
+    }).catch(function () {});
+    tl.addEventListener("click", function (e) {
+      var li = e.target.closest("li.tick");
+      if (li) show(+li.getAttribute("data-i"));
+    });
+    tl.addEventListener("keydown", function (e) {
+      var li = e.target.closest("li.tick"); if (!li) return;
+      var i = +li.getAttribute("data-i"), n = tl.children.length;
+      var j = e.key === "ArrowRight" ? Math.min(n - 1, i + 1) : e.key === "ArrowLeft" ? Math.max(0, i - 1) : -1;
+      if (j >= 0) { e.preventDefault(); show(j); tl.children[j].querySelector("button").focus(); }
+    });
+  }
+
+  /* ── 3b. two fingerprints, made in this browser ────────────────── */
+  var prints = $("#prints");
+  if (prints && window.crypto && crypto.subtle && "IntersectionObserver" in window) {
+    var hex = function (buf) { return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ("0" + b.toString(16)).slice(-2); }).join(""); };
+    var art = function (box, h) {
+      box.textContent = "";
+      for (var i = 0; i < 256; i++) {
+        var nib = parseInt(h[i % 64], 16), nib2 = parseInt(h[(i * 7 + 3) % 64], 16);
+        var c = document.createElement("span");
+        var l = 10 + ((nib ^ nib2) & 15) * 3.2;
+        c.style.backgroundColor = "hsl(" + (150 + (nib2 & 7) * 3) + " " + (18 + (nib & 7) * 4) + "% " + l.toFixed(0) + "%)";
+        box.appendChild(c);
+      }
+    };
+    var write = function (el, h) {
+      $(".p-hash", el).textContent = h.match(/.{1,16}/g).join(" ");
+      art($(".p-art", el), h);
+    };
+    var run = function () {
+      // the fixture: p1..p6.jpg, 64 KiB each, and thesis.odt, 2 MiB, random
+      var sizes = [65536, 65536, 65536, 65536, 65536, 65536, 2097152];
+      var files = sizes.map(function (n) {
+        var b = new Uint8Array(n);
+        for (var o = 0; o < n; o += 65536) crypto.getRandomValues(b.subarray(o, Math.min(n, o + 65536)));
+        return b;
+      });
+      var whole = function (fs) {
+        var total = fs.reduce(function (a, f) { return a + f.length; }, 0), all = new Uint8Array(total), o = 0;
+        fs.forEach(function (f) { all.set(f, o); o += f.length; });
+        return crypto.subtle.digest("SHA-256", all);
+      };
+      whole(files).then(function (h1) {
+        write($("#pr-before"), hex(h1));
+        // put back: the bytes go out to a copy and come back again
+        var copies = files.map(function (f) { return f.slice(0); });
+        setTimeout(function () {
+          whole(copies).then(function (h2) {
+            write($("#pr-after"), hex(h2));
+            var same = hex(h1) === hex(h2);
+            $(".print-eq", prints).classList.toggle("same", same);
+            Array.prototype.forEach.call(document.querySelectorAll("#p-files li"), function (li) { li.classList.add("ok"); });
+          });
+        }, motion ? 900 : 0);
+      });
+    };
+    var io = new IntersectionObserver(function (es) {
+      if (es[0].isIntersecting) { io.disconnect(); run(); }
+    }, { rootMargin: "0px 0px -20% 0px" });
+    io.observe(prints);
+  }
+
+  /* ── 4. the gallery ────────────────────────────────────────────── */
+  var gallery = $("#gallery");
+  if (gallery) {
+    var frame = $(".g-frame", gallery), tabs = gallery.querySelectorAll(".g-tab");
+    var gName = $("#g-name"), gDesc = $("#g-desc"), gSrc = $("#g-src");
+    var pick = function (btn) {
+      Array.prototype.forEach.call(tabs, function (t) { t.setAttribute("aria-selected", t === btn ? "true" : "false"); t.tabIndex = t === btn ? 0 : -1; });
+      var name = btn.getAttribute("data-img"); // theme-x or shell-x
+      var isTheme = name.indexOf("theme-") === 0;
+      var b = "assets/renders/" + name;
+      var pic = document.createElement("picture");
+      pic.className = "g-img";
+      pic.innerHTML = '<source type="image/avif" srcset="' + b + '-1366.avif 1366w, ' + b + '-2732.avif 2732w" sizes="(max-width: 960px) 100vw, 72vw">' +
+        '<img src="' + b + '-1366.webp" srcset="' + b + '-683.webp 683w, ' + b + '-1366.webp 1366w, ' + b + '-2732.webp 2732w" sizes="(max-width: 960px) 100vw, 72vw" width="1366" height="768" decoding="async" alt="">';
+      var img = $("img", pic);
+      img.alt = "The AurOS desktop: " + btn.textContent + (isTheme ? " look, Everything in a row layout." : " layout, Nocturne look, three programs open.");
+      var swap = function () {
+        frame.appendChild(pic);
+        requestAnimationFrame(function () {
+          pic.classList.add("on");
+          var old = frame.querySelectorAll(".g-img");
+          setTimeout(function () { Array.prototype.forEach.call(old, function (o) { if (o !== pic) o.remove(); }); }, 700);
+        });
+      };
+      if (img.decode) img.decode().then(swap, swap); else swap();
+      gName.textContent = btn.textContent;
+      gDesc.textContent = btn.getAttribute("data-desc");
+      gSrc.textContent = (isTheme ? btn.getAttribute("data-src") + " · shells/rail.shell" : "themes/nocturne.theme · " + btn.getAttribute("data-src")) +
+        " · rendered by website/tools/render-shell.c through src/aurshell";
+    };
+    Array.prototype.forEach.call(tabs, function (t, i) {
+      t.tabIndex = t.getAttribute("aria-selected") === "true" ? 0 : -1;
+      t.addEventListener("click", function () { pick(t); });
+      t.addEventListener("keydown", function (e) {
+        var d = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : e.key === "ArrowUp" || e.key === "ArrowLeft" ? -1 : 0;
+        if (!d) return;
+        e.preventDefault();
+        var n = tabs[(i + d + tabs.length) % tabs.length];
+        n.focus(); pick(n);
+      });
+    });
+  }
 })();

@@ -57,8 +57,8 @@
     </div>
 
     <div class="rig" id="rig" role="img" aria-label="An old laptop on a ridge at night, open, showing the AurOS desktop in the Sandstone look: ‘What would you like to do?’ above a list of six programs.">
+      <div class="ground"></div>
       <div class="machine">
-        <div class="ground"></div>
         <div class="deck">
           <div class="hinge"></div>
           <svg class="keys" viewBox="0 0 1000 420" preserveAspectRatio="none" aria-hidden="true">
@@ -170,8 +170,252 @@
   </div>
 </section>
 
+<!-- ── 2. one restart ───────────────────────────────────────────────── -->
+<section class="restart" id="restart" aria-labelledby="restart-h">
+  <div class="restart-track">
+    <div class="restart-stage">
+      <div class="wrap restart-grid">
+        <header class="restart-head">
+          <p class="kicker"><b>02</b> One restart</p>
+          <h2 id="restart-h">It restarts once.</h2>
+          <p class="lede">This is the screen it shows while it works, rebuilt from <span class="mono">src/aurscreen</span>, saying what the installer says.</p>
+          <p class="r-step" aria-hidden="true"><span class="num" id="r-n">1</span><span class="of">/ 7</span><span id="r-label">Checking this computer</span></p>
+        </header>
+        <figure class="r-screen">
+          <div class="r-bezel">
+            <div class="aur" id="aur" aria-hidden="true">
+              <div class="a-mark"><i></i><span>AurOS</span></div>
+              <div class="a-title">Installing AurOS</div>
+              <div class="a-paras"><p>Copying AurOS onto this computer.</p></div>
+              <div class="a-bar"><span style="width:47%"></span></div><div class="a-pct">47%</div>
+              <ol class="a-steps"><li class="done">Checking this computer</li><li class="done">Saving the way back to Windows</li><li class="done">Making room on the Windows drive</li><li class="now">Copying AurOS</li><li>Setting up how it starts</li><li>Checking AurOS works here</li><li>Finishing</li></ol>
+              <div class="a-warn on">Do not turn the computer off. It will restart by itself.</div>
+              <div class="a-foot"><div>windows  the Windows drive is now 61.2 GiB</div><div>Copying AurOS onto this computer.</div></div>
+            </div>
+            <picture class="r-welcome">
+              <source type="image/avif" srcset="assets/renders/welcome-1366.avif 1366w, assets/renders/welcome-2732.avif 2732w" sizes="(max-width: 960px) 92vw, 62vw">
+              <img src="assets/renders/welcome-1366.webp" srcset="assets/renders/welcome-1366.webp 1366w, assets/renders/welcome-2732.webp 2732w" sizes="(max-width: 960px) 92vw, 62vw" width="1366" height="768" loading="lazy" decoding="async" alt="AurOS’s first start, as src/aurshell/welcome.c paints it: ‘AurOS is on this computer. Have a look around. Nothing has been decided yet. Right now, switching this computer on still starts Windows. That stays true until you press Yes.’ Buttons: Yes, it all works · Let me look first · No, go back to Windows.">
+            </picture>
+          </div>
+          <figcaption class="source r-cap"><span class="r-cap-a">Steps and sentences: <a href="https://github.com/ComputerDude771/auros-from-scratch/blob/HEAD/src/aurscreen/screen.c">src/aurscreen/screen.c</a>, <a href="https://github.com/ComputerDude771/auros-from-scratch/blob/HEAD/src/aurstage/install.c">src/aurstage/install.c</a>. Set in DejaVu Sans, like the real one.</span><span class="r-cap-b">Then it starts AurOS and asks one question. <a href="https://github.com/ComputerDude771/auros-from-scratch/blob/HEAD/src/aurshell/welcome.c">src/aurshell/welcome.c</a>, rendered.</span></figcaption>
+        </figure>
+        <div class="disk" aria-label="The drive, to scale">
+          <div class="disk-bar" id="disk">
+            <span class="seg efi" style="--w:0.04"></span>
+            <span class="seg win" id="seg-win" style="--w:99.5"><em>Windows (C:)</em></span>
+            <span class="seg aur" id="seg-aur" style="--w:0"><em>AurOS</em></span>
+            <span class="seg rec" style="--w:0.42"></span>
+          </div>
+          <div class="disk-key">
+            <span><i class="k-win"></i>Windows <b class="num" id="d-win">238.5</b> GiB</span>
+            <span><i class="k-aur"></i>AurOS <b class="num" id="d-aur">0</b> GiB</span>
+            <span class="disk-note" data-source="tools/screentest.sh src/aurstage/install.c">Illustration, to scale: a 256&nbsp;GB drive. Windows is shrunk to the smallest size <span class="mono">ntfsresize</span> allows (61.2&nbsp;GiB in the test fixture) and AurOS gets everything that frees. Recovery stays where it was.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 3. the way back ──────────────────────────────────────────────── -->
+<section class="wayback sec" id="wayback" aria-labelledby="wayback-h">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="kicker"><b>03</b> The way back</p>
+      <h2 id="wayback-h">Put Windows back.</h2>
+      <p class="lede">Until you press <strong>Yes, it all works</strong>, Windows is still on the drive and still starts. One button puts it back exactly as it was. We cut the power on purpose to prove it.</p>
+    </div>
+
+    <div class="cut" id="cut">
+      <p class="cut-line" data-source="docs/results/powercut.txt">The power was cut at <b class="num">18</b> named instants, <span class="nb">13 while installing</span> and <span class="nb">5 while putting Windows back.</span> <b class="num">138</b> checks. <b class="num">0</b> failed.</p>
+      <p class="source cut-src">Every cut is followed by the same question: are the <span class="num">7</span> files in Windows exactly what they were, and does Windows come back? <span class="mono">sudo sh tools/powercuttest.sh</span> · transcript: <a href="https://github.com/ComputerDude771/auros-from-scratch/blob/HEAD/docs/results/powercut.txt">docs/results/powercut.txt</a>. Simulated machine (QEMU + OVMF); one firmware, one virtual disk.</p>
+      <div class="timeline" role="group" aria-label="The 18 instants, in order. Choose one to read what the test checked.">
+        <div class="tl-phase"><span>Installing</span><span>Putting Windows back</span></div>
+        <ol class="tl" id="tl">
+            <li class="tick install" data-i="0"><button type="button" aria-pressed="false"><span class="t-name">gate</span></button></li>
+            <li class="tick install" data-i="1"><button type="button" aria-pressed="false"><span class="t-name">capture-mid</span></button></li>
+            <li class="tick install" data-i="2"><button type="button" aria-pressed="false"><span class="t-name">shrink-begin</span></button></li>
+            <li class="tick install" data-i="3"><button type="button" aria-pressed="false"><span class="t-name">shrink-end</span></button></li>
+            <li class="tick install" data-i="4"><button type="button" aria-pressed="false"><span class="t-name">write-mid</span></button></li>
+            <li class="tick install" data-i="5"><button type="button" aria-pressed="false"><span class="t-name">write-end</span></button></li>
+            <li class="tick install" data-i="6"><button type="button" aria-pressed="false"><span class="t-name">boot-mid</span></button></li>
+            <li class="tick install" data-i="7"><button type="button" aria-pressed="false"><span class="t-name">boot-end</span></button></li>
+            <li class="tick install" data-i="8"><button type="button" aria-pressed="false"><span class="t-name">commit-array</span></button></li>
+            <li class="tick install" data-i="9"><button type="button" aria-pressed="false"><span class="t-name">commit-sector</span></button></li>
+            <li class="tick install" data-i="10"><button type="button" aria-pressed="false"><span class="t-name">commit-backup</span></button></li>
+            <li class="tick install" data-i="11"><button type="button" aria-pressed="false"><span class="t-name">boot-entry</span></button></li>
+            <li class="tick install" data-i="12"><button type="button" aria-pressed="false"><span class="t-name">settle-end</span></button></li>
+            <li class="tick restore" data-i="13"><button type="button" aria-pressed="false"><span class="t-name">restore-array</span></button></li>
+            <li class="tick restore" data-i="14"><button type="button" aria-pressed="false"><span class="t-name">restore-sector</span></button></li>
+            <li class="tick restore" data-i="15"><button type="button" aria-pressed="false"><span class="t-name">restore-backup</span></button></li>
+            <li class="tick restore" data-i="16"><button type="button" aria-pressed="false"><span class="t-name">restore-esp-mid</span></button></li>
+            <li class="tick restore" data-i="17"><button type="button" aria-pressed="false"><span class="t-name">restore-grow</span></button></li>
+        </ol>
+      </div>
+      <div class="transcript" id="transcript" aria-live="polite">
+        <div class="tr-head mono"><span>docs/results/powercut.txt</span><span id="tr-name">── shrink-end</span></div>
+        <pre class="tr-body" id="tr-body">    the machine stops dead at shrink-end                       ok
+    after the cut: every file in Windows is still exactly what it was ok
+    and Windows can be put back                                ok
+    after shrink-end: the table is valid again                 ok
+    after shrink-end: the three original partitions are back   ok
+    after shrink-end: Windows is its full size again           ok
+    after shrink-end: the EFI partition is byte-for-byte what it was ok
+    after shrink-end: the Windows FILESYSTEM is its full size again ok
+    after shrink-end: and the installer says so itself         ok</pre>
+      </div>
+    </div>
+
+    <div class="prints" id="prints">
+      <div class="prints-head">
+        <h3>Before, and after putting it back</h3>
+        <p class="source">The test’s own Windows: six 64&nbsp;KiB pictures and a 2&nbsp;MiB <span class="mono">thesis.odt</span> of random bytes (<span class="mono">tools/machine.sh</span>). Re-enacted in your browser with fresh random bytes; the test does it with <span class="mono">md5sum</span> on a real NTFS volume.</p>
+      </div>
+      <div class="print-pair">
+        <div class="print" id="pr-before">
+          <p class="p-label mono">before anything is touched</p>
+          <div class="p-art" aria-hidden="true"></div>
+          <p class="p-hash mono" aria-label="SHA-256 before">computed in your browser</p>
+        </div>
+        <div class="print-eq" aria-hidden="true"><span>=</span></div>
+        <div class="print" id="pr-after">
+          <p class="p-label mono">after Put Windows back</p>
+          <div class="p-art" aria-hidden="true"></div>
+          <p class="p-hash mono" aria-label="SHA-256 after">computed in your browser</p>
+        </div>
+      </div>
+      <ul class="p-files mono" id="p-files" aria-label="The files">
+        <li>Users/auros/Pictures/p1.jpg</li><li>Users/auros/Pictures/p2.jpg</li><li>Users/auros/Pictures/p3.jpg</li><li>Users/auros/Pictures/p4.jpg</li><li>Users/auros/Pictures/p5.jpg</li><li>Users/auros/Pictures/p6.jpg</li><li>Users/auros/thesis.odt</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ── 4. the desktop ───────────────────────────────────────────────── -->
+<section class="desk sec" id="desktop" aria-labelledby="desk-h">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="kicker"><b>04</b> The desktop</p>
+      <h2 id="desk-h">Six looks. Six ways to work.</h2>
+      <p class="lede">Every picture here is drawn by the desktop’s own code at 1366&nbsp;×&nbsp;768, the screen most of these laptops have. Nothing is mocked up. <a href="desktop.html">Click around it in your browser</a>.</p>
+    </div>
+    <div class="gallery" id="gallery">
+      <div class="g-tabs">
+        <div class="g-group">
+          <p class="g-h mono" id="g-looks">Looks</p>
+          <ul role="tablist" aria-labelledby="g-looks">
+              <li><button type="button" role="tab" class="g-tab" aria-selected="true" data-img="theme-nocturne" data-src="themes/nocturne.theme" data-desc="The default: dark, calm, gold accent.">Nocturne</button></li>
+              <li><button type="button" role="tab" class="g-tab" aria-selected="false" data-img="theme-sandstone" data-src="themes/sandstone.theme" data-desc="The light theme, for bright rooms and daylight.">Sandstone</button></li>
+              <li><button type="button" role="tab" class="g-tab" aria-selected="false" data-img="theme-ember" data-src="themes/ember.theme" data-desc="Warm charcoal and firelight, for an old screen whose blues have faded.">Ember</button></li>
+              <li><button type="button" role="tab" class="g-tab" aria-selected="false" data-img="theme-moss" data-src="themes/moss.theme" data-desc="Dark, with a green accent.">Moss</button></li>
+              <li><button type="button" role="tab" class="g-tab" aria-selected="false" data-img="theme-slate" data-src="themes/slate.theme" data-desc="Cool grey-blue, for offices.">Slate</button></li>
+              <li><button type="button" role="tab" class="g-tab" aria-selected="false" data-img="theme-synthwave" data-src="themes/synthwave.theme" data-desc="Loud pink and cyan.">Synthwave</button></li>
+          </ul>
+        </div>
+        <div class="g-group">
+          <p class="g-h mono" id="g-lays">Layouts</p>
+          <ul role="tablist" aria-labelledby="g-lays">
+              <li><button type="button" role="tab" class="g-tab" aria-selected="false" data-img="shell-rail" data-src="shells/rail.shell" data-desc="Nothing is ever hidden. Slide left and right.">Everything in a row</button></li>
+              <li><button type="button" role="tab" class="g-tab" aria-selected="false" data-img="shell-taskbar" data-src="shells/taskbar.shell" data-desc="A bar along the bottom with everything you have open.">The familiar one</button></li>
+              <li><button type="button" role="tab" class="g-tab" aria-selected="false" data-img="shell-dock" data-src="shells/dock.shell" data-desc="Your regular programs always in the same place.">Favourites along the edge</button></li>
+              <li><button type="button" role="tab" class="g-tab" aria-selected="false" data-img="shell-tiles" data-src="shells/tiles.shell" data-desc="A page of big buttons. Press one, it fills the screen.">One thing at a time</button></li>
+              <li><button type="button" role="tab" class="g-tab" aria-selected="false" data-img="shell-workbench" data-src="shells/workbench.shell" data-desc="Windows tile automatically. Fast once learned.">Panes and keyboard</button></li>
+              <li><button type="button" role="tab" class="g-tab" aria-selected="false" data-img="shell-locked" data-src="shells/locked.shell" data-desc="Only what the owner chose. The first one opens straight away.">Just these apps</button></li>
+          </ul>
+        </div>
+      </div>
+      <figure class="g-stage" role="tabpanel" aria-live="polite">
+        <div class="g-frame">
+          <picture class="g-img on">
+            <source type="image/avif" srcset="assets/renders/theme-nocturne-1366.avif 1366w, assets/renders/theme-nocturne-2732.avif 2732w" sizes="(max-width: 960px) 100vw, 72vw">
+            <img src="assets/renders/theme-nocturne-1366.webp" srcset="assets/renders/theme-nocturne-683.webp 683w, assets/renders/theme-nocturne-1366.webp 1366w, assets/renders/theme-nocturne-2732.webp 2732w" sizes="(max-width: 960px) 100vw, 72vw" width="1366" height="768" loading="lazy" decoding="async" alt="The AurOS desktop in the Nocturne look, Everything in a row layout: ‘What would you like to do?’ with Internet, Email, Photos, My Files, Writing and Music.">
+          </picture>
+        </div>
+        <figcaption class="g-cap"><span class="g-name" id="g-name">Nocturne</span><span class="g-desc" id="g-desc">The default: dark, calm, gold accent.</span><span class="source" id="g-src">themes/nocturne.theme · shells/rail.shell · rendered by website/tools/render-shell.c through src/aurshell</span></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ── 5. organisations ─────────────────────────────────────────────── -->
+<section class="orgs sec" id="orgs" aria-labelledby="orgs-h">
+  <div class="wrap orgs-grid">
+    <div class="orgs-pitch">
+      <p class="kicker"><b>05</b> Schools &amp; nonprofits</p>
+      <h2 id="orgs-h">One recipe. Every machine.</h2>
+      <p class="lede">Your cupboard of laptops, built from one short file: only the programs you asked for, in your language, locked down as far as you want. Ubuntu’s security updates install themselves, the kernel and boot chain included.</p>
+      <p class="lede">Most computers are sold by what they add. This shows you what it <strong>takes out</strong>.</p>
+      <dl class="price" data-source="lathe/docs/SPEC.md">
+        <div><dt>Schools &amp; nonprofits</dt><dd><b class="num">$15</b> per device per year, <span class="num">25</span>-device minimum</dd></div>
+        <div><dt>One machine</dt><dd><b class="num">$79</b>, once</dd></div>
+      </dl>
+      <p class="source">Prices as set in <span class="mono">lathe/docs/SPEC.md</span>. Nothing is on sale yet: AurOS is pre-release.</p>
+    </div>
+    <div class="cfg" id="cfg">
+      <form class="cfg-form" id="cfg-form" aria-label="Build a recipe">
+        <div class="f-row">
+          <label for="f-lang" class="f-l mono">Language</label>
+          <select id="f-lang" name="language"></select>
+        </div>
+        <fieldset class="f-row">
+          <legend class="f-l mono">Programs</legend>
+          <div class="chips" id="f-apps"></div>
+        </fieldset>
+        <fieldset class="f-row">
+          <legend class="f-l mono">Who can change things</legend>
+          <div class="seg4" id="f-policy"></div>
+          <p class="f-says" id="f-says"></p>
+        </fieldset>
+        <label class="f-pin"><input type="checkbox" id="f-pin"> Keep Firefox at today’s version, forever</label>
+      </form>
+      <div class="cfg-out">
+        <div class="file">
+          <div class="file-h mono"><span>customers/example-school/recipe.yaml</span><span class="ill">ILLUSTRATION</span></div>
+          <pre class="yaml" id="yaml" aria-live="polite">schema: 1
+name: example-school
+policy: managed</pre>
+        </div>
+        <div class="plan" id="plan" aria-live="polite">
+          <div class="plan-col keep"><p class="mono plan-h">On these machines <b id="n-keep" class="num">–</b></p><ul id="l-keep"></ul></div>
+          <div class="plan-col gone"><p class="mono plan-h">Taken out <b id="n-gone" class="num">–</b></p><ul id="l-gone"></ul></div>
+        </div>
+        <p class="source">Validated and compiled in your browser by <span class="mono">recipes/lib/recipe.mjs</span>, the same code that turns a recipe into the profile <span class="mono">build/forge</span> builds.</p>
+        <noscript><p class="source">The configurator needs JavaScript. Without it: write to us and we will build the recipe with you.</p></noscript>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 6. status ────────────────────────────────────────────────────── -->
+<section class="status" aria-label="Status">
+  <div class="wrap">
+    <p class="status-line"><span class="dot" aria-hidden="true"></span><span><b>Pre-release.</b> Tested on simulated machines and on real Windows in CI. Real PCs installed so far: <b class="num zero" data-source="lathe/hardware/compat.tsv">0</b>.</span> <a href="safety.html">What can go wrong, and what doesn’t come across</a></p>
+  </div>
+</section>
+
 </main>
+<footer class="foot" id="download">
+  <div class="wrap foot-grid">
+    <div class="dl">
+      <p class="kicker"><b>06</b> Download</p>
+      <h2>Try the test build.</h2>
+      <p class="lede">One file for Windows. It checks your PC first and changes nothing until you say so. It is <strong>not signed yet</strong>, so Windows will warn you before it opens.</p>
+      <a class="btn btn-brass" href="https://github.com/ComputerDude771/auros-from-scratch/raw/image-desktop/AurOS-Installer-test.exe"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1v9m0 0L4.5 6.5M8 10l3.5-3.5M2 13.5h12" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>AurOS-Installer-test.exe <span class="tag">test build</span></a>
+      <p class="sha mono" data-source="HANDOFF-TRIAGE.md">SHA-256 ef903efd9cdeb10e15e52b3ce9e4eac83788f3396ac9f029ed04f2cfca1c5891</p>
+      <p class="source">Before you run it, read <a href="safety.html">what can go wrong</a> and back up anything you cannot lose.</p>
+    </div>
+    <nav class="foot-links" aria-label="More">
+      <div><p class="mono f-h">Look closer</p><a href="desktop.html">Click around AurOS</a><a href="wallpaper.html">Press your own wallpaper</a><a href="guide.html">The one-page guide</a><a href="safety.html">Safety</a></div>
+      <div><p class="mono f-h">Source</p><a href="https://github.com/ComputerDude771/auros-from-scratch">GitHub</a><a href="https://github.com/ComputerDude771/auros-from-scratch/tree/HEAD/docs">Docs</a><a href="https://github.com/ComputerDude771/auros-from-scratch/tree/HEAD/docs/results">Every test transcript</a></div>
+      <div><p class="mono f-h">Other directions</p><a href="archive/drive/">The page is the drive</a></div>
+    </nav>
+  </div>
+  <div class="wrap foot-base mono"><span>AurOS · MIT licensed</span><span>This page draws its own sky and tracks no one.</span><span>Fonts: Archivo, Atkinson Hyperlegible, Martian Mono, DejaVu Sans (<a href="assets/fonts/LICENSE.md">licences</a>)</span></div>
+</footer>
+
 <script src="assets/aurora.js" defer></script>
+<script src="assets/restart.js" defer></script>
 <script src="assets/main.js" defer></script>
+<script type="module" src="assets/cfg.js"></script>
 </body>
 </html>

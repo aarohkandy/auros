@@ -1,0 +1,156 @@
+#!/usr/bin/env bash
+# ./verify — every fast check in this repository, in one command. Run it before you believe anything.
+#
+# Adopted from LATHE (lathe/verify). A check nobody runs does not exist, so there is one entry point,
+# and it exits non-zero if ANY suite failed. Two rules from LATHE's history are load-bearing here:
+#
+#   D37  verify once reported PASS over failing suites because a command was piped through `tail`,
+#        and a pipeline's status is its last command's. So: no command below is piped. Output that
+#        needs trimming is trimmed AFTER the status has been taken. tools/verify-meta.test.mjs breaks
+#        each kind of suite on purpose and proves the failure reaches this script's exit status —
+#        and it checks that no `run` line in this file contains a pipe.
+#   D19  set -o pipefail regardless, for anything that slips through.
+#
+# What is NOT here, and says so with a SKIP line: anything that needs QEMU, OVMF, root or a built
+# image (tools/e2e-all.sh runs those), and the slow C suites unless VERIFY_SLOW=1.
+#
+#   ./verify                      the fast checks
+#   VERIFY_SLOW=1 ./verify        also hittest, wlhostile, the wlstress pair and the picture sheets
+#   VERIFY_ONLY="a b" ./verify    only the suites whose ids are listed (used by verify-meta)
+set -uo pipefail
+cd "$(dirname "$0")" || exit 2
+# A `node --test` started from inside another `node --test` (which is how verify-meta runs this
+# script) inherits NODE_TEST_CONTEXT, prints "run() is being called recursively ... skipping running
+# files", runs ZERO tests and exits 0. Found by verify-meta: the recipe suite "passed" in a sandbox
+# where it had been broken on purpose. A green line over nothing is the worst kind.
+unset NODE_TEST_CONTEXT
+
+PASS=0; FAIL=0; SKIP=0; FAILED=()
+only () { [ -z "${VERIFY_ONLY:-}" ] && return 0; case " $VERIFY_ONLY " in *" $1 "*) return 0 ;; esac; return 1; }
+run () {
+  local id="$1" name="$2"; shift 2
+  only "$id" || return 0
+  printf '\n\033[1m── %s ──\033[0m\n' "$name"
+  if "$@"; then printf '\033[32m   PASS\033[0m  %s\n' "$name"; PASS=$((PASS+1))
+  else printf '\033[31m   FAIL\033[0m  %s\n' "$name"; FAIL=$((FAIL+1)); FAILED+=("$name"); fi
+}
+skip () {
+  only "$1" || return 0
+  printf '\n\033[1m── %s ──\033[0m\n   \033[33mSKIP:\033[0m %s\n' "$2" "$3"; SKIP=$((SKIP+1))
+}
+TMPV=$(mktemp -d); trap 'rm -rf "$TMPV"' EXIT
+
+# ── recipes/ — the organisation recipe, compiled to a forge profile ─────────────────────────────────
+run recipes "recipes: parse, validate, compile, forge keys, every field changes the profile" \
+  node --test --test-reporter=dot recipes/test/*.test.mjs
+run prove-red "recipes: every planted bug is caught by the test named for it (prove-red)" \
+  node recipes/test/prove-red.mjs
+
+# ── build/forge: every profile resolves through forge's own loader ──────────────────────────────────
+resolve_all () {
+  local p ok=0
+  for p in profiles/*.profile; do
+    if bash build/forge resolve "$(basename "$p" .profile)" > "$TMPV/resolve.out" 2>&1; then echo "   ok    $p"
+    else echo "   FAIL  $p"; cat "$TMPV/resolve.out"; ok=1; fi
+  done
+  return $ok
+}
+run forge-resolve "build/forge resolve, every profile in profiles/" resolve_all
+
+# ── the honesty gate: what the website and front-door documents may claim ───────────────────────────
+run honesty-corpus "honesty gate works as a classifier (corpus, both directions)" \
+  node --test --test-reporter=dot tools/honesty-gate.test.mjs
+run honesty "honesty gate: website/, docs/TRY-IT.md, README.md" \
+  node tools/honesty-gate.mjs
+
+# ── hardware/compat.tsv: the record of real hardware ────────────────────────────────────────────────
+run compat "compat.tsv honesty (no vm row claims a physical column)" node tools/compat-lint.mjs
+run compat-test "compat.tsv lint, both directions" node --test --test-reporter=dot tools/compat-lint.test.mjs
+
+# ── shell scripts: syntax, and shellcheck's errors ──────────────────────────────────────────────────
+shell_scripts () {
+  local f
+  for f in build/* tools/*.sh verify $(find rootfs -type f 2>/dev/null); do
+    [ -f "$f" ] || continue
+    case "$(head -n 1 "$f" 2>/dev/null)" in
+      '#!'*bash*) echo "bash $f" ;;
+      '#!'*/sh|'#!'*/sh' '*|'#!'*'env sh'*) echo "sh $f" ;;
+    esac
+  done
+}
+syntax_all () {
+  local sh f bad=0 n=0
+  shell_scripts > "$TMPV/scripts"
+  while read -r sh f; do
+    n=$((n+1))
+    if ! "$sh" -n "$f"; then echo "   $sh -n FAILED: $f"; bad=1; fi
+  done < "$TMPV/scripts"
+  echo "   $n scripts checked"
+  [ "$n" -gt 0 ] || { echo "   found no shell scripts at all — refusing to call that a pass"; return 1; }
+  return $bad
+}
+run syntax "bash -n / sh -n on every shell script (build/, tools/, rootfs/, verify)" syntax_all
+shellcheck_all () {
+  shell_scripts > "$TMPV/scripts"
+  # shellcheck disable=SC2046
+  shellcheck -S error $(cut -d' ' -f2 "$TMPV/scripts")
+}
+if command -v shellcheck >/dev/null 2>&1; then
+  run shellcheck "shellcheck -S error on every shell script" shellcheck_all
+else
+  skip shellcheck "shellcheck -S error" "needs shellcheck (apt install shellcheck, or pip install shellcheck-py)"
+fi
+
+# ── the fast C unit tests from tools/README.md, built and run by tools/unit-all.sh ──────────────────
+# unit-all.sh belongs to whoever owns those tests; this only calls it, one test at a time, so each
+# gets its own PASS or FAIL line. Its transcript is shown only when the test failed.
+cunit () {
+  local name="$1"
+  if sh tools/unit-all.sh "$TMPV/unit" "$name"; then return 0; fi
+  echo "   ── last lines of $name ──"
+  tail -n 25 "$TMPV/unit/$name.txt"
+  return 1
+}
+FAST_C="recip_proof blur_equiv kerning contrast padtest launchtest targets modaltest powertest bttest welcometest kiosktest stridetest nettest keytest notifytest wltest"
+SLOW_C="hittest wlhostile wlstress wlstress_asan contactsheet setsheet netsheet"
+need_for () {
+  case "$1" in
+    notifytest) command -v dbus-daemon >/dev/null && pkg-config --exists dbus-1 || echo "dbus-daemon and libdbus-1-dev" ;;
+    keytest|wlhostile|wlstress|wlstress_asan) pkg-config --exists wayland-server xkbcommon || echo "libwayland-dev and libxkbcommon-dev" ;;
+    wltest) { pkg-config --exists wayland-server xkbcommon && command -v weston-simple-shm >/dev/null; } || echo "libwayland-dev, libxkbcommon-dev and weston (weston-simple-shm)" ;;
+  esac
+}
+if [ ! -f tools/unit-all.sh ]; then
+  skip c-unit "C unit tests (tools/README.md)" "needs tools/unit-all.sh"
+elif ! command -v cc >/dev/null || ! command -v wayland-scanner >/dev/null || ! command -v pkg-config >/dev/null; then
+  skip c-unit "C unit tests (tools/README.md)" "needs cc, pkg-config and wayland-scanner (unit-all.sh generates the protocol code first)"
+else
+  for t in $FAST_C $SLOW_C; do
+    case " $SLOW_C " in *" $t "*) if [ "${VERIFY_SLOW:-0}" != 1 ]; then skip "c-$t" "C unit: $t" "slow — VERIFY_SLOW=1 ./verify runs it"; continue; fi ;; esac
+    missing=$(need_for "$t")
+    if [ -n "$missing" ]; then skip "c-$t" "C unit: $t" "needs $missing"; continue; fi
+    run "c-$t" "C unit: $t" cunit "$t"
+  done
+fi
+
+# ── what is not run here, said out loud ─────────────────────────────────────────────────────────────
+for t in stagetest installtest nosticktest loadertest matrixtest choicesboottest putbacktest firstboottest bootupdatetest failtest powercuttest; do
+  skip "e2e-$t" "end-to-end: $t" "needs QEMU, OVMF, root and a built out/ — sh tools/e2e-all.sh OUTDIR $t"
+done
+skip e2e-bootchain "bootchaintest" "needs a forged rootfs (the signed shim and grub) and OVMF"
+skip e2e-permissions "permissions.sh" "needs a rootfs a build has produced"
+skip e2e-filetypes "filetypes.sh" "needs desktop.profile's packages_files installed on the machine running it"
+
+# ── LAST: the aggregate itself must be able to go red ───────────────────────────────────────────────
+# Runs this script in sandboxes with one suite broken at a time. Not present in those sandboxes, so it
+# does not recurse.
+if [ -f tools/verify-meta.test.mjs ]; then
+  run verify-meta "verify propagates every failure (meta)" node --test --test-reporter=dot tools/verify-meta.test.mjs
+else
+  skip verify-meta "verify propagates every failure (meta)" "tools/verify-meta.test.mjs not present"
+fi
+
+printf '\n\033[1m════ %d passed · %d failed · %d skipped ════\033[0m\n' "$PASS" "$FAIL" "$SKIP"
+for f in "${FAILED[@]+"${FAILED[@]}"}"; do printf '   \033[31mFAILED\033[0m  %s\n' "$f"; done
+[ "$FAIL" -eq 0 ] || exit 1
+[ "$PASS" -gt 0 ] || { echo "verify: nothing ran — refusing to call that a pass"; exit 1; }

@@ -1,0 +1,19 @@
+$ sh tools/installtest.sh
+# started 2026-10-04T23:40:16Z
+
+Does it actually install AurOS, and leave Windows intact?
+
+  a 3 GiB machine: ESP, a 1 GiB Windows with 7 files, WinRE at the end
+  a stick with a 334 MiB AurOS image, a record area and room for the way back
+
+  refusals, with the disk untouched
+    no stick in the computer: refused                          ok
+    ...and the disk is byte-for-byte unchanged                 ok
+    a damaged image on the stick: refused                      ok
+    ...and the disk is byte-for-byte unchanged                 ok
+    a damaged boot chain on the stick: refused                 ok
+    ...and the disk is byte-for-byte unchanged                 ok
+    a stick for a different AurOS: refused                     ok
+    ...and the disk is byte-for-byte unchanged                 ok
+
+  and then installing, for real

@@ -72,20 +72,29 @@ DISK="$TMP/disk.img"
 # the same numbers and a partition table that disagrees with the
 # journal by a typo would look exactly like the attack the journal is
 # there to stop.
-# One gibibyte of Windows, not four. The surface test reads every
+# Two gibibytes of Windows, not four. The surface test reads every
 # sector of the reclaimable space and that is almost the whole cost of
 # this suite under emulation; a bigger volume buys nothing, because
 # what is being tested is that the read happens and reports honestly,
 # not how long a real disk takes.
+#
+# NOT ONE. It was one, and that stopped being a machine with room when
+# the dry run started counting what the install carves out besides the
+# root (src/aurstage/main.c: this disk's ESP copied as the way back,
+# plus LOADER_BOOT_TYPICAL_MB for AurOS's own boot partition). The
+# smallest floor aurstage.min_gb= accepts is 1 GB, so the "healthy
+# machine" case needs 1 GB + 100 MiB + 512 MiB, about 1.64 GB, free --
+# and a 1 GiB volume can give 1018 MiB. That case then failed with
+# verdict=no-room, which was the product being right about the fixture.
 P1S=2048;    P1E=206847        # ESP, 100 MiB
-P2S=206848;  P2E=2303999       # Windows, 1 GiB
-P3S=2304000; P3E=6291422       # AurOS, the rest of 3 GiB
+P2S=206848;  P2E=4401151       # Windows, 2 GiB
+P3S=4401152; P3E=8388574       # AurOS, the rest of 4 GiB (the same 1.9 GiB as before)
 SERIAL=AUROSTEST
-DISKSECT=6291456               # 3 GiB in 512-byte sectors
-truncate -s 3G "$DISK"
+DISKSECT=8388608               # 4 GiB in 512-byte sectors
+truncate -s 4G "$DISK"
 sgdisk --zap-all "$DISK" >/dev/null 2>&1
 sgdisk -n 1:2048:+100M -t 1:ef00 -c 1:"EFI"     "$DISK" >/dev/null 2>&1
-sgdisk -n 2:0:+1G      -t 2:0700 -c 2:"Windows" "$DISK" >/dev/null 2>&1
+sgdisk -n 2:0:+2G      -t 2:0700 -c 2:"Windows" "$DISK" >/dev/null 2>&1
 sgdisk -n 3:0:0        -t 3:8304 -c 3:"AurOS"   "$DISK" >/dev/null 2>&1
 
 mkpart() { # start-sector end-sector kind
@@ -280,7 +289,7 @@ echo "  the dry run, all the way through"
 # two-gigabyte volume under emulation this is the slowest case here,
 # and that is the point -- it is doing the reading.
 # aurstage.min_gb=1 because this fixture's Windows volume is a
-# gibibyte: the real floor is twenty-four, and a twenty-five gigabyte
+# couple of gibibytes: the real floor is twenty-four, and a twenty-five gigabyte
 # fixture would be a twenty-five gigabyte surface test under emulation
 # for no extra confidence. The floor itself gets its own case below.
 run_case "a healthy machine: it says it could be converted" \

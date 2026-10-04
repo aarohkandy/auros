@@ -78,9 +78,15 @@ function scratch () {
 }
 
 function runTests (dir, file) {
-  const r = spawnSync(process.execPath, ['--test', '--test-reporter=tap', join(dir, file)], { cwd: dir, encoding: 'utf8', timeout: 300_000 })
+  // NODE_TEST_CONTEXT is removed because a `node --test` inside another one runs NOTHING and exits 0
+  // ("run() is being called recursively"), which would make every mutation look survived and the
+  // baseline look green. The baseline below also requires that tests actually ran.
+  const env = { ...process.env }
+  delete env.NODE_TEST_CONTEXT
+  const r = spawnSync(process.execPath, ['--test', '--test-reporter=tap', join(dir, file)], { cwd: dir, env, encoding: 'utf8', timeout: 300_000 })
   const failed = [...(r.stdout ?? '').matchAll(/^\s*not ok \d+ - (.*)$/gm)].map((m) => m[1].trim())
-  return { code: r.status, failed, out: (r.stdout ?? '') + (r.stderr ?? '') }
+  const passed = Number(/^# pass (\d+)$/m.exec(r.stdout ?? '')?.[1] ?? 0)
+  return { code: r.status, failed, passed, out: (r.stdout ?? '') + (r.stderr ?? '') }
 }
 
 const args = process.argv.slice(2)
@@ -99,6 +105,7 @@ if (chosen.length === 0) { console.error(`prove-red: no mutation named ${args.jo
     for (const t of new Set(chosen.map((m) => m.test))) {
       const r = runTests(dir, t)
       if (r.code !== 0) { console.error(`prove-red: ${t} is not green before any mutation:\n${r.failed.join('\n')}`); process.exit(2) }
+      if (r.passed === 0) { console.error(`prove-red: ${t} ran no tests at all — a baseline of nothing proves nothing:\n${r.out.slice(-1500)}`); process.exit(2) }
     }
   } finally { rmSync(dir, { recursive: true, force: true }) }
 }
