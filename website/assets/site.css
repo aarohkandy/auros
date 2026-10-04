@@ -44,7 +44,7 @@
 :root[data-theme="light"] { color-scheme: dark; } /* the page is a night; it has no light version */
 
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scroll-behavior: auto; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: auto; overflow-x: clip; }
 body {
   margin: 0; background: var(--night); color: var(--ink);
   font: 400 18px/1.55 var(--text);
@@ -144,12 +144,14 @@ h3 { font-family: var(--display); font-stretch: 112%; font-weight: 500; font-siz
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); }
 .cam { position: absolute; left: 50%; top: calc(var(--w) * 0.019); width: calc(var(--w) * 0.008); height: calc(var(--w) * 0.008);
   margin-left: calc(var(--w) * -0.004); border-radius: 50%; background: #07080a; box-shadow: 0 0 0 1px #2a2c30; }
-.screen { position: relative; width: 100%; height: 100%; background: #000; overflow: hidden;
+.screen { position: relative; width: 100%; height: 100%; background: #000; overflow: hidden; container-type: inline-size;
   box-shadow: 0 0 0 2px #0b0c0e; }
 .screen picture, .screen img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .screen .glass { position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(118deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.035) 26%, rgba(255,255,255,0) 44%); }
-.screen .black { position: absolute; inset: 0; background: #000; opacity: 0; transition: opacity .4s; }
+.screen .black { position: absolute; inset: 0; background: #000; opacity: 0; }
+.screen .aur-boot { opacity: 0; }
+.lid-front { box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), inset 0 1px 0 rgba(150, 220, 185, .22); }
 .screen .on-img { opacity: 1; transition: opacity 1.4s ease .5s, filter 1.4s ease .5s; }
 .boot-anim .screen .on-img { animation: wake 2.2s ease .6s both; }
 @keyframes wake { from { opacity: 0; filter: brightness(1.6) blur(2px); } 30% { opacity: .35; } to { opacity: 1; filter: none; } }
@@ -360,7 +362,7 @@ section { position: relative; }
 .tr-body { margin: 0; padding: 18px; font: 12.5px/1.75 var(--mono); color: var(--ink-2); overflow-x: auto; min-height: 15em; }
 .tr-body .ok { color: var(--green); }
 @media (max-width: 760px) {
-  .tl { height: 170px; grid-template-columns: repeat(13, 1fr) 14px repeat(5, 1fr); }
+  .tl { height: 170px; grid-template-columns: repeat(13, 1fr) 14px repeat(5, 1fr); margin-right: 16px; }
   .tick .t-name { font-size: 9.5px; transform: rotate(-70deg); }
   .tr-body { font-size: 10.5px; padding: 14px; white-space: pre; }
 }
@@ -501,3 +503,8 @@ select { appearance: none; background: #0b0e12 url("data:image/svg+xml,%3Csvg xm
 .f-h { margin: 0 0 4px; font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .08em; }
 .foot-base { display: flex; flex-wrap: wrap; gap: 8px 28px; margin-top: 88px; padding-top: 20px; border-top: 1px solid var(--rule); color: var(--ink-3); font-size: 11px; }
 @media (max-width: 960px) { .dl, .foot-links { grid-column: 1 / -1; } }
+
+/* the restart's screen arrives full-bleed and settles into its frame */
+.js.motion .restart-stage { --intro: 1; }
+.js.motion .restart-head, .js.motion .disk, .js.motion .r-cap { opacity: var(--intro); }
+.js.motion .r-bezel { position: relative; z-index: 3; will-change: transform; }

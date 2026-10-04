@@ -26,7 +26,8 @@
 
   /* ── the laptop: push in ───────────────────────────────────────── */
   var hero = $(".hero"), rig = $("#rig"), copy = $(".hero-copy"), cue = $(".scroll-cue");
-  var machine = rig && $(".machine", rig), lid = rig && $(".lid", rig), black = rig && $(".screen .black", rig);
+  var machine = rig && $(".machine", rig), lid = rig && $(".lid", rig), black = rig && $(".screen .black", rig),
+      boot = rig && $(".screen .aur-boot", rig);
   if (hero && rig && motion) {
     var base = null;
     var measure = function () {
@@ -62,7 +63,9 @@
       copy.style.transform = "translateY(" + (-p * 120) + "px)";
       if (cue) cue.style.opacity = String(Math.max(0, 1 - p * 6));
       // and the screen goes dark: the one restart
-      black.style.opacity = String(Math.min(1, Math.max(0, (p - 0.72) / 0.22)));
+      black.style.opacity = String(Math.min(1, Math.max(0, (p - 0.62) / 0.16)));
+      // ...and comes back as the staging screen the next section is about
+      boot.style.opacity = String(Math.min(1, Math.max(0, (p - 0.84) / 0.12)));
     };
     var onScroll = function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -112,7 +115,25 @@
         dAur.textContent = aur.toFixed(1);
       }
       fig.classList.toggle("welcome", p > 0.88);
+      // the first stretch of the track: the screen arrives full-bleed
+      // (where the laptop left it) and settles into its frame
+      var e = Math.min(1, Math.max(0, p / 0.07));
+      e = 1 - Math.pow(1 - e, 3);
+      if (e !== lastE) {
+        lastE = e;
+        var bz = $(".r-bezel", fig);
+        bz.style.transform = "";
+        var fr = bz.getBoundingClientRect();
+        var vw = window.innerWidth, vh = window.innerHeight;
+        var S0 = Math.max(vw / fr.width, vh / fr.height) * 1.02;
+        var k = S0 + (1 - S0) * e;
+        var tx = (vw / 2 - (fr.left + fr.width / 2)) * (1 - e), ty = (vh / 2 - (fr.top + fr.height / 2)) * (1 - e);
+        bz.style.transformOrigin = "50% 50%";
+        bz.style.transform = e >= 1 ? "" : "translate(" + tx + "px," + ty + "px) scale(" + k + ")";
+        stage.style.setProperty("--intro", e.toFixed(3));
+      }
     };
+    var lastE = -1, stage = $(".restart-stage");
     var rt = false;
     window.addEventListener("scroll", function () { if (!rt) { rt = true; requestAnimationFrame(function () { rt = false; paintRestart(); }); } }, { passive: true });
     window.addEventListener("resize", function () { screen.fit(); lastKey = ""; paintRestart(); });
@@ -172,17 +193,17 @@
       for (i = 0; i < 32; i++) {
         var byte = parseInt(h.substr(i * 2, 2), 16);
         for (j = 0; j < 4; j++) {
-          x += (byte & 1) ? 1 : -1; y += (byte & 2) ? 1 : -1;
-          x = Math.max(0, Math.min(W - 1, x)); y = Math.max(0, Math.min(H - 1, y));
+          x = Math.max(0, Math.min(W - 1, x + ((byte & 1) ? 1 : -1)));
+          y = Math.max(0, Math.min(H - 1, y + ((byte & 2) ? 1 : -1)));
           f[y * W + x]++; byte >>= 2;
         }
       }
-      var out = "+---[SHA256]----+\n";
-      for (y = 0; y < H; y++) {
+      var end = y * W + x, out = "+----[SHA256]-----+\n";
+      for (var r = 0; r < H; r++) {
         out += "|";
-        for (x = 0; x < W; x++) {
-          var c = (x === 8 && y === 4) ? "S" : (y * W + x === (function () { return lastXY; })()) ? "E" : chars[Math.min(chars.length - 1, f[y * W + x])];
-          out += c;
+        for (var c = 0; c < W; c++) {
+          var k = r * W + c;
+          out += (k === 4 * W + 8) ? "S" : (k === end) ? "E" : chars[Math.min(chars.length - 1, f[k])];
         }
         out += "|\n";
       }
