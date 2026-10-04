@@ -163,19 +163,36 @@
   var prints = $("#prints");
   if (prints && window.crypto && crypto.subtle && "IntersectionObserver" in window) {
     var hex = function (buf) { return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ("0" + b.toString(16)).slice(-2); }).join(""); };
-    var art = function (box, h) {
-      box.textContent = "";
-      for (var i = 0; i < 256; i++) {
-        var nib = parseInt(h[i % 64], 16), nib2 = parseInt(h[(i * 7 + 3) % 64], 16);
-        var c = document.createElement("span");
-        var l = 10 + ((nib ^ nib2) & 15) * 3.2;
-        c.style.backgroundColor = "hsl(" + (150 + (nib2 & 7) * 3) + " " + (18 + (nib & 7) * 4) + "% " + l.toFixed(0) + "%)";
-        box.appendChild(c);
+    // OpenSSH's "drunken bishop" picture of a fingerprint (ssh-keygen -lv):
+    // a 17x9 field walked two bits at a time, so equal hashes draw equal
+    // pictures and different ones, almost always, visibly do not.
+    var art = function (box, h, label) {
+      var W = 17, H = 9, f = [], x = 8, y = 4, i, j, chars = " .o+=*BOX@%&#/^";
+      for (i = 0; i < W * H; i++) f.push(0);
+      for (i = 0; i < 32; i++) {
+        var byte = parseInt(h.substr(i * 2, 2), 16);
+        for (j = 0; j < 4; j++) {
+          x += (byte & 1) ? 1 : -1; y += (byte & 2) ? 1 : -1;
+          x = Math.max(0, Math.min(W - 1, x)); y = Math.max(0, Math.min(H - 1, y));
+          f[y * W + x]++; byte >>= 2;
+        }
       }
+      var out = "+---[SHA256]----+\n";
+      for (y = 0; y < H; y++) {
+        out += "|";
+        for (x = 0; x < W; x++) {
+          var c = (x === 8 && y === 4) ? "S" : (y * W + x === (function () { return lastXY; })()) ? "E" : chars[Math.min(chars.length - 1, f[y * W + x])];
+          out += c;
+        }
+        out += "|\n";
+      }
+      box.textContent = out + label;
+      box.classList.add("done");
     };
     var write = function (el, h) {
       $(".p-hash", el).textContent = h.match(/.{1,16}/g).join(" ");
-      art($(".p-art", el), h);
+      var pre = $(".p-art", el);
+      art(pre, h, pre.textContent.split("\n").pop());
     };
     var run = function () {
       // the fixture: p1..p6.jpg, 64 KiB each, and thesis.odt, 2 MiB, random

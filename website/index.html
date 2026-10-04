@@ -201,13 +201,13 @@
         </figure>
         <div class="disk" aria-label="The drive, to scale">
           <div class="disk-bar" id="disk">
-            <span class="seg efi" style="--w:0.04"></span>
-            <span class="seg win" id="seg-win" style="--w:99.5"><em>Windows (C:)</em></span>
-            <span class="seg aur" id="seg-aur" style="--w:0"><em>AurOS</em></span>
-            <span class="seg rec" style="--w:0.42"></span>
+            <span class="seg s-efi" style="--w:0.1"></span>
+            <span class="seg s-win" id="seg-win" style="--w:237.3"><em>Windows (C:)</em></span>
+            <span class="seg s-aur" id="seg-aur" style="--w:0"><em>AurOS</em></span>
+            <span class="seg s-rec" style="--w:1"></span>
           </div>
           <div class="disk-key">
-            <span><i class="k-win"></i>Windows <b class="num" id="d-win">238.5</b> GiB</span>
+            <span><i class="k-win"></i>Windows <b class="num" id="d-win">237.3</b> GiB</span>
             <span><i class="k-aur"></i>AurOS <b class="num" id="d-aur">0</b> GiB</span>
             <span class="disk-note" data-source="tools/screentest.sh src/aurstage/install.c">Illustration, to scale: a 256&nbsp;GB drive. Windows is shrunk to the smallest size <span class="mono">ntfsresize</span> allows (61.2&nbsp;GiB in the test fixture) and AurOS gets everything that frees. Recovery stays where it was.</span>
           </div>
@@ -227,7 +227,7 @@
     </div>
 
     <div class="cut" id="cut">
-      <p class="cut-line" data-source="docs/results/powercut.txt">The power was cut at <b class="num">18</b> named instants, <span class="nb">13 while installing</span> and <span class="nb">5 while putting Windows back.</span> <b class="num">138</b> checks. <b class="num">0</b> failed.</p>
+      <p class="cut-line" data-source="docs/results/powercut.txt">The power was cut at <b class="num">18</b> named instants: <b class="num">13</b> while installing, <b class="num">5</b> while putting Windows back. <b class="num">138</b> checks. <b class="num">0</b> failed.</p>
       <p class="source cut-src">Every cut is followed by the same question: are the <span class="num">7</span> files in Windows exactly what they were, and does Windows come back? <span class="mono">sudo sh tools/powercuttest.sh</span> · transcript: <a href="https://github.com/ComputerDude771/auros-from-scratch/blob/HEAD/docs/results/powercut.txt">docs/results/powercut.txt</a>. Simulated machine (QEMU + OVMF); one firmware, one virtual disk.</p>
       <div class="timeline" role="group" aria-label="The 18 instants, in order. Choose one to read what the test checked.">
         <div class="tl-phase"><span>Installing</span><span>Putting Windows back</span></div>
@@ -274,14 +274,34 @@
       <div class="print-pair">
         <div class="print" id="pr-before">
           <p class="p-label mono">before anything is touched</p>
-          <div class="p-art" aria-hidden="true"></div>
-          <p class="p-hash mono" aria-label="SHA-256 before">computed in your browser</p>
+          <pre class="p-art" aria-hidden="true">+---[SHA256]----+
+|               |
+|               |
+|               |
+|               |
+|               |
+|               |
+|               |
+|               |
+|               |
++----[before]---+</pre>
+          <p class="p-hash mono" aria-label="SHA-256 before">waiting to be computed in your browser</p>
         </div>
         <div class="print-eq" aria-hidden="true"><span>=</span></div>
         <div class="print" id="pr-after">
           <p class="p-label mono">after Put Windows back</p>
-          <div class="p-art" aria-hidden="true"></div>
-          <p class="p-hash mono" aria-label="SHA-256 after">computed in your browser</p>
+          <pre class="p-art" aria-hidden="true">+---[SHA256]----+
+|               |
+|               |
+|               |
+|               |
+|               |
+|               |
+|               |
+|               |
+|               |
++----[after]----+</pre>
+          <p class="p-hash mono" aria-label="SHA-256 after">waiting to be computed in your browser</p>
         </div>
       </div>
       <ul class="p-files mono" id="p-files" aria-label="The files">
@@ -370,7 +390,7 @@
       </form>
       <div class="cfg-out">
         <div class="file">
-          <div class="file-h mono"><span>customers/example-school/recipe.yaml</span><span class="ill">ILLUSTRATION</span></div>
+          <div class="file-h mono"><span>example-school/recipe.yaml <span class="dim">· comments left out</span></span><span class="ill">ILLUSTRATION</span></div>
           <pre class="yaml" id="yaml" aria-live="polite">schema: 1
 name: example-school
 policy: managed</pre>

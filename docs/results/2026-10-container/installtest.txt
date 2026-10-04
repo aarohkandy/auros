@@ -17,3 +17,32 @@ Does it actually install AurOS, and leave Windows intact?
     ...and the disk is byte-for-byte unchanged                 ok
 
   and then installing, for real
+    it installs and the new system starts                      ok
+    ...and kept a second copy of the way back on the computer  ok
+
+  and what it left behind
+    another tool agrees the new table is valid                 ok
+    the disk now has 6 partitions                              ok
+      p1 2048..206847 EFI
+      p2 206848..223256 Windows
+      p3 5498880..6291422 WinRE
+      p4 225280..5193727 AUROS-ROOT
+      p5 5193728..5400575 AUROS-SAVED
+      p6 5400576..5498879 AUROS-BOOT
+    Windows is smaller than it was                             ok
+    the Windows volume still mounts                            ok
+    and all 7 files in it are byte-for-byte what they were     ok
+    the installer reported success                             ok
+
+  and then putting Windows back, from the memory stick
+    it restores and says so                                    ok
+    and it used the copy on the stick, not the one on the computer ok
+    from the stick: the table is valid again                   ok
+    from the stick: the three original partitions are back     ok
+    from the stick: Windows is its full size again             ok
+    from the stick: the EFI partition is byte-for-byte what it was ok
+    from the stick: the Windows FILESYSTEM is its full size again ok
+    from the stick: and the installer says so itself           ok
+    from the stick: all 7 files in Windows are exactly what they were ok
+
+  and again with no stick at all, from the copy on the computer

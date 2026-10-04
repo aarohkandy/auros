@@ -1,0 +1,130 @@
+/* cfg.js — the configurator. A recipe made from four answers, written
+ * out, validated and compiled by recipes/lib/recipe.mjs (copied here as
+ * assets/recipe.mjs: the same code the build uses, not a lookalike).
+ *
+ * The YAML panel is emitYaml()'s output with its per-field comment lines
+ * left out to fit; the two lists under it are compile()'s report: what is
+ * on the machines and what is taken out of the standard desktop.
+ */
+import { OPTIONS, emitYaml, validate, compile } from "./recipe.mjs";
+
+const $ = (s) => document.querySelector(s);
+const form = $("#cfg-form");
+if (form) {
+  // The languages offered here, with the keyboard printed on the keys and a
+  // clock to match. Non-Latin scripts get a Latin keyboard plus a second
+  // layout, because recipe.mjs only accepts Latin layouts for `keyboard:`
+  // (so a password can always be typed).
+  const LANGS = [
+    ["English (United Kingdom)", { keyboard: "English (UK)", timezone: "Europe/London" }],
+    ["English (United States)", { keyboard: "English (US)", timezone: "America/New_York" }],
+    ["Spanish", { keyboard: "Spanish", timezone: "Europe/Madrid" }],
+    ["French", { keyboard: "French", timezone: "Europe/Paris" }],
+    ["German", { keyboard: "German", timezone: "Europe/Berlin" }],
+    ["Portuguese (Brazil)", { keyboard: "Portuguese (Brazil)", timezone: "America/Sao_Paulo" }],
+    ["Swahili", { keyboard: "English (US)", timezone: "Africa/Nairobi" }],
+    ["Arabic", { keyboard: "English (US)", second_script: "Arabic", timezone: "Africa/Cairo" }],
+    ["Hindi", { keyboard: "English (India)", second_script: "Hindi (InScript)", timezone: "Asia/Kolkata" }],
+    ["Marathi", { keyboard: "English (India)", second_script: "Marathi (InScript)", timezone: "Asia/Kolkata" }],
+  ].filter(([l, o]) => OPTIONS.languages[l] && OPTIONS.keyboards[o.keyboard] && (!o.second_script || OPTIONS.keyboards[o.second_script]));
+
+  const APPS = ["Firefox", "LibreOffice Writer", "LibreOffice Calc", "LibreOffice Impress", "Files", "Document Viewer",
+    "Image Viewer", "Text Editor", "Calculator", "Media Player", "GCompris", "Typing Tutor", "Scanner"]
+    .filter((a) => OPTIONS.apps[a]);
+  const START = new Set(["Firefox", "LibreOffice Writer", "Files", "Document Viewer"]);
+  const POLICIES = Object.keys(OPTIONS.policies);
+
+  const sel = $("#f-lang");
+  for (const [l] of LANGS) sel.add(new Option(l, l, false, l === "English (United Kingdom)"));
+
+  const chips = $("#f-apps");
+  const chip = (value, label, on) => {
+    const lab = document.createElement("label");
+    lab.className = "chip";
+    lab.innerHTML = '<input type="checkbox"><span></span>';
+    lab.firstChild.value = value; lab.firstChild.checked = on;
+    lab.lastChild.textContent = label;
+    chips.appendChild(lab);
+  };
+  for (const a of APPS) chip(a, a, START.has(a));
+  if (OPTIONS.capabilities.printing) chip("@printing", "Printing", true);
+
+  const pol = $("#f-policy");
+  for (const p of POLICIES) {
+    const lab = document.createElement("label");
+    lab.innerHTML = '<input type="radio" name="policy"><span></span>';
+    lab.firstChild.value = p; lab.firstChild.checked = p === "managed";
+    lab.lastChild.textContent = p;
+    pol.appendChild(lab);
+  }
+
+  const esc = (t) => t.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  const yamlEl = $("#yaml"), keepEl = $("#l-keep"), goneEl = $("#l-gone"), nKeep = $("#n-keep"), nGone = $("#n-gone"), says = $("#f-says");
+  let before = new Set();
+
+  const build = () => {
+    const language = sel.value;
+    const L = Object.fromEntries(LANGS)[language];
+    const picked = [...chips.querySelectorAll("input:checked")].map((i) => i.value);
+    const apps = picked.filter((v) => v[0] !== "@").sort();
+    const policy = form.querySelector('input[name="policy"]:checked').value;
+    const r = {
+      schema: 1,
+      name: "example-school",
+      for: "Shared classroom laptops at an example school. Pupils and teachers use them for schoolwork in the browser and in the few programs listed here, and nobody installs anything by hand.",
+      organisation: { display_name: "Example School" },
+      language,
+      keyboard: L.keyboard,
+    };
+    if (L.second_script) { r.second_script = L.second_script; r.switch_scripts_with = "Windows key + Spacebar"; }
+    r.timezone = L.timezone;
+    r.apps = apps;
+    r.prune = { keep_only_the_apps_above: true };
+    if (picked.includes("@printing")) r.prune.also_keep = ["printing"];
+    r.policy = policy;
+    if (policy === "kiosk" && apps.length > 1) r.kiosk = { starts: apps.includes("Firefox") ? "Firefox" : apps[0] };
+    if ($("#f-pin").checked) r.pin = ["firefox"];
+    return r;
+  };
+
+  const render = () => {
+    const r = build();
+    says.textContent = OPTIONS.policies[r.policy].says;
+    let yaml;
+    try { yaml = emitYaml(r); } catch (e) { yaml = ""; }
+    const lines = yaml.split("\n").filter((l, i) => !(l.startsWith("#") && i > 0)).join("\n").replace(/\n{2,}/g, "\n").trim();
+    const v = validate(r);
+    let html = lines.split("\n").map((l) => {
+      if (l.startsWith("#")) return '<span class="c">' + esc(l) + "</span>";
+      const m = l.match(/^(\s*)([a-z_]+):(.*)$/);
+      return m ? m[1] + '<span class="k">' + m[2] + "</span>:" + esc(m[3]) : esc(l);
+    }).join("\n");
+    if (!v.ok) {
+      html += "\n\n" + v.errors.map((e) => '<span class="err"># refused: ' + esc((e.path ? e.path + ": " : "") + e.message) + "</span>").join("\n");
+    }
+    yamlEl.innerHTML = html;
+
+    keepEl.textContent = ""; goneEl.textContent = "";
+    if (!v.ok) { nKeep.textContent = "–"; nGone.textContent = "–"; return; }
+    const { report } = compile(r);
+    const now = new Set();
+    for (const i of report.installed) {
+      const li = document.createElement("li");
+      li.textContent = i.item;
+      keepEl.appendChild(li);
+    }
+    for (const i of report.removed) {
+      const li = document.createElement("li");
+      li.innerHTML = esc(i.item) + " <small>" + esc(i.packages.join(" ")) + "</small>";
+      now.add(i.item);
+      if (before.size && !before.has(i.item)) li.className = "new";
+      goneEl.appendChild(li);
+    }
+    before = now;
+    nKeep.textContent = String(report.installed.length);
+    nGone.textContent = String(report.removed.length);
+  };
+  form.addEventListener("change", render);
+  form.addEventListener("submit", (e) => e.preventDefault());
+  render();
+}

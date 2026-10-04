@@ -1,0 +1,22 @@
+strings the shell paints
+  ok    nothing the shell paints uses a word she would not
+
+the words that describe each archetype
+  ok    every archetype describes itself plainly
+
+how a build describes itself
+  ok    every build describes itself plainly
+
+what the shipped programs are called
+  ok    every program AurOS ships is named plainly
+
+the words in the installer
+  src/aurbridge/wizard.c:1566                kernel
+      L"kernel32.dll"
+  src/aurbridge/wizard.c:1915                firmware
+      L"UEFI Firmware Settings"
+
+2 user-facing strings use words she does not.
+See docs/EASY.md rule 2. The fix is usually a different sentence
+about what happens next, not a simpler synonym for the same idea.
+exit=1

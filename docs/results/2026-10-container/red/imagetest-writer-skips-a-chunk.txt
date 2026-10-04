@@ -1,3 +1,4 @@
+# deliberate break: image_write_root skips the 1 MiB chunk at 8 MiB (src/aurstage/image.c, reverted after)
 
 Does the image get found, checked, and written the right way round?
 
@@ -27,15 +28,16 @@ Does the image get found, checked, and written the right way round?
     ...which is our own build being wrong, and it says so    ok
 
   writing it
-    the root extent is written and verified                  ok
-    ...byte for byte the same as the source                  ok
-    ...and it mounts, with its files in it                   ok
+    the root extent is written and verified                  FAIL
+      what was written to this computer's disk did not read back the same, 8 MB in. The drive is failing.
+    ...byte for byte the same as the source                  FAIL
+    ...and it mounts, with its files in it                   FAIL
+      it does not mount
 
   and the first megabyte is written LAST
     a write that runs out of room is refused                 ok
     ...and the first megabyte is all zeroes, not a filesystem ok
     ...and nothing will mount it                             ok
 
-23 checks: the image is found by what is on it, a single flipped
-byte is caught, and an interrupted write leaves nothing that will mount.
-exit=0
+3 of 23 wrong.
+exit=1

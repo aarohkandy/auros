@@ -1,3 +1,4 @@
+# deliberate break: two painted sentences with 'kernel' appended to wizard.c (reverted after)
 strings the shell paints
   ok    nothing the shell paints uses a word she would not
 
@@ -13,8 +14,12 @@ what the shipped programs are called
 the words in the installer
   src/aurbridge/wizard.c:1915                firmware
       L"UEFI Firmware Settings"
+  src/aurbridge/wizard.c:4201                kernel
+      L"The kernel is ready"
+  src/aurbridge/wizard.c:4202                kernel
+      L"Your kernel needs foo.dll"
 
-1 user-facing string uses a word she does not.
+3 user-facing strings use words she does not.
 See docs/EASY.md rule 2. The fix is usually a different sentence
 about what happens next, not a simpler synonym for the same idea.
 exit=1
