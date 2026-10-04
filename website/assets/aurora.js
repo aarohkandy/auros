@@ -211,11 +211,24 @@
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       if (!drew) { drew = true; if (opts.onFirstFrame) opts.onFirstFrame(); }
     }
+    // An old laptop's integrated graphics is exactly who visits this page.
+    // If frames are coming slowly, draw fewer pixels; if that is still
+    // slow at the smallest size, keep the last frame and stop.
+    var slow = 0, n = 0;
     function loop(now) {
       if (!running) return;
       raf = requestAnimationFrame(loop);
       if (now - last < 33) return;      // ~30 fps is plenty for light that moves this slowly
+      var gap = last ? now - last : 33;
       last = now;
+      if (++n > 4) {
+        slow = slow * 0.85 + (gap > 60 ? 1 : 0) * 0.15;
+        if (slow > 0.6) {
+          slow = 0; n = 0;
+          if (scale > 0.3) { scale = Math.max(0.3, scale * 0.72); size(); }
+          else { pause(); return; }
+        }
+      }
       draw(now);
     }
     function play() {

@@ -31,6 +31,7 @@
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
+  position: relative;
   margin: 0;
   background: var(--paper);
   color: var(--ink);
@@ -46,7 +47,7 @@ a:hover { color: var(--red); }
 
 /* paper grain, very faint */
 body::before {
-  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .5;
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: .5;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .08 0 0 0 0 .07 0 0 0 0 .05 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 .grid {
@@ -87,7 +88,7 @@ body::before {
   border-top: 1px solid #1413112e;
 }
 .hero { padding-top: clamp(28px, 4.2vw, 64px); padding-bottom: 0; align-items: end; }
-.hero-text { grid-column: 1 / span 5; align-self: start; position: relative; z-index: 2; }
+.hero-text { grid-column: 1 / span 4; align-self: start; position: relative; z-index: 2; }
 .kicker {
   font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; color: var(--red);
   margin: 0 0 18px;
@@ -96,7 +97,7 @@ h1 {
   font-family: var(--serif);
   font-weight: 300;
   font-variation-settings: "opsz" 72;
-  font-size: clamp(76px, 13.4vw, 228px);
+  font-size: clamp(76px, 12.2vw, 210px);
   line-height: .82;
   letter-spacing: -.035em;
   margin: 0 0 0 -.05em;
@@ -119,7 +120,7 @@ h1 em { font-style: italic; font-weight: 300; letter-spacing: -.045em; }
 .actions .primary:hover { background: var(--red); color: #fff; }
 .actions small { display: block; font-weight: 400; color: var(--ink-3); font-size: 12px; margin-top: 6px; }
 
-.object { grid-column: 6 / span 7; position: relative; z-index: 3; margin: 0 calc(var(--m) * -0.4) var(--sink, -2.5%) 0; }
+.object { grid-column: 5 / span 8; align-self: end; position: relative; z-index: 3; margin: 0 calc(var(--m) * -0.6) var(--sink, -2.5%) clamp(0px, 2vw, 40px); }
 .object svg { display: block; width: 100%; height: auto; overflow: visible; }
 
 /* the museum label */
@@ -234,7 +235,7 @@ h1 em { font-style: italic; font-weight: 300; letter-spacing: -.045em; }
     </div>
 
     <figure class="object" aria-labelledby="fig1" style="margin-top:0;margin-bottom:0">
-      <svg viewBox="0 0 1000 640" role="img" aria-label="An illustrated laptop, its screen showing the AurOS desktop with Internet, Email and Photos windows open and a taskbar along the bottom">
+      <svg viewBox="0 0 1000 640" role="img" aria-label="An illustrated laptop, its screen showing the AurOS home screen: What would you like to do? with six large choices, Internet, Email, Photos, My Files, Settings and Help, over a night sky with an aurora">
         <defs>
           <linearGradient id="lid" x1="0" y1="0" x2=".35" y2="1">
             <stop offset="0" stop-color="#2E2F33"/><stop offset=".45" stop-color="#1E1F22"/><stop offset="1" stop-color="#151618"/>
@@ -254,6 +255,7 @@ h1 em { font-style: italic; font-weight: 300; letter-spacing: -.045em; }
           <linearGradient id="spec" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".3" stop-color="#fff" stop-opacity=".22"/><stop offset=".7" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
           </linearGradient>
+          <linearGradient id="key" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34353A"/><stop offset=".7" stop-color="#26272B"/><stop offset="1" stop-color="#1B1C1F"/></linearGradient>
           <clipPath id="scr"><rect x="110" y="44" width="780" height="438.75" rx="2"/></clipPath>
         </defs>
         <!-- floor shadow -->
@@ -264,7 +266,7 @@ h1 em { font-style: italic; font-weight: 300; letter-spacing: -.045em; }
         <rect x="104" y="38" width="792" height="450.75" rx="4" fill="#0A0A0B"/>
         <circle cx="500" cy="23" r="3.6" fill="#0B0B0C"/><circle cx="499" cy="22" r="1.1" fill="#3A4A5A"/>
         <g clip-path="url(#scr)">
-          <image class="screen-img" href="desktop-taskbar.webp" x="110" y="44" width="780" height="438.75" preserveAspectRatio="xMidYMid slice"/>
+          <image class="screen-img" href="rail-home.webp" x="110" y="44" width="780" height="438.75" preserveAspectRatio="xMidYMid slice"/>
           <rect x="110" y="44" width="780" height="438.75" fill="url(#glare)"/>
         </g>
         <!-- hinge -->
@@ -353,9 +355,12 @@ h1 em { font-style: italic; font-weight: 300; letter-spacing: -.045em; }
       var x3 = b.l + (b.r - b.l) * (f1 - gap), x4 = b.l + (b.r - b.l) * (f0 + gap);
       var p = document.createElementNS(NS, "path");
       p.setAttribute("d", "M" + x1.toFixed(1) + " " + a.y.toFixed(1) + " L" + x2.toFixed(1) + " " + a.y.toFixed(1) + " L" + x3.toFixed(1) + " " + b.y.toFixed(1) + " L" + x4.toFixed(1) + " " + b.y.toFixed(1) + "Z");
-      p.setAttribute("fill", "#232427");
-      p.setAttribute("stroke", "#fff"); p.setAttribute("stroke-opacity", ".04"); p.setAttribute("stroke-width", ".5");
+      p.setAttribute("fill", "url(#key)");
       g.appendChild(p);
+      var hl = document.createElementNS(NS, "path");      // light catching each key's far edge
+      hl.setAttribute("d", "M" + (x1 + .6).toFixed(1) + " " + (a.y + .4).toFixed(1) + " L" + (x2 - .6).toFixed(1) + " " + (a.y + .4).toFixed(1));
+      hl.setAttribute("stroke", "#fff"); hl.setAttribute("stroke-opacity", (.07 + i * .025).toFixed(3)); hl.setAttribute("stroke-width", ".7");
+      g.appendChild(hl);
     }
   }
 

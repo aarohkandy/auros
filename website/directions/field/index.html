@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AurOS for schools — the cupboard</title>
+<meta name="description" content="The laptops in the school cupboard still work. Windows 11 won't take them; AurOS can, from one short profile per school. Pre-release: no school runs it yet.">
+<meta name="theme-color" content="#E6DDCC">
+<link rel="preload" href="../fonts/fraunces-full.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: "Fraunces"; src: url("../fonts/fraunces-full.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Fraunces"; src: url("../fonts/fraunces-full-italic.woff2") format("woff2"); font-weight: 100 900; font-style: italic; font-display: swap; }
+@font-face { font-family: "Courier Prime"; src: url("../fonts/courier-prime-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Courier Prime"; src: url("../fonts/courier-prime-700.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Inter Tight"; src: url("../fonts/inter-tight.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+
+:root {
+  --desk: #E6DDCC;
+  --desk-2: #DCD1BD;
+  --ink: #2B261F;
+  --ink-2: #5A5246;
+  --ink-3: #8A7F6E;
+  --paper: #FBF8F1;
+  --stamp: #B4412E;
+  --green: #3F6B57;
+  --serif: "Fraunces", Georgia, serif;
+  --type: "Courier Prime", "Courier New", monospace;
+  --sans: "Inter Tight", "Helvetica Neue", Arial, sans-serif;
+  --gx: clamp(16px, 3.6vw, 56px);
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--desk); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--stamp); outline-offset: 3px; }
+body { position: relative; }
+body::before {   /* the grain of the desk top */
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 50; opacity: .55; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .28 0 0 0 0 .18 0 0 0 .16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── hero ───────────────────────────────────────────────────────── */
+.hero {
+  position: relative; min-height: 100vh; min-height: 100svh; overflow: hidden;
+  display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 6fr); grid-template-rows: auto auto; gap: 0 clamp(24px, 4vw, 64px);
+  padding: 0 var(--gx);
+  background: radial-gradient(90% 70% at 30% 20%, #F1EBDF 0%, #E6DDCC00 70%);
+}
+.top { position: absolute; left: calc(50% + clamp(12px, 2vw, 32px) - var(--gx) / 2); right: var(--gx); top: 0; display: flex; justify-content: space-between; align-items: center; padding: 18px 0; font-size: 13px; z-index: 3; }
+.top .brand { font-family: var(--serif); font-weight: 600; font-size: 19px; font-variation-settings: "SOFT" 100, "opsz" 24; letter-spacing: -.01em; }
+.top .brand span { font-family: var(--type); font-weight: 400; font-size: 12px; color: var(--ink-3); margin-left: 10px; letter-spacing: .02em; }
+.top nav { display: flex; gap: 22px; color: var(--ink-2); }
+.top nav a { text-decoration: none; }
+.top nav a:hover { color: var(--stamp); }
+
+.stack { position: relative; grid-column: 1; grid-row: 1 / span 2; align-self: stretch; min-height: 640px; }
+.stack svg { position: absolute; left: 50%; bottom: 0; height: 128vh; width: auto; max-width: none; transform: translateX(-52%); overflow: visible; }
+.stack .ill { position: absolute; z-index: 2; left: 0; bottom: 14px; font-family: var(--type); font-size: 11px; color: var(--ink-3); letter-spacing: .04em; background: var(--desk); padding: 2px 6px 2px 0; }
+
+.copy { grid-column: 2; grid-row: 1; align-self: end; padding: 110px 0 0; position: relative; z-index: 2; }
+.kicker { font-family: var(--type); font-size: 13px; color: var(--ink-2); margin: 0 0 22px; letter-spacing: .02em; }
+.kicker b { color: var(--stamp); font-weight: 700; }
+h1 {
+  font-family: var(--serif); font-weight: 380; font-variation-settings: "SOFT" 100, "WONK" 0, "opsz" 144;
+  font-size: clamp(46px, 5.6vw, 96px); line-height: .96; letter-spacing: -.03em; margin: 0; color: #231E18; text-wrap: balance;
+}
+h1 em { font-style: italic; font-weight: 340; font-variation-settings: "SOFT" 100, "WONK" 1, "opsz" 144; }
+.lede { font-family: var(--serif); font-variation-settings: "SOFT" 50, "opsz" 20; font-size: clamp(18px, 1.2vw + 5px, 22px); line-height: 1.45; color: var(--ink-2); max-width: 31ch; margin: 28px 0 0; }
+.lede b { color: var(--ink); font-weight: 560; }
+.cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; margin-top: 30px; font-size: 15px; }
+.cta a.btn { text-decoration: none; background: var(--ink); color: var(--paper); padding: 14px 20px; border-radius: 3px; font-weight: 550; box-shadow: 0 1px 0 #00000030, 0 8px 18px -10px #00000080; }
+.cta a.btn:hover { background: var(--stamp); }
+.cta a.plain { color: var(--ink-2); text-underline-offset: 4px; }
+
+/* the work order, on the desk */
+.order {
+  position: relative; grid-column: 2; grid-row: 2; align-self: start; margin: 46px 0 60px; width: min(470px, 100%); z-index: 2;
+  background: var(--paper); color: #2A2620;
+  padding: 26px 28px 24px; transform: rotate(-1.6deg);
+  box-shadow: 0 1px 1px #0000001a, 0 14px 30px -12px #4A3A2080, 0 40px 60px -40px #4A3A2060;
+  font-family: var(--type); font-size: 13px; line-height: 1.55;
+}
+.order::before {   /* the clip */
+  content: ""; position: absolute; top: -14px; left: 50%; width: 92px; height: 26px; transform: translateX(-50%);
+  background: linear-gradient(#5E6166, #2E3034); border-radius: 4px 4px 2px 2px; box-shadow: 0 2px 3px #00000050, inset 0 1px 0 #ffffff40;
+}
+.order h2 { font-family: var(--type); font-weight: 700; font-size: 13px; letter-spacing: .12em; margin: 4px 0 2px; }
+.order .meta { display: flex; justify-content: space-between; color: #7C7365; font-size: 11.5px; border-bottom: 1px dashed #B9AF9E; padding-bottom: 10px; margin-bottom: 12px; }
+.order pre { margin: 0; font-family: inherit; font-size: 12.5px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+.order pre .k { color: #2A2620; }
+.order pre .v { color: #2F5B47; }
+.order pre .c { color: #9A8F7E; }
+.order .foot { margin-top: 14px; padding-top: 10px; border-top: 1px dashed #B9AF9E; font-size: 11px; color: #7C7365; word-break: break-all; }
+.stampmark {
+  position: absolute; right: 26px; bottom: 74px; transform: rotate(-8deg);
+  font-family: var(--type); font-weight: 700; font-size: 13px; letter-spacing: .1em; color: var(--stamp); line-height: 1.2; text-align: center;
+  border: 2.5px solid var(--stamp); border-radius: 4px; padding: 6px 10px; opacity: .78; mix-blend-mode: multiply;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.2 1.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.2 1.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.stampmark small { display: block; font-size: 9.5px; letter-spacing: .08em; font-weight: 400; }
+
+/* ── follow-up: one machine, opened ────────────────────────────── */
+.open { padding: clamp(70px, 10vw, 150px) var(--gx) clamp(56px, 7vw, 100px); display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 40px clamp(32px, 5vw, 90px); align-items: center; border-top: 1px solid #C9BDA6; background: linear-gradient(#DED4C2, var(--desk) 220px); }
+.open figure { margin: 0; }
+.open figcaption { font-family: var(--type); font-size: 12px; color: var(--ink-3); margin-top: 18px; max-width: 60ch; line-height: 1.55; }
+.open h2 { font-family: var(--serif); font-weight: 400; font-variation-settings: "SOFT" 100, "opsz" 96; font-size: clamp(34px, 3.6vw, 60px); line-height: 1; letter-spacing: -.025em; margin: 0 0 26px; }
+.open dl { margin: 0; border-top: 1px solid #C9BDA6; }
+.open dl div { display: grid; grid-template-columns: 8.5em 1fr; gap: 16px; padding: 14px 0; border-bottom: 1px solid #C9BDA6; align-items: baseline; }
+.open dt { font-family: var(--serif); font-variation-settings: "SOFT" 100, "opsz" 24; font-size: 19px; }
+.open dd { margin: 0; font-family: var(--type); font-size: 12.5px; color: var(--green); word-break: break-word; }
+.open dd small { display: block; color: var(--ink-3); font-size: 11.5px; margin-top: 3px; }
+.truth { margin-top: 28px; font-size: 15px; line-height: 1.55; color: var(--ink-2); max-width: 40ch; }
+.truth b { font-family: var(--serif); font-weight: 500; font-size: 44px; line-height: 0; color: var(--stamp); margin-right: 6px; vertical-align: -6px; }
+footer { padding: 22px var(--gx) 34px; font-family: var(--type); font-size: 11.5px; color: var(--ink-3); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px; border-top: 1px solid #C9BDA6; }
+
+@media (max-width: 980px) {
+  .top { left: var(--gx); }
+  .hero { grid-template-columns: 1fr; }
+  .copy { grid-column: 1; grid-row: auto; order: -1; padding: 86px 0 10px; }
+  .stack { grid-column: 1; grid-row: auto; margin: 26px calc(var(--gx) * -1) 0; }
+  .order { grid-column: 1; grid-row: auto; margin: 40px auto 56px; }
+  .stack { height: auto; min-height: 0; }
+  .stack svg { position: relative; width: 100%; height: auto; left: 0; transform: none; display: block; }
+  .stack { max-height: 460px; overflow: hidden; display: flex; align-items: flex-end; }
+  .stack .ill { bottom: 4px; }
+  .order { margin-top: 36px; }
+  .open { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .top nav { display: none; }
+  h1 { font-size: 46px; }
+  .lede { font-size: 18px; }
+  .order { padding: 24px 18px 20px; }
+  .order pre { font-size: 11.5px; }
+  .stampmark { right: 12px; bottom: 70px; font-size: 11px; }
+  .open dl div { grid-template-columns: 1fr; gap: 4px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .stack svg .lt { animation: settle .9s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i) * 45ms); }
+  @keyframes settle { from { opacity: 0; transform: translateY(-22px); } to { opacity: 1; transform: none; } }
+}
+</style>
+</head>
+<body>
+
+<section class="hero" aria-labelledby="t1">
+  <header class="top">
+    <span class="brand">AurOS<span>for schools &amp; charities</span></span>
+    <nav aria-label="Sections"><a href="#open">One machine, opened</a><a href="#profile">The profile</a><a href="#truth">Where it stands</a></nav>
+  </header>
+
+  <div class="stack" id="stack">
+    <svg id="pile" viewBox="0 0 700 900" role="img" aria-label="Illustration: a tall stack of closed laptops from around 2012 to 2018, of different makes and colours, with label-maker tape and asset stickers on their fronts"></svg>
+    <span class="ill">ILLUSTRATION &middot; NOT A COUNT</span>
+  </div>
+
+  <div class="copy">
+    <p class="kicker">For schools, libraries and charities &middot; <b>pre-release</b></p>
+    <h1 id="t1">The cupboard is full of laptops that <em>still work.</em></h1>
+    <p class="lede">Windows&nbsp;11 won&rsquo;t take them. AurOS can: <b>one short profile per school</b> &mdash; your apps, your language, your lock-down &mdash; and every machine comes up the same.</p>
+    <div class="cta">
+      <a class="btn" href="https://github.com/ComputerDude771/auros-from-scratch/issues/new?title=A%20cupboard%20of%20laptops">Try one machine with us</a>
+      <a class="plain" href="#profile">Read the profile</a>
+    </div>
+
+  </div>
+
+  <div class="order" id="profile" aria-label="An example AurOS profile, printed">
+      <h2>WORK ORDER</h2>
+      <div class="meta"><span>profiles/school-kiosk.profile</span><span>excerpt</span></div>
+      <div class="stampmark" aria-hidden="true">EXAMPLE<small>not a customer</small></div>
+<pre><span class="k">inherit</span>=<span class="v">"desktop"</span>
+<span class="k">theme</span>=<span class="v">"sandstone"</span>
+<span class="k">shell_archetype</span>=<span class="v">"locked"</span>
+<span class="k">kiosk_mode</span>=<span class="v">"yes"</span>
+<span class="k">allowed_apps</span>=<span class="v">"firefox firefox-esr epiphany-browser org.gnome.Epiphany falkon"</span>
+<span class="k">allow_user_install</span>=<span class="v">"no"</span>
+<span class="k">allow_settings_change</span>=<span class="v">"no"</span>
+<span class="k">allow_theme_change</span>=<span class="v">"no"</span>
+<span class="k">allow_tty</span>=<span class="v">"no"</span>
+<span class="k">auto_login</span>=<span class="v">"yes"</span>
+<span class="k">default_user</span>=<span class="v">"student"</span></pre>
+      <div class="foot">built by build/all &middot; image 5.2 GB &middot; sha-256 38f72b5025216809348691868c25e0a6730d9b54e0e5604a959695cb6ebb3dc2</div>
+    </div>
+</section>
+
+<main>
+<section class="open" id="open" aria-labelledby="t2">
+  <figure>
+    <svg viewBox="0 0 1000 650" role="img" aria-label="Illustration of an open grey laptop; its screen shows the locked AurOS kiosk: one big Internet window and three large buttons, Internet, Email and Photos" style="display:block;width:100%;height:auto;overflow:visible">
+      <defs>
+        <linearGradient id="g-lid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#55585D"/><stop offset="1" stop-color="#3D4044"/></linearGradient>
+        <linearGradient id="g-deck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4A4D52"/><stop offset="1" stop-color="#6A6D72"/></linearGradient>
+        <linearGradient id="g-lip" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8B8E93"/><stop offset=".2" stop-color="#55585D"/><stop offset="1" stop-color="#36383C"/></linearGradient>
+        <radialGradient id="g-sh" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#3A2A10" stop-opacity=".45"/><stop offset="1" stop-color="#3A2A10" stop-opacity="0"/></radialGradient>
+        <clipPath id="c-scr"><rect x="112" y="46" width="776" height="436.5"/></clipPath>
+      </defs>
+      <ellipse cx="500" cy="622" rx="530" ry="26" fill="url(#g-sh)"/>
+      <rect x="72" y="10" width="856" height="520" rx="12" fill="url(#g-lid)"/>
+      <rect x="104" y="38" width="792" height="452.5" rx="3" fill="#121314"/>
+      <circle cx="500" cy="24" r="3.4" fill="#1A1B1D"/>
+      <g clip-path="url(#c-scr)"><image href="kiosk.webp" x="112" y="46" width="776" height="436.5" preserveAspectRatio="xMidYMid slice"/></g>
+      <rect x="120" y="528" width="760" height="12" rx="3" fill="#2A2C2F"/>
+      <path d="M72 540 L928 540 L956 596 L44 596 Z" fill="url(#g-deck)"/>
+      <path d="M150 546 L850 546 L868 576 L132 576 Z" fill="#2E3034"/>
+      <g id="keys2"></g>
+      <path d="M432 580 L568 580 L571 592 L429 592 Z" fill="#5C5F64"/>
+      <path d="M44 596 L956 596 L956 603 Q956 614 943 614 L57 614 Q44 614 44 603 Z" fill="url(#g-lip)"/>
+      <!-- an asset sticker on the palm rest, and a strip of label tape -->
+      <g transform="translate(756 583) rotate(-1.5)"><rect width="78" height="11" rx="1" fill="#E9E6DE"/><g fill="#2B2B2B"><rect x="4" y="2" width="1" height="7"/><rect x="6" y="2" width="2" height="7"/><rect x="9" y="2" width="1" height="7"/><rect x="11" y="2" width="1" height="7"/><rect x="13" y="2" width="3" height="7"/><rect x="17" y="2" width="1" height="7"/><rect x="19" y="2" width="2" height="7"/><rect x="22" y="2" width="1" height="7"/></g><text x="27" y="8.2" font-family="Courier Prime, monospace" font-size="6.6" fill="#2B2B2B">ASSET 00417</text></g>
+    </svg>
+    <figcaption>Illustration. On its screen, the real AurOS locked shell: one program at a time, big buttons, nothing else to find. Painted by AurOS&rsquo;s own drawing code, the shell the school-kiosk profile names.</figcaption>
+  </figure>
+  <div>
+    <h2 id="t2">One profile. Every machine the same.</h2>
+    <dl>
+      <div><dt>Their apps</dt><dd>allowed_apps="firefox &hellip; falkon"<small>and nothing else will start</small></dd></div>
+      <div><dt>Their language</dt><dd>locale="fr_FR.UTF-8" keyboard_layout="fr"<small>from profiles/multilingual.profile</small></dd></div>
+      <div><dt>Their lock-down</dt><dd>allow_settings_change="no" allow_tty="no"<small>no installs, no settings, no console</small></dd></div>
+    </dl>
+    <p class="truth" id="truth"><b>0</b> schools run AurOS yet, and no real PC has been installed so far. The five profiles in the repository have each been built into an image and hashed; the next evidence is one laptop from one cupboard.</p>
+  </div>
+</section>
+</main>
+<footer><span>AurOS &middot; pre-release v4 &middot; MIT licensed</span><span>The laptops are drawn, not photographed. The profile lines are the repository&rsquo;s, unedited.</span></footer>
+
+<script>
+(function () {
+  "use strict";
+  var NS = "http://www.w3.org/2000/svg";
+  function el(name, attrs, parent) { var e = document.createElementNS(NS, name); for (var k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+  function rnd(seed) { return function () { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; }
+
+  /* ── the pile ──────────────────────────────────────────────────── */
+  var svg = document.getElementById("pile"), r = rnd(2013);
+  // finishes of the era: matte black, graphite, silver, gunmetal blue, white plastic, a red one
+  var FIN = [
+    { lid: "#2A2B2E", base: "#202124", edge: "#4A4B50", feet: "#111" },
+    { lid: "#3B3E43", base: "#33363A", edge: "#5C6066", feet: "#16171A" },
+    { lid: "#B8BBBF", base: "#A9ACB0", edge: "#DADDE0", feet: "#55585C" },
+    { lid: "#3A4350", base: "#323A46", edge: "#5A6574", feet: "#15181D" },
+    { lid: "#E3E0D8", base: "#D6D2C8", edge: "#F4F1EA", feet: "#8A857B" },
+    { lid: "#2A2B2E", base: "#202124", edge: "#4A4B50", feet: "#111" },
+    { lid: "#7E2F2B", base: "#6E2825", edge: "#A04A44", feet: "#2A1110" },
+    { lid: "#8F9296", base: "#83868A", edge: "#B4B7BB", feet: "#45474A" }
+  ];
+  var TAPE = [["LAB 2 · 07", "#1E1F22"], ["LIBRARY 3", "#23406B"], ["SPARE", "#8B2420"], ["WIN 11: NO", "#1E1F22"], ["ROOM 14", "#2F5B47"], ["I5-3320M", "#1E1F22"], ["2013", "#23406B"], ["LAB 2 · 19", "#1E1F22"], ["CHARGER?", "#8B2420"], ["8 GB RAM", "#2F5B47"]];
+  var N = 36, y = 870, laptops = [];
+  for (var i = 0; i < N; i++) {
+    var f = FIN[Math.floor(r() * FIN.length)];
+    if (i === 0) f = FIN[0];
+    var w = 520 + Math.round(r() * 120) - (i > N - 4 ? 20 : 0);
+    var h = 26 + Math.round(r() * 13);
+    var x = 350 - w / 2 + Math.round((r() - .5) * 34);
+    var rot = ((r() - .5) * 1.1).toFixed(2);
+    y -= h + 1.2;
+    laptops.push({ f: f, w: w, h: h, x: x, y: y, rot: rot });
+  }
+  // shadow on the desk, under the whole pile
+  el("ellipse", { cx: 350, cy: 874, rx: 370, ry: 18, fill: "#4A3A20", opacity: ".28", filter: "url(#blur)" }, svg);
+  var defs = el("defs", {}, svg);
+  var fb = el("filter", { id: "blur", x: "-20%", y: "-200%", width: "140%", height: "500%" }, defs); el("feGaussianBlur", { stdDeviation: "8" }, fb);
+  var lg = el("linearGradient", { id: "sheen", x1: "0", y1: "0", x2: "1", y2: "0" }, defs);
+  el("stop", { offset: "0", "stop-color": "#fff", "stop-opacity": ".10" }, lg);
+  el("stop", { offset: ".35", "stop-color": "#fff", "stop-opacity": ".03" }, lg);
+  el("stop", { offset: "1", "stop-color": "#000", "stop-opacity": ".18" }, lg);
+
+  var tapeIdx = 0;
+  laptops.forEach(function (L, i) {
+    var g = el("g", { class: "lt", style: "--i:" + (N - i), transform: "rotate(" + L.rot + " " + (L.x + L.w / 2) + " " + (L.y + L.h / 2) + ")" }, svg);
+    var lidH = Math.round(L.h * .38), baseH = L.h - lidH;
+    // contact shadow on the laptop below
+    el("rect", { x: L.x + 6, y: L.y + L.h - 1, width: L.w - 12, height: 4, fill: "#000", opacity: ".22", rx: 2 }, g);
+    // base and lid
+    el("rect", { x: L.x, y: L.y + lidH, width: L.w, height: baseH, rx: 5, fill: L.f.base }, g);
+    el("rect", { x: L.x + 3, y: L.y, width: L.w - 6, height: lidH + 2, rx: 4, fill: L.f.lid }, g);
+    el("rect", { x: L.x + 3, y: L.y, width: L.w - 6, height: 1.2, fill: L.f.edge, opacity: ".9" }, g);       // light on the lid's top edge
+    el("rect", { x: L.x, y: L.y + lidH + 1, width: L.w, height: 1, fill: "#000", opacity: ".45" }, g);         // the seam
+    el("rect", { x: L.x, y: L.y + lidH + 2, width: L.w, height: 1, fill: L.f.edge, opacity: ".5" }, g);
+    el("rect", { x: L.x, y: L.y, width: L.w, height: L.h, rx: 5, fill: "url(#sheen)" }, g);
+    // feet
+    el("rect", { x: L.x + 18, y: L.y + L.h - 2, width: 26, height: 3, rx: 1.5, fill: L.f.feet }, g);
+    el("rect", { x: L.x + L.w - 44, y: L.y + L.h - 2, width: 26, height: 3, rx: 1.5, fill: L.f.feet }, g);
+    // front details: a thumb notch, status lights, a card slot, jacks
+    var mid = L.x + L.w / 2;
+    el("rect", { x: mid - 22, y: L.y + lidH - 1, width: 44, height: 3, rx: 1.5, fill: "#000", opacity: ".35" }, g);
+    var by = L.y + lidH + baseH / 2;
+    if (r() < .7) { for (var k = 0; k < 3; k++) el("circle", { cx: L.x + 26 + k * 9, cy: by, r: 1.6, fill: k === 0 && r() < .5 ? "#7FD38F" : "#000", opacity: k === 0 ? ".9" : ".35" }, g); }
+    if (r() < .55) el("rect", { x: L.x + L.w * .62, y: by - 1.5, width: 34, height: 3, rx: 1, fill: "#000", opacity: ".45" }, g);
+    if (r() < .45) { el("circle", { cx: L.x + L.w - 40, cy: by, r: 2.6, fill: "#000", opacity: ".5" }, g); el("circle", { cx: L.x + L.w - 30, cy: by, r: 2.6, fill: "#000", opacity: ".5" }, g); }
+    // label-maker tape, on some
+    if ((i % 3 === 1 || i % 7 === 3) && tapeIdx < TAPE.length) {
+      var t = TAPE[tapeIdx++], tw = 14 + t[0].length * 6.4, tx = L.x + 60 + r() * (L.w - 200), ty = L.y + lidH + 3;
+      var tg = el("g", { transform: "rotate(" + ((r() - .5) * 2.4).toFixed(2) + " " + tx + " " + ty + ")" }, g);
+      el("rect", { x: tx, y: ty, width: tw, height: Math.min(14, baseH - 4), rx: 1.5, fill: t[1] }, tg);
+      el("rect", { x: tx, y: ty, width: tw, height: 1, fill: "#fff", opacity: ".18" }, tg);
+      var tt = el("text", { x: tx + tw / 2, y: ty + Math.min(14, baseH - 4) / 2 + 3.4, "text-anchor": "middle", "font-family": "Inter Tight, Arial, sans-serif", "font-weight": "700", "font-size": "9.4", "letter-spacing": "1.1", fill: "#F3F1EC" }, tg);
+      tt.textContent = t[0];
+    } else if (i % 4 === 2) {
+      // an asset sticker with a barcode
+      var sx = L.x + L.w * (.18 + r() * .5), sy = L.y + lidH + 4, sg = el("g", {}, g);
+      el("rect", { x: sx, y: sy, width: 58, height: Math.min(12, baseH - 6), rx: 1, fill: "#ECE9E1" }, sg);
+      for (var b = 0, bx = sx + 4; b < 14; b++) { var bw = r() < .3 ? 2 : 1; el("rect", { x: bx, y: sy + 2, width: bw, height: Math.min(12, baseH - 6) - 4, fill: "#2B2B2B" }, sg); bx += bw + 1 + (r() < .3 ? 1 : 0); }
+    }
+  });
+  // crop the viewBox to the pile
+  svg.setAttribute("viewBox", "0 " + (laptops[N - 1].y - 20) + " 700 " + (900 - laptops[N - 1].y + 20));
+
+  /* ── the keyboard on the opened laptop ─────────────────────────── */
+  var kg = document.getElementById("keys2"), top = { y: 548, l: 154, r: 846 }, bot = { y: 574, l: 136, r: 864 };
+  function at(t) { return { y: top.y + (bot.y - top.y) * t, l: top.l + (bot.l - top.l) * t, r: top.r + (bot.r - top.r) * t }; }
+  for (var row = 0; row < 5; row++) {
+    var a = at(row / 5 + .02), c = at((row + 1) / 5 - .02), n = 15;
+    for (var j = 0; j < n; j++) {
+      var g0 = .004, x1 = a.l + (a.r - a.l) * (j / n + g0), x2 = a.l + (a.r - a.l) * ((j + 1) / n - g0), x3 = c.l + (c.r - c.l) * ((j + 1) / n - g0), x4 = c.l + (c.r - c.l) * (j / n + g0);
+      if (row === 4 && j > 4 && j < 10) { if (j !== 5) continue; x2 = a.l + (a.r - a.l) * (10 / n - g0); x3 = c.l + (c.r - c.l) * (10 / n - g0); }
+      el("path", { d: "M" + x1.toFixed(1) + " " + a.y.toFixed(1) + "L" + x2.toFixed(1) + " " + a.y.toFixed(1) + "L" + x3.toFixed(1) + " " + c.y.toFixed(1) + "L" + x4.toFixed(1) + " " + c.y.toFixed(1) + "Z", fill: "#45484D" }, kg);
+    }
+  }
+})();
+</script>
+</body>
+</html>

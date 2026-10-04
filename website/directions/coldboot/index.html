@@ -46,13 +46,17 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* 1 · the kernel console */
 .console {
-  padding: clamp(18px, 3.2vw, 48px) clamp(16px, 3.6vw, 56px);
-  font-family: var(--vt); font-size: clamp(17px, 1.45vw + 4px, 27px); line-height: 1.18;
+  padding: clamp(24px, 7vh, 80px) clamp(16px, 5vw, 80px);
+  font-family: var(--vt); font-size: clamp(19px, 1.5vw + 7px, 36px); line-height: 1.16;
   color: var(--console); white-space: pre-wrap; word-break: break-word;
-  text-shadow: 0 0 1px #ffffff40;
+  text-shadow: 0 0 6px #d8f0e033, 0 0 1px #ffffff50;
 }
 .console .l { display: block; padding-left: 10ch; text-indent: -10ch; }
 .console .l.hi { color: var(--console-hi); }
+.console .p { color: #575C57; }
+.console .k { color: #8FD9C4; }
+.console .l.hi .x { color: #FFFFFF; }
+.console .l.first { font-size: 1.0em; letter-spacing: .02em; margin-bottom: .5em; }
 .console .l.first { padding-left: 0; text-indent: 0; color: var(--console-hi); }
 .console .cur { display: inline-block; width: .55em; height: 1em; background: var(--console); vertical-align: -0.12em; animation: blink 1s steps(1) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
@@ -231,7 +235,7 @@ footer { padding: 28px var(--gx) 40px; font-family: var(--mono); font-size: 11.5
   var P = "aurstage: ";
   var CONSOLE = [
     [0,   "AurOS staging environment", "first"],
-    [380, P + "── installing AurOS ────────────────────────────────────", "rule"],
+    [260, P + "── installing AurOS ────────────────────────────────────", "rule"],
     [160, P + "secure   Secure Boot on; kernel lockdown integrity"],
     [120, P + "record   no memory stick: an interrupted install will start again from the beginning"],
     [140, P + "drive    This drive reports no bad sectors (9412 hours of use)."],
@@ -273,7 +277,12 @@ footer { padding: 28px var(--gx) 40px; font-family: var(--mono); font-size: 11.5
   function line(text, cls) {
     var d = document.createElement("span");
     d.className = "l" + (cls ? " " + cls : "");
-    if (text.indexOf(P) === 0) { d.innerHTML = '<span class="p"></span>'; d.firstChild.textContent = P; d.appendChild(document.createTextNode(text.slice(P.length))); }
+    if (text.indexOf(P) === 0) {
+      d.innerHTML = '<span class="p"></span>'; d.firstChild.textContent = P;
+      var rest = text.slice(P.length), m = /^([a-z]+)( {2,})(.*)$/.exec(rest);
+      if (m) { var k = document.createElement("span"); k.className = "k"; k.textContent = m[1]; d.appendChild(k); d.appendChild(document.createTextNode(m[2] + m[3])); }
+      else { var x = document.createElement("span"); x.className = "x"; x.textContent = rest; d.appendChild(x); }
+    }
     else d.textContent = text;
     con.appendChild(d);
     return d;
@@ -294,7 +303,7 @@ footer { padding: 28px var(--gx) 40px; font-family: var(--mono); font-size: 11.5
 
   function play() {
     reset(); running = true;
-    var k = reduce ? 0.35 : 1, t = 300 * k;
+    var k = reduce ? 0.35 : 0.7, t = 200 * k;
     cursor();
     CONSOLE.forEach(function (c) {
       t += c[0] * k;
@@ -302,14 +311,14 @@ footer { padding: 28px var(--gx) 40px; font-family: var(--mono); font-size: 11.5
         if (c[1] === "%") {                      // aurstage's own progress: percentages on one line
           var d = line(P + "");
           var n = 0;
-          (function tick() { n += 10; d.appendChild(document.createTextNode((n < 100 ? " " : " ") + n + "%")); cursor(); if (n < 100) later(tick, 55 * k); })();
+          (function tick() { n += 10; d.appendChild(document.createTextNode((n < 100 ? " " : " ") + n + "%")); cursor(); if (n < 100) later(tick, 40 * k); })();
           return;
         }
         line(c[1], c[2]); cursor();
       }, t);
-      if (c[1] === "%") t += 600 * k;
+      if (c[1] === "%") t += 460 * k;
     });
-    t += 700 * k;
+    t += 380;
     later(toScreen, t);
   }
 
@@ -324,7 +333,7 @@ footer { padding: 28px var(--gx) 40px; font-family: var(--mono); font-size: 11.5
     pushTail("");
     show(con, false, 250); show(scr, true, 350);
     var total = PHASE.reduce(function (a, p) { return a + p.w; }, 0);
-    var DUR = reduce ? 1800 : 5200, start = null, pi = -1, shown = 0;
+    var DUR = reduce ? 1800 : 2000, start = null, pi = -1, shown = 0;
     function frame(now) {
       if (!running) return;
       if (start === null) start = now;
@@ -349,14 +358,14 @@ footer { padding: 28px var(--gx) 40px; font-family: var(--mono); font-size: 11.5
       $("scr-warn").classList.remove("on");
       pushTail("AurOS is installed. Starting it now.");
       later(function () { pushTail("handing over to the system on /dev/sda5, in this same boot"); }, 350 * (reduce ? .4 : 1));
-      later(toDesk, reduce ? 700 : 1500);
+      later(toDesk, reduce ? 700 : 750);
     }
     raf = requestAnimationFrame(frame);
   }
 
   function toDesk() {
     show(scr, false, 160);
-    later(bloom, reduce ? 60 : 650);           // a beat of black: the screen handing over
+    later(bloom, reduce ? 60 : 380);           // a beat of black: the screen handing over
   }
 
   function bloom() {
@@ -371,16 +380,16 @@ footer { padding: 28px var(--gx) 40px; font-family: var(--mono); font-size: 11.5
     void img.offsetWidth;
     img.style.transition = "transform 3.2s cubic-bezier(.16,.84,.3,1), filter 2.4s cubic-bezier(.3,.6,.2,1)";
     img.style.transform = "scale(1)"; img.style.filter = "brightness(1) saturate(1)";
-    later(function () { scrim.style.transition = "opacity 1.4s ease"; scrim.style.opacity = 1; }, 1200);
+    later(function () { scrim.style.transition = "opacity 1.2s ease"; scrim.style.opacity = 1; }, 800);
     Array.prototype.forEach.call(head.children, function (c, i) {
       c.style.transform = "translateY(14px)";
       later(function () {
         c.style.transition = "opacity 1s ease, transform 1.2s cubic-bezier(.16,.84,.3,1)";
         c.style.opacity = 1; c.style.transform = "none";
-      }, 1700 + i * 220);
+      }, 1100 + i * 180);
     });
-    later(function () { cap.style.transition = "opacity 1s ease"; cap.style.opacity = 1; }, 2600);
-    later(function () { running = false; }, 3000);
+    later(function () { cap.style.transition = "opacity 1s ease"; cap.style.opacity = 1; }, 1900);
+    later(function () { running = false; }, 2400);
   }
 
   function finish() {                          // skip: go straight to the end

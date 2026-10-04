@@ -46,8 +46,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* ── hero ─────────────────────────────────────────────────────── */
 .hero { padding: clamp(14px, 2.4vw, 40px) var(--gx) 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 20px 48px; align-items: end; }
 h1 { grid-column: 1 / -1; margin: 0; font-weight: 700; font-size: clamp(36px, 4.6vw, 80px); line-height: 1; letter-spacing: -.035em; color: var(--fg-hi); }
-.sub { margin: 0 0 8px; font-weight: 700; font-size: clamp(22px, 2.4vw, 40px); line-height: 1.05; letter-spacing: -.02em; color: var(--muted); }
-h1 span { color: var(--muted); }
+.sub { margin: 0 0 8px; font-weight: 700; font-size: clamp(22px, 2.4vw, 40px); line-height: 1.05; letter-spacing: -.02em; color: #A6AEB8; }
+h1 span { color: #A6AEB8; }
 .ctl { display: flex; align-items: center; gap: 18px; padding-bottom: 6px; }
 .go {
   height: 54px; padding: 0 24px; border: 0; border-radius: 4px; background: var(--brass); color: #16120A;
@@ -275,7 +275,7 @@ footer { margin: clamp(56px, 7vw, 90px) var(--gx) 0; padding: 22px 0 36px; borde
     W = Math.round(r.width); H = Math.round(r.height);
     cv.width = W * dpr; cv.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    cell = W < 600 ? 4 : 5;
+    cell = W < 600 ? 6 : 9;
     cols = Math.floor(W / cell); rows = Math.floor(H / cell);
     colStart = Math.ceil(WIN0 / TOTAL * cols);
     colWinEnd = Math.floor((WIN_END_FULL + 1) / TOTAL * cols);
@@ -301,7 +301,7 @@ footer { margin: clamp(56px, 7vw, 90px) var(--gx) 0; padding: 22px 0 36px; borde
     drawRuler(); placeCallouts(); render();
   }
 
-  var COLORS = { 1: "#1A1E23", 2: "#7E8D9D", 3: "#C89B4A", 4: "#101215" };
+  var COLORS = { 1: "#1D2127", 2: "#66737F", 3: "#C89B4A", 4: "#111316" };
   var phase = "idle", P = { shrink: 0, write: 0, scan: null, glow: null, committed: false, restoreGrow: 0 };
 
   function render() {

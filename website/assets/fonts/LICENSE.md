@@ -4,23 +4,24 @@ Self-hosted, nothing loaded from a font service.
 
 | file | font | licence | copyright |
 |---|---|---|---|
-| `newsreader-normal.woff2`, `newsreader-italic.woff2` | Newsreader (display face) | SIL OFL 1.1 | Copyright 2020 The Newsreader Project Authors (Production Type) |
+| `archivo.woff2` | Archivo (display face; variable, weight 200–600, width 100–125) | SIL OFL 1.1 | Copyright 2020 The Archivo Project Authors (Omnibus-Type) |
 | `atkinson-400.woff2`, `atkinson-400i.woff2`, `atkinson-700.woff2` | Atkinson Hyperlegible (text face) | SIL OFL 1.1 | Copyright 2020 Braille Institute of America, Inc. |
 | `martian-mono.woff2` | Martian Mono (variable, 300–700) | SIL OFL 1.1 | Copyright 2021 The Martian Mono Project Authors (Evil Martians) |
 | `dejavu-sans.woff2`, `dejavu-sans-bold.woff2` | DejaVu Sans | Bitstream Vera licence + public-domain DejaVu changes (below) | Copyright 2003 Bitstream, Inc.; DejaVu changes are in the public domain |
 
-**Modifications.** Newsreader is the `@fontsource-variable/newsreader`
-5.3.0 file, instanced with fontTools to weights 300–400 at optical size
-72 (it is only ever set large) and subset to Latin-1 plus typographic
-punctuation. DejaVu Sans is Ubuntu's `fonts-dejavu-core`, subset the
+**Modifications.** Archivo is the `@fontsource-variable/archivo`
+5.3.0 file, instanced with fontTools to weights 200–600 and widths
+100–125 (the page uses it expanded, light, and large) and subset to
+Latin-1 plus typographic punctuation. DejaVu Sans is Ubuntu's `fonts-dejavu-core`, subset the
 same way. Reserved Font Names are not used for the modified files'
 family names in CSS beyond identifying the source. Subsetting is done by
 `website/tools/fonts.sh`.
 
 Why each one:
 
-- **Newsreader** for display: an editorial serif drawn for reading on
-  screens, with a light weight that holds up white-on-night at 100px.
+- **Archivo, expanded and light** for display: wide, quiet capitals and
+  lowercase that read like a film's title card over a night sky, and
+  nothing like a SaaS headline.
 - **Atkinson Hyperlegible** for text: drawn by the Braille Institute for
   readers with low vision, which describes a lot of the people who still
   use a 2013 laptop.
