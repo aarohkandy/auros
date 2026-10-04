@@ -1,0 +1,30 @@
+$ sh tools/shrinktest.sh
+# started 2026-10-04T23:25:19Z
+
+Does the one irreversible step leave the files where they were?
+
+  a 512 MiB Windows volume with 9 files in it
+    it says it is 512 MiB
+
+  what it says it could do
+    ntfsresize answers                                       ok
+    ...with a floor of 71 MiB                                ok
+
+  and then doing it
+    the volume resizes                                       ok
+    ...and it reports having started                         ok
+    the size it reports is the size on the volume            ok
+    ...and it is not bigger than what was asked for          ok
+
+  and the files
+    the volume still mounts                                  ok
+    all 9 files are byte-for-byte what they were             ok
+
+  and a shrink that cannot be done
+    a target below the floor is refused                      ok
+    ...and the volume is still mountable afterwards          ok
+
+10 checks: a real volume shrinks, reports the size it actually
+reached, and every file in it is still exactly what it was.
+exit=0
+seconds=3

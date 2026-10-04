@@ -1,0 +1,48 @@
+xkbcommon: ERROR: [XKB-338] Couldn't find file "symbols/not-a-real-layout" in include paths
+xkbcommon: ERROR: [XKB-338] 1 include paths searched:
+xkbcommon: ERROR: [XKB-338] 	/usr/share/X11/xkb
+xkbcommon: ERROR: [XKB-338] 3 include paths could not be added:
+xkbcommon: ERROR: [XKB-338] 	/root/.config/xkb
+xkbcommon: ERROR: [XKB-338] 	/root/.xkb
+xkbcommon: ERROR: [XKB-338] 	/etc/xkb
+xkbcommon: ERROR: [XKB-769] Abandoning symbols file "(unnamed)"
+xkbcommon: ERROR: Failed to compile xkb_symbols
+xkbcommon: ERROR: Failed to compile keymap
+aurwl: keyboard layout "not-a-real-layout" did not compile; using the default layout
+can she type her wifi password?
+
+  a US keyboard
+    a                                      "a"           ok
+    1                                      "1"           ok
+    space                                  " "           ok
+    Shift held, a                          "A"           ok
+    Shift held, 1                          "!"           ok
+    Shift released, a again                "a"           ok
+
+  with Caps Lock on
+    a                                      "A"           ok
+    1 (Caps is not Shift)                  "1"           ok
+
+  keys that are not text
+    Return                                 (nothing)     ok
+    Tab                                    (nothing)     ok
+    Escape                                 (nothing)     ok
+    Backspace                              (nothing)     ok
+    Up arrow                               (nothing)     ok
+
+  a French keyboard, from /etc/default/keyboard
+    the key marked Q on a US board         "a"           ok
+    the key marked W on a US board         "z"           ok
+    the key marked Z on a US board         "w"           ok
+    Shift held, that same key              "A"           ok
+
+  the same file written without quotes
+    the key marked Y on a US board         "y"           ok
+
+  a layout name that does not exist (xkbcommon complains above; it should)
+    a still types something                "a"           ok
+
+19 checks: keys resolve through the real keymap, in the
+layout the machine is configured with.
+exit=0
+seconds=2

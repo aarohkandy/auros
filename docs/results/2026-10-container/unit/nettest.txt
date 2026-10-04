@@ -1,0 +1,50 @@
+does the wifi panel read what the machine actually says?
+
+  an ordinary house
+    three networks are three rows                        ok
+    the one we are on is first                           ok
+    the rest are strongest first                         ok
+    a network with nothing in the last field is open     ok
+    the others want a password                           ok
+
+  a name with a colon in it
+    it is one network, not two                           ok
+    its whole name survives                              ok
+    and the signal after it is still read                ok
+    a backslash in a name survives too                   ok
+
+  a house with two boxes answering
+    she is shown one network, not three                  ok
+    with the strongest reading of it                     ok
+
+  a network that does not say its name
+    it is not in the list at all                         ok
+    and the real one still is                            ok
+
+  networks this computer has joined before
+    only the wifi ones are remembered                    ok
+    a name with a colon is remembered whole              ok
+    the one we know is marked known                      ok
+    the one we do not is not                             ok
+
+  what this computer has
+    a laptop with wifi                                   ok
+    a desktop with only a cable                          ok
+    a machine that reports nothing at all                ok
+    the radio's name comes back with the answer          ok
+    the network service is not running yet               ok
+    a laptop whose wifi is switched off still HAS wifi   ok
+
+  what she is told when it does not work
+    a password that was not accepted                     ok
+    a password rejected the other way nmcli says it      ok
+    a network that has gone                              ok
+    a machine with no wifi in it                         ok
+    the network service stopped mid-way                  ok
+    a machine that will not allow it                     ok
+    anything else                                        ok
+    a wrong password is not reported as something else   ok
+
+31 checks: what the machine says becomes what she sees
+exit=0
+seconds=5

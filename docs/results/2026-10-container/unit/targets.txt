@@ -1,0 +1,286 @@
+is everything she has to press big enough to press?
+  an ordinary machine
+    band button 1 (text 80%)                 96x44   at 1024x600   ok
+    band button 2 (text 80%)                 96x44   at 1024x600   ok
+    band button 3 (text 80%)                 96x44   at 1024x600   ok
+    band button 4 (text 80%)                 96x44   at 1024x600   ok
+    band button 5 (text 80%)                 96x44   at 1024x600   ok
+    band button 6 (text 80%)                 96x44   at 1024x600   ok
+    power choice 1 (text 80%)               448x72   at 1024x600   ok
+    power choice 2 (text 80%)               448x72   at 1024x600   ok
+    power choice 3 (text 80%)               448x72   at 1024x600   ok
+    band button 1 (text 100%)                96x44   at 1024x600   ok
+    band button 2 (text 100%)                96x44   at 1024x600   ok
+    band button 3 (text 100%)                96x44   at 1024x600   ok
+    band button 4 (text 100%)                96x44   at 1024x600   ok
+    band button 5 (text 100%)                96x44   at 1024x600   ok
+    band button 6 (text 100%)                96x44   at 1024x600   ok
+    power choice 1 (text 100%)              560x78   at 1024x600   ok
+    power choice 2 (text 100%)              560x78   at 1024x600   ok
+    power choice 3 (text 100%)              560x78   at 1024x600   ok
+    band button 1 (text 140%)               134x44   at 1024x600   ok
+    band button 2 (text 140%)               134x44   at 1024x600   ok
+    band button 3 (text 140%)               134x44   at 1024x600   ok
+    band button 4 (text 140%)               134x44   at 1024x600   ok
+    band button 5 (text 140%)               134x44   at 1024x600   ok
+    band button 6 (text 140%)               134x44   at 1024x600   ok
+    power choice 1 (text 140%)              784x88   at 1024x600   ok
+    power choice 2 (text 140%)              784x88   at 1024x600   ok
+    power choice 3 (text 140%)              784x88   at 1024x600   ok
+    band button 1 (text 200%)               163x62   at 1024x600   ok
+    band button 2 (text 200%)               163x62   at 1024x600   ok
+    band button 3 (text 200%)               163x62   at 1024x600   ok
+    band button 4 (text 200%)               163x62   at 1024x600   ok
+    band button 5 (text 200%)               163x62   at 1024x600   ok
+    band button 6 (text 200%)               163x62   at 1024x600   ok
+    power choice 1 (text 200%)              854x104  at 1024x600   ok
+    power choice 2 (text 200%)              854x104  at 1024x600   ok
+    power choice 3 (text 200%)              854x104  at 1024x600   ok
+    band button 1 (text 80%)                 96x44   at 1366x768   ok
+    band button 2 (text 80%)                 96x44   at 1366x768   ok
+    band button 3 (text 80%)                 96x44   at 1366x768   ok
+    band button 4 (text 80%)                 96x44   at 1366x768   ok
+    band button 5 (text 80%)                 96x44   at 1366x768   ok
+    band button 6 (text 80%)                 96x44   at 1366x768   ok
+    power choice 1 (text 80%)               448x72   at 1366x768   ok
+    power choice 2 (text 80%)               448x72   at 1366x768   ok
+    power choice 3 (text 80%)               448x72   at 1366x768   ok
+    band button 1 (text 100%)                96x44   at 1366x768   ok
+    band button 2 (text 100%)                96x44   at 1366x768   ok
+    band button 3 (text 100%)                96x44   at 1366x768   ok
+    band button 4 (text 100%)                96x44   at 1366x768   ok
+    band button 5 (text 100%)                96x44   at 1366x768   ok
+    band button 6 (text 100%)                96x44   at 1366x768   ok
+    power choice 1 (text 100%)              560x78   at 1366x768   ok
+    power choice 2 (text 100%)              560x78   at 1366x768   ok
+    power choice 3 (text 100%)              560x78   at 1366x768   ok
+    band button 1 (text 140%)               134x44   at 1366x768   ok
+    band button 2 (text 140%)               134x44   at 1366x768   ok
+    band button 3 (text 140%)               134x44   at 1366x768   ok
+    band button 4 (text 140%)               134x44   at 1366x768   ok
+    band button 5 (text 140%)               134x44   at 1366x768   ok
+    band button 6 (text 140%)               134x44   at 1366x768   ok
+    power choice 1 (text 140%)              784x88   at 1366x768   ok
+    power choice 2 (text 140%)              784x88   at 1366x768   ok
+    power choice 3 (text 140%)              784x88   at 1366x768   ok
+    band button 1 (text 200%)               192x62   at 1366x768   ok
+    band button 2 (text 200%)               192x62   at 1366x768   ok
+    band button 3 (text 200%)               192x62   at 1366x768   ok
+    band button 4 (text 200%)               192x62   at 1366x768   ok
+    band button 5 (text 200%)               192x62   at 1366x768   ok
+    band button 6 (text 200%)               192x62   at 1366x768   ok
+    power choice 1 (text 200%)             1120x104  at 1366x768   ok
+    power choice 2 (text 200%)             1120x104  at 1366x768   ok
+    power choice 3 (text 200%)             1120x104  at 1366x768   ok
+    band button 1 (text 80%)                 96x44   at 1920x1080   ok
+    band button 2 (text 80%)                 96x44   at 1920x1080   ok
+    band button 3 (text 80%)                 96x44   at 1920x1080   ok
+    band button 4 (text 80%)                 96x44   at 1920x1080   ok
+    band button 5 (text 80%)                 96x44   at 1920x1080   ok
+    band button 6 (text 80%)                 96x44   at 1920x1080   ok
+    power choice 1 (text 80%)               448x72   at 1920x1080   ok
+    power choice 2 (text 80%)               448x72   at 1920x1080   ok
+    power choice 3 (text 80%)               448x72   at 1920x1080   ok
+    band button 1 (text 100%)                96x44   at 1920x1080   ok
+    band button 2 (text 100%)                96x44   at 1920x1080   ok
+    band button 3 (text 100%)                96x44   at 1920x1080   ok
+    band button 4 (text 100%)                96x44   at 1920x1080   ok
+    band button 5 (text 100%)                96x44   at 1920x1080   ok
+    band button 6 (text 100%)                96x44   at 1920x1080   ok
+    power choice 1 (text 100%)              560x78   at 1920x1080   ok
+    power choice 2 (text 100%)              560x78   at 1920x1080   ok
+    power choice 3 (text 100%)              560x78   at 1920x1080   ok
+    band button 1 (text 140%)               134x44   at 1920x1080   ok
+    band button 2 (text 140%)               134x44   at 1920x1080   ok
+    band button 3 (text 140%)               134x44   at 1920x1080   ok
+    band button 4 (text 140%)               134x44   at 1920x1080   ok
+    band button 5 (text 140%)               134x44   at 1920x1080   ok
+    band button 6 (text 140%)               134x44   at 1920x1080   ok
+    power choice 1 (text 140%)              784x88   at 1920x1080   ok
+    power choice 2 (text 140%)              784x88   at 1920x1080   ok
+    power choice 3 (text 140%)              784x88   at 1920x1080   ok
+    band button 1 (text 200%)               192x62   at 1920x1080   ok
+    band button 2 (text 200%)               192x62   at 1920x1080   ok
+    band button 3 (text 200%)               192x62   at 1920x1080   ok
+    band button 4 (text 200%)               192x62   at 1920x1080   ok
+    band button 5 (text 200%)               192x62   at 1920x1080   ok
+    band button 6 (text 200%)               192x62   at 1920x1080   ok
+    power choice 1 (text 200%)             1120x104  at 1920x1080   ok
+    power choice 2 (text 200%)             1120x104  at 1920x1080   ok
+    power choice 3 (text 200%)             1120x104  at 1920x1080   ok
+  settings locked down
+    band button 1 (text 80%)                 96x44   at 1024x600   ok
+    band button 2 (text 80%)                 96x44   at 1024x600   ok
+    band button 3 (text 80%)                 96x44   at 1024x600   ok
+    power choice 1 (text 80%)               448x72   at 1024x600   ok
+    power choice 2 (text 80%)               448x72   at 1024x600   ok
+    power choice 3 (text 80%)               448x72   at 1024x600   ok
+    band button 1 (text 100%)                96x44   at 1024x600   ok
+    band button 2 (text 100%)                96x44   at 1024x600   ok
+    band button 3 (text 100%)                96x44   at 1024x600   ok
+    power choice 1 (text 100%)              560x78   at 1024x600   ok
+    power choice 2 (text 100%)              560x78   at 1024x600   ok
+    power choice 3 (text 100%)              560x78   at 1024x600   ok
+    band button 1 (text 140%)               134x44   at 1024x600   ok
+    band button 2 (text 140%)               134x44   at 1024x600   ok
+    band button 3 (text 140%)               134x44   at 1024x600   ok
+    power choice 1 (text 140%)              784x88   at 1024x600   ok
+    power choice 2 (text 140%)              784x88   at 1024x600   ok
+    power choice 3 (text 140%)              784x88   at 1024x600   ok
+    band button 1 (text 200%)               192x62   at 1024x600   ok
+    band button 2 (text 200%)               192x62   at 1024x600   ok
+    band button 3 (text 200%)               192x62   at 1024x600   ok
+    power choice 1 (text 200%)              854x104  at 1024x600   ok
+    power choice 2 (text 200%)              854x104  at 1024x600   ok
+    power choice 3 (text 200%)              854x104  at 1024x600   ok
+    band button 1 (text 80%)                 96x44   at 1366x768   ok
+    band button 2 (text 80%)                 96x44   at 1366x768   ok
+    band button 3 (text 80%)                 96x44   at 1366x768   ok
+    power choice 1 (text 80%)               448x72   at 1366x768   ok
+    power choice 2 (text 80%)               448x72   at 1366x768   ok
+    power choice 3 (text 80%)               448x72   at 1366x768   ok
+    band button 1 (text 100%)                96x44   at 1366x768   ok
+    band button 2 (text 100%)                96x44   at 1366x768   ok
+    band button 3 (text 100%)                96x44   at 1366x768   ok
+    power choice 1 (text 100%)              560x78   at 1366x768   ok
+    power choice 2 (text 100%)              560x78   at 1366x768   ok
+    power choice 3 (text 100%)              560x78   at 1366x768   ok
+    band button 1 (text 140%)               134x44   at 1366x768   ok
+    band button 2 (text 140%)               134x44   at 1366x768   ok
+    band button 3 (text 140%)               134x44   at 1366x768   ok
+    power choice 1 (text 140%)              784x88   at 1366x768   ok
+    power choice 2 (text 140%)              784x88   at 1366x768   ok
+    power choice 3 (text 140%)              784x88   at 1366x768   ok
+    band button 1 (text 200%)               192x62   at 1366x768   ok
+    band button 2 (text 200%)               192x62   at 1366x768   ok
+    band button 3 (text 200%)               192x62   at 1366x768   ok
+    power choice 1 (text 200%)             1120x104  at 1366x768   ok
+    power choice 2 (text 200%)             1120x104  at 1366x768   ok
+    power choice 3 (text 200%)             1120x104  at 1366x768   ok
+    band button 1 (text 80%)                 96x44   at 1920x1080   ok
+    band button 2 (text 80%)                 96x44   at 1920x1080   ok
+    band button 3 (text 80%)                 96x44   at 1920x1080   ok
+    power choice 1 (text 80%)               448x72   at 1920x1080   ok
+    power choice 2 (text 80%)               448x72   at 1920x1080   ok
+    power choice 3 (text 80%)               448x72   at 1920x1080   ok
+    band button 1 (text 100%)                96x44   at 1920x1080   ok
+    band button 2 (text 100%)                96x44   at 1920x1080   ok
+    band button 3 (text 100%)                96x44   at 1920x1080   ok
+    power choice 1 (text 100%)              560x78   at 1920x1080   ok
+    power choice 2 (text 100%)              560x78   at 1920x1080   ok
+    power choice 3 (text 100%)              560x78   at 1920x1080   ok
+    band button 1 (text 140%)               134x44   at 1920x1080   ok
+    band button 2 (text 140%)               134x44   at 1920x1080   ok
+    band button 3 (text 140%)               134x44   at 1920x1080   ok
+    power choice 1 (text 140%)              784x88   at 1920x1080   ok
+    power choice 2 (text 140%)              784x88   at 1920x1080   ok
+    power choice 3 (text 140%)              784x88   at 1920x1080   ok
+    band button 1 (text 200%)               192x62   at 1920x1080   ok
+    band button 2 (text 200%)               192x62   at 1920x1080   ok
+    band button 3 (text 200%)               192x62   at 1920x1080   ok
+    power choice 1 (text 200%)             1120x104  at 1920x1080   ok
+    power choice 2 (text 200%)             1120x104  at 1920x1080   ok
+    power choice 3 (text 200%)             1120x104  at 1920x1080   ok
+  the network pinned as well
+    band button 1 (text 80%)                 96x44   at 1024x600   ok
+    band button 2 (text 80%)                 96x44   at 1024x600   ok
+    power choice 1 (text 80%)               448x72   at 1024x600   ok
+    power choice 2 (text 80%)               448x72   at 1024x600   ok
+    power choice 3 (text 80%)               448x72   at 1024x600   ok
+    band button 1 (text 100%)                96x44   at 1024x600   ok
+    band button 2 (text 100%)                96x44   at 1024x600   ok
+    power choice 1 (text 100%)              560x78   at 1024x600   ok
+    power choice 2 (text 100%)              560x78   at 1024x600   ok
+    power choice 3 (text 100%)              560x78   at 1024x600   ok
+    band button 1 (text 140%)               134x44   at 1024x600   ok
+    band button 2 (text 140%)               134x44   at 1024x600   ok
+    power choice 1 (text 140%)              784x88   at 1024x600   ok
+    power choice 2 (text 140%)              784x88   at 1024x600   ok
+    power choice 3 (text 140%)              784x88   at 1024x600   ok
+    band button 1 (text 200%)               192x62   at 1024x600   ok
+    band button 2 (text 200%)               192x62   at 1024x600   ok
+    power choice 1 (text 200%)              854x104  at 1024x600   ok
+    power choice 2 (text 200%)              854x104  at 1024x600   ok
+    power choice 3 (text 200%)              854x104  at 1024x600   ok
+    band button 1 (text 80%)                 96x44   at 1366x768   ok
+    band button 2 (text 80%)                 96x44   at 1366x768   ok
+    power choice 1 (text 80%)               448x72   at 1366x768   ok
+    power choice 2 (text 80%)               448x72   at 1366x768   ok
+    power choice 3 (text 80%)               448x72   at 1366x768   ok
+    band button 1 (text 100%)                96x44   at 1366x768   ok
+    band button 2 (text 100%)                96x44   at 1366x768   ok
+    power choice 1 (text 100%)              560x78   at 1366x768   ok
+    power choice 2 (text 100%)              560x78   at 1366x768   ok
+    power choice 3 (text 100%)              560x78   at 1366x768   ok
+    band button 1 (text 140%)               134x44   at 1366x768   ok
+    band button 2 (text 140%)               134x44   at 1366x768   ok
+    power choice 1 (text 140%)              784x88   at 1366x768   ok
+    power choice 2 (text 140%)              784x88   at 1366x768   ok
+    power choice 3 (text 140%)              784x88   at 1366x768   ok
+    band button 1 (text 200%)               192x62   at 1366x768   ok
+    band button 2 (text 200%)               192x62   at 1366x768   ok
+    power choice 1 (text 200%)             1120x104  at 1366x768   ok
+    power choice 2 (text 200%)             1120x104  at 1366x768   ok
+    power choice 3 (text 200%)             1120x104  at 1366x768   ok
+    band button 1 (text 80%)                 96x44   at 1920x1080   ok
+    band button 2 (text 80%)                 96x44   at 1920x1080   ok
+    power choice 1 (text 80%)               448x72   at 1920x1080   ok
+    power choice 2 (text 80%)               448x72   at 1920x1080   ok
+    power choice 3 (text 80%)               448x72   at 1920x1080   ok
+    band button 1 (text 100%)                96x44   at 1920x1080   ok
+    band button 2 (text 100%)                96x44   at 1920x1080   ok
+    power choice 1 (text 100%)              560x78   at 1920x1080   ok
+    power choice 2 (text 100%)              560x78   at 1920x1080   ok
+    power choice 3 (text 100%)              560x78   at 1920x1080   ok
+    band button 1 (text 140%)               134x44   at 1920x1080   ok
+    band button 2 (text 140%)               134x44   at 1920x1080   ok
+    power choice 1 (text 140%)              784x88   at 1920x1080   ok
+    power choice 2 (text 140%)              784x88   at 1920x1080   ok
+    power choice 3 (text 140%)              784x88   at 1920x1080   ok
+    band button 1 (text 200%)               192x62   at 1920x1080   ok
+    band button 2 (text 200%)               192x62   at 1920x1080   ok
+    power choice 1 (text 200%)             1120x104  at 1920x1080   ok
+    power choice 2 (text 200%)             1120x104  at 1920x1080   ok
+    power choice 3 (text 200%)             1120x104  at 1920x1080   ok
+  a kiosk
+    band button 1 (text 80%)                 96x44   at 1024x600   ok
+    band button 1 (text 100%)                96x44   at 1024x600   ok
+    band button 1 (text 140%)               134x44   at 1024x600   ok
+    band button 1 (text 200%)               192x62   at 1024x600   ok
+    band button 1 (text 80%)                 96x44   at 1366x768   ok
+    band button 1 (text 100%)                96x44   at 1366x768   ok
+    band button 1 (text 140%)               134x44   at 1366x768   ok
+    band button 1 (text 200%)               192x62   at 1366x768   ok
+    band button 1 (text 80%)                 96x44   at 1920x1080   ok
+    band button 1 (text 100%)                96x44   at 1920x1080   ok
+    band button 1 (text 140%)               134x44   at 1920x1080   ok
+    band button 1 (text 200%)               192x62   at 1920x1080   ok
+
+and the headphones panel, on every screen it has
+    580 measured across 4 screens, every text size and
+    every panel size, with nothing near and a room full
+
+and the welcome question, on every screen it has
+    204 measured across 7 screens, every text size, every
+    panel size, with and without a Windows to import from
+
+and Settings, on every screen and every machine
+  an ordinary machine
+    18357 measured across 5 pages, every text size, every
+    panel size, and every combination of battery, backlight
+    and sound a machine can have
+
+and the wifi panel, on every screen it has
+  an ordinary machine
+  settings locked down
+    1808 measured across 5 screens, every text size and every
+    panel size, with nothing near, a house near and a block near
+
+21201 measured, all at least 44px on their shorter side
+
+Not measured: archetype internals -- dock cells, window buttons,
+rail rows. They do not publish their geometry, so this cannot see
+them. Exposing it is how they get covered -- which is what the
+wifi panel did, and why it is in this list.
+exit=0
+seconds=6

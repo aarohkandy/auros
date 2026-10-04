@@ -158,10 +158,16 @@ sh tools/wlstress.sh /tmp/wltest_asan
 wayland-scanner client-header \
   /usr/share/wayland-protocols/stable/xdg-shell/xdg-shell.xml \
   build/gen/xdg-shell-client.h
+wayland-scanner client-header \
+  /usr/share/wayland-protocols/stable/viewporter/viewporter.xml \
+  build/gen/viewporter-client.h      # wlhostile.c includes this one too
 cc -O2 -std=gnu11 -o /tmp/wlhostile tools/wlhostile.c src/aurwl/aurwl.c \
    src/aurshell/draw.c build/gen/*-protocol.c -Ibuild/gen \
    $(pkg-config --cflags --libs wayland-server wayland-client xkbcommon) -lm
 /tmp/wlhostile
+
+# touchpads, mice, touchscreens: the classification src/aurshell/pad.c makes
+cc -O2 -std=gnu11 -o /tmp/padtest tools/padtest.c src/aurshell/pad.c -lm && /tmp/padtest
 
 cc -O2 -std=gnu11 -o /tmp/hittest tools/hittest.c src/aurshell/draw.c \
    src/aurshell/shellcommon.c src/aurshell/anim.c src/aurshell/layouts/*.c \

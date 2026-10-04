@@ -1,0 +1,23 @@
+$ sh tools/bridgetest.sh
+# started 2026-10-04T23:16:02Z
+
+Do the Windows half and the Linux half agree about the bytes?
+
+    every published vector in format.c checks out            ok
+    and it builds clean for Windows                          ok
+    the journal one half writes is the journal the other half reads ok
+    and it carries every field the reader looks for          ok
+    the partition-table hash matches a third implementation  ok
+    gzip itself accepts the container AurBridge writes       ok
+    and what comes out of it is byte-for-byte what went in   ok
+    cpio itself finds the journal in the archive             ok
+    and unpacking it gives back the file that went in        ok
+    sgdisk finds no fault with the table AurBridge writes    ok
+    and it has the three partitions it should                ok
+    and the image partition carries the type the installer looks for ok
+    and the names survive the UTF-16                         ok
+
+13 checks: what AurBridge writes is what the staging
+environment, gzip, cpio and sgdisk all read back.
+exit=0
+seconds=7

@@ -1,0 +1,44 @@
+$ sh tools/imagetest.sh
+# started 2026-10-04T23:21:01Z
+
+Does the image get found, checked, and written the right way round?
+
+  a 82820608-byte root filesystem inside a 96 MiB image
+
+  finding it
+    the stick is found by what is on it                      ok
+    ...and names its profile                                 ok
+    ...and the root extent's length                          ok
+    a stick for another profile is not used                  ok
+    ...and says so                                           ok
+    a journal from before profiles were recorded still installs ok
+
+  and when the stick holds more than one
+    the one the journal names is the one that is found       ok
+    ...and it is the second one, so the search did not stop at the first ok
+    a damaged image nobody asked for does not refuse the one they did ok
+    ...and is still refused when it is                       ok
+
+  checking it
+    an intact image verifies                                 ok
+    one flipped byte is caught                               ok
+    ...and is called damaged, not missing                    ok
+    a flipped byte in the boot chain is caught too           ok
+    ...and is named as the start-up files                    ok
+    a manifest that disagrees with the image is caught       ok
+    ...which is our own build being wrong, and it says so    ok
+
+  writing it
+    the root extent is written and verified                  ok
+    ...byte for byte the same as the source                  ok
+    ...and it mounts, with its files in it                   ok
+
+  and the first megabyte is written LAST
+    a write that runs out of room is refused                 ok
+    ...and the first megabyte is all zeroes, not a filesystem ok
+    ...and nothing will mount it                             ok
+
+23 checks: the image is found by what is on it, a single flipped
+byte is caught, and an interrupted write leaves nothing that will mount.
+exit=0
+seconds=43

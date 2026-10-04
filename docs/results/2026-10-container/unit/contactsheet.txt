@@ -1,0 +1,3 @@
+/home/user/auros/docs/results/2026-10-container/unit/contactsheet-nocturne.png  2102x1950  six archetypes, theme Nocturne
+exit=0
+seconds=5

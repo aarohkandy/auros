@@ -1,0 +1,18 @@
+$ sh tools/manifesttest.sh out/aurbridge-wizard.exe
+# started 2026-10-04T23:23:37Z
+
+Will Windows start the wizard at all?
+
+    the source manifest is one Windows loads                     ok
+    no comments and no '--' in the manifest                      ok
+    refuses '--' inside a comment (the real failure)             ok
+    refuses a manifest without requireAdministrator              ok
+    refuses a truncated manifest                                 ok
+    build/aurbridge refuses a manifest Windows would refuse      ok
+    the manifest inside aurbridge-wizard.exe loads               ok
+    ...and is the source manifest, byte for byte                 ok
+    refuses the same .exe with '--' written into it              ok
+
+  9 checks, all ok
+exit=0
+seconds=0

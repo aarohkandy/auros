@@ -1,0 +1,3 @@
+  DejaVuSans.ttf                              -37.11 px total,  9 of 10 pairs kerned
+exit=0
+seconds=1

@@ -1,0 +1,29 @@
+# ILLUSTRATIVE EXAMPLE — not a customer. No organisation named here exists.
+# Forty walk-up counter kiosks. No desktop on these machines at all.
+#
+# Ported from LATHE's auros-recipes/customers/example-kiosk/recipe.yaml. What did not come across,
+# and why (each one is refused by recipes/lib/recipe.mjs with the same sentence):
+#   kiosk.opens, allowed_sites  AurOS cannot yet send the browser to a page or fence it in;
+#                               writing them here would read like a fence and be none
+#   kiosk.forget_session_after_minutes, restart_daily_at   not in the engine yet
+#   kiosk.printing, usb_storage printing is prune.also_keep; a kiosk already cannot open a USB stick
+#   prune.also_remove           under keep_only: true it removes nothing more
+#   theme: high contrast        AurOS has no high-contrast theme (a gap, not a choice)
+#   hardware, updates, size_budget_gb, first_boot_message, approved_by, helpdesk — as in example-school
+
+schema: 1
+name: example-kiosk
+for: >
+  Forty counter kiosks across six walk-in service centres. A visitor sits down, uses the
+  benefits and job-search sites, prints what they need, and walks away. Nobody signs in and
+  nothing on the machine can be changed by the person using it.
+organisation:
+  display_name: Example Community Services
+language: English (United States)
+keyboard: English (US)
+timezone: America/Los_Angeles
+apps: [Firefox]
+prune:
+  keep_only_the_apps_above: true
+  also_keep: [printing]
+policy: kiosk

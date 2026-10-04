@@ -1,0 +1,97 @@
+$ sh tools/aurfirsttest.sh
+# started 2026-10-04T23:15:45Z
+
+Does the machine stay Windows' until somebody says otherwise?
+
+  a machine that was never converted from Windows
+    it knows there is nothing to promote                     ok
+    and arms nothing                                         ok
+    confirming writes no BootOrder it has no entry for       ok
+
+  a converted machine, before anybody has answered
+    it knows it is waiting for an answer                     ok
+    and which entry is AurOS                                 ok
+    and that Windows is still the default                    ok
+    hold arms the one-shot at it                             ok
+    and does not touch BootOrder                             ok
+    holding twice writes NVRAM once                          ok
+    and importing from Windows is not allowed yet            ok
+
+  and then somebody says it works
+    AurOS goes to the front of BootOrder                     ok
+    and Windows Boot Manager is still in it                  ok
+    the one-shot is cleared                                  ok
+    and the question stops being asked                       ok
+    now importing from Windows may run                       ok
+    and hold stops arming anything for ever                  ok
+    an entry already in the order moves rather than repeating ok
+    no BootOrder at all: one is built that still holds everything ok
+    ...with the not-to-be-booted ones behind, not promoted   ok
+    ...and none of them dropped                              ok
+    a Windows entry the firmware marked inactive is still there ok
+    ...so the menu is never left with only AurOS in it       ok
+    and declining can still put Windows first                ok
+    an entry that cannot be read is kept, and not demoted    ok
+    an existing order is preserved, hidden entry and all     ok
+
+  and when there are two entries called AurOS
+    ours is the one that names this install's partition      ok
+    ...and it says that is how it chose                      ok
+    the one-shot is armed to the live entry, not the dead one ok
+    and confirming puts the live one first, dropping nobody  ok
+    the partition is matched however its GUID is written     ok
+    a menu holding only a dead AurOS has no entry of ours in it ok
+    ...and nothing arms the dead one                         ok
+    unable to tell, it falls back to the first -- and says so ok
+
+  or somebody says it does not
+    the one-shot is cleared                                  ok
+    and BootOrder is exactly what it was                     ok
+    and the machine stops coming back to AurOS               ok
+    ...even after another boot                               ok
+
+  and the two programs that write EFI variables agree about how
+    the same variable, byte for byte, from either side       ok
+    and about what the installer called the entry            ok
+
+  and what it leaves for the desktop to read
+    the hold writes down that the question is open           ok
+    and leaves it readable by the desktop's own user         ok
+    and confirming rewrites it, so the question stops being asked ok
+    and it names the entry, so nothing else has to look      ok
+
+  and the boundary between the desktop and root
+    anything that is not one of the four words reaches no branch ok
+    and the request is consumed either way                   ok
+
+  and the shapes a directory she owns can hold
+    an answer written through a planted link changes nothing ok
+    a request that is a link is not read                     ok
+    ...and the link is removed                               ok
+    ...and the file it pointed at is untouched               ok
+    a directory in its place is cleared, not fatal           ok
+    a pipe in its place does not block root for ever         ok
+    a hard link to a root-only file is not read              ok
+
+  and importing, which waits for the answer
+    importing is refused until AurOS has been confirmed      ok
+    ...and nothing was mounted or read                       ok
+
+  and putting Windows back, which is asked for from Settings
+    with the restore's files gone, it refuses and says why   ok
+    ...and arranges nothing, and does not restart            ok
+    with the files there, it is arranged                     ok
+    ...the menu will take the restore entry, by its id       ok
+    ...in a block of exactly 1024 bytes                      ok
+    ...which grub's own tool reads back the same             ok
+    ...and the firmware starts AurOS's menu next, though she declined ok
+    ...without touching BootOrder                            ok
+    ...and then it restarts                                  ok
+    when the restart cannot be arranged, it says so          ok
+    ...and takes the menu's choice back, and does not restart ok
+
+65 checks: BootOrder is untouched until somebody says AurOS works,
+the one-shot keeps the machine coming back until then, and confirming
+promotes AurOS without removing anybody else.
+exit=0
+seconds=4

@@ -1,0 +1,50 @@
+
+The question, and what each answer asks for
+
+  when it appears at all
+    a machine with no state file is not asked anything         ok
+    a machine that already answered is not asked again         ok
+    nor one that said no                                       ok
+    nor one AurOS was installed onto directly                  ok
+    and one that is waiting IS asked                           ok
+    ...on the question, not halfway through it                 ok
+
+  and what nothing has asked for
+    opening it writes no request at all                        ok
+
+  the three answers
+    "Yes, it all works" asks for confirm                       ok
+    ...and then says so on screen                              ok
+    "No, go back to Windows" asks for decline                  ok
+    "Bring my files across" asks for import                    ok
+    with no Windows on the disk, nothing offers to import from it ok
+
+  letting go without answering
+    escape closes it                                           ok
+    ...and answers nothing                                     ok
+    pressing the background does nothing                       ok
+    ...and asks for nothing                                    ok
+    ...and is still consumed, so it cannot reach what is behind it ok
+
+  and one request at a time
+    a second press while one is in flight does not replace it  ok
+
+  reading the answer back
+    nothing moves while there is no answer yet                 ok
+    an answer moves it on                                      ok
+    ...to the screen that offers to bring her files            ok
+    saying no reaches the screen that says Windows is next     ok
+    a refusal reaches the screen that says so, not the one that lies ok
+    a half-written answer is not an answer                     ok
+
+  and the panel never needs to be root
+    one press leaves one new file behind, and it is the request ok
+
+  and an answer to something it did not ask
+    a result for another request is left alone                 ok
+    and a result nothing recognises is trouble, not silence    ok
+
+27 checks: it appears only while the question is open, each
+button asks for one word, and closing it answers nothing.
+exit=0
+seconds=5

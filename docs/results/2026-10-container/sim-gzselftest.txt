@@ -1,0 +1,5 @@
+$ out/aurbridge-sim gzselftest
+# started 2026-10-04T23:24:40Z
+gzselftest ok
+exit=0
+seconds=0

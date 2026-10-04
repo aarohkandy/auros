@@ -1,0 +1,44 @@
+$ sh tools/wrtest.sh
+# started 2026-10-04T23:16:16Z
+
+Can anything write to a disk except the one file that may?
+
+  a write inside its window
+    lands                                                    ok
+    ...and reads back identical                              ok
+    ...and the verified count is honest                      ok
+
+  and every write that is not
+    one byte before the window is refused                    ok
+    ...and not one byte was written                          ok
+    eight bytes past the end is refused                      ok
+    ...and not one byte was written                          ok
+    a window nobody armed is refused                         ok
+    ...and not one byte was written                          ok
+    an offset that would wrap the address is refused         ok
+    ...and not one byte was written                          ok
+    a window that has been disarmed is refused               ok
+    ...and not one byte was written                          ok
+
+  and windows that would tread on each other
+    two overlapping windows will not arm                     ok
+    ...and it says which two                                 ok
+    two windows that merely touch are fine                   ok
+
+  and a read-back that disagrees
+    a mismatch is caught                                     ok
+    ...and the first wrong byte is named                     ok
+
+  and nothing outside the window moved
+    the megabyte before the window is untouched              ok
+    the six megabytes after it are untouched                 ok
+
+  and the build refuses a second writer
+    a writable open in another file stops the build          ok
+    a writable open hidden in a header stops the build too   ok
+    ...and the real tree still builds                        ok
+
+23 checks: writes land only where they were armed to, refusals
+write nothing, and nothing else in the directory can write at all.
+exit=0
+seconds=11

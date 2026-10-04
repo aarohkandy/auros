@@ -1,0 +1,4 @@
+max channel difference over 9 radii x 8 regions: 2
+old total 1379.9 ms   new total 566.3 ms   speedup 2.44x
+exit=0
+seconds=3

@@ -1,0 +1,40 @@
+$ sh tools/choicestest.sh
+# started 2026-10-04T23:17:38Z
+
+Does what she chose in the installer reach AurOS?
+
+  the ordinary case
+    it finishes                                                    ok
+    LANG is Spanish                                                ok
+    ...and the locale will be generated                            ok
+    the keyboard is Spanish                                        ok
+    ...keeping the model and options                               ok
+    the clock is in Madrid                                         ok
+    the look is Moss                                               ok
+    the desktop is the taskbar one                                 ok
+    all five are recorded for Ferry                                ok
+
+  Windows' own identifiers, mapped with Ferry's tables
+    a KLID becomes its layout (fr)                                 ok
+    a Windows zone becomes its IANA name (Europe/Paris)            ok
+    only what was given is recorded                                ok
+    ...and the language was not touched                            ok
+
+  nothing chosen, or no file at all
+    no file: it still finishes                                     ok
+    ...and changes nothing                                         ok
+
+  a file somebody else wrote, with things in it that must be refused
+    it finishes                                                    ok
+    every hostile value refused, nothing else changed              ok
+    and nothing recorded as chosen                                 ok
+    each refusal is said out loud                                  ok
+
+  and the script is never sourced
+    shell syntax in the file is text, not commands                 ok
+    ...and the valid line beside it still applies                  ok
+
+21 checks: what she chose in the installer is what AurOS starts with,
+and a file she did not write cannot choose anything.
+exit=0
+seconds=0

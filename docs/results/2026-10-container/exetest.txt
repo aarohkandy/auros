@@ -1,0 +1,42 @@
+$ sh tools/exetest.sh
+# started 2026-10-04T23:23:37Z
+
+Is it one file, and does it carry what it says it does?
+
+  what the installer carries
+    both halves of the staging environment are in the .exe     ok
+    the kernel in it is the one this build made                ok
+    the initramfs in it is the one this build made             ok
+    and it is still a Windows program                          ok
+    and signing it does not disturb what it carries            ok
+
+  and what a release is not allowed to be
+    a release with nothing inside it is refused                ok
+    a release that cannot say where the image is, too          ok
+    and one that cannot say what it should be                  ok
+
+  the download, against a server that answers Range
+    a whole download arrives intact                            ok
+    a half-finished one comes out right                        ok
+    ...because it was CONTINUED, not started again             ok
+
+  and against one that ignores it
+    a server that ignores Range does not corrupt the file      ok
+
+  and one that stops partway
+    what did arrive is kept, so the next try carries on        ok
+    and the try after that finishes it                         ok
+
+  and one that answers the wrong part of the file
+    its bytes go where IT says, not where we asked             ok
+
+  and one that says more is coming and then stops
+    a transfer that stops short is not a finished one          ok
+
+  and a copy that is already here
+    file:// works, so a machine that is offline is not stuck   ok
+
+17 checks: the installer carries the staging environment, signing
+does not disturb it, and a download resumes rather than starting again.
+exit=0
+seconds=63

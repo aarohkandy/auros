@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AurOS — Still works</title>
+<meta name="description" content="AurOS turns a Windows PC from 2012–2018 into a fast, patched desktop with one restart, and puts Windows back byte for byte if you ask. Pre-release.">
+<meta name="theme-color" content="#EEEAE2">
+<link rel="preload" href="../fonts/newsreader-opsz.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: "Newsreader"; src: url("../fonts/newsreader-opsz.woff2") format("woff2"); font-weight: 200 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Newsreader"; src: url("../fonts/newsreader-opsz-italic.woff2") format("woff2"); font-weight: 200 800; font-style: italic; font-display: swap; }
+@font-face { font-family: "Inter Tight"; src: url("../fonts/inter-tight.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Plex Mono"; src: url("../fonts/plex-mono-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+
+:root {
+  --paper: #EEEAE2;
+  --paper-lo: #E3DED4;
+  --ink: #141311;
+  --ink-2: #3B3833;
+  --ink-3: #6E695F;
+  --rule: #1413111f;
+  --rule-hard: #141311;
+  --red: #A8321E;
+  --serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --sans: "Inter Tight", "Helvetica Neue", Arial, sans-serif;
+  --mono: "Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --m: clamp(16px, 3.4vw, 48px);           /* outer margin */
+  --g: clamp(12px, 1.6vw, 24px);           /* gutter */
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--red); }
+:focus-visible { outline: 2px solid var(--red); outline-offset: 3px; }
+
+/* paper grain, very faint */
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .08 0 0 0 0 .07 0 0 0 0 .05 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.grid {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--g);
+  padding: 0 var(--m);
+  max-width: 1680px;
+  margin: 0 auto;
+}
+
+/* ── masthead ─────────────────────────────────────────── */
+.mast {
+  padding-top: 18px; padding-bottom: 14px;
+  align-items: baseline;
+  font-size: 12.5px; letter-spacing: .01em;
+  border-bottom: 1px solid var(--rule-hard);
+  margin: 0 var(--m); padding-left: 0; padding-right: 0;
+}
+.mast .mark { grid-column: 1 / span 3; font-weight: 650; font-size: 15px; letter-spacing: -.01em; }
+.mast .mark i { font-family: var(--serif); font-weight: 400; font-style: italic; color: var(--ink-3); margin-left: 10px; font-size: 14px; }
+.mast nav { grid-column: 5 / span 5; display: flex; gap: 22px; }
+.mast nav a { text-decoration: none; color: var(--ink-2); }
+.mast nav a:hover { color: var(--red); }
+.mast .no { grid-column: 10 / span 3; text-align: right; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+/* ── the hero: plate I ───────────────────────────────── */
+.plate1 { position: relative; }
+.plate1 .wall { position: relative; }
+.plate1 .wall::before {        /* the spotlight on the wall */
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(55% 80% at 70% 8%, #ffffffc0, #ffffff00 72%);
+}
+.plate1 .floor {               /* the vitrine floor the laptop stands on */
+  position: relative; z-index: 0;
+  background: linear-gradient(#14131112, #14131100 40px), var(--paper-lo);
+  border-top: 1px solid #1413112e;
+}
+.hero { padding-top: clamp(28px, 4.2vw, 64px); padding-bottom: 0; align-items: end; }
+.hero-text { grid-column: 1 / span 5; align-self: start; position: relative; z-index: 2; }
+.kicker {
+  font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; color: var(--red);
+  margin: 0 0 18px;
+}
+h1 {
+  font-family: var(--serif);
+  font-weight: 300;
+  font-variation-settings: "opsz" 72;
+  font-size: clamp(76px, 13.4vw, 228px);
+  line-height: .82;
+  letter-spacing: -.035em;
+  margin: 0 0 0 -.05em;
+}
+h1 em { font-style: italic; font-weight: 300; letter-spacing: -.045em; }
+.lede {
+  font-family: var(--serif);
+  font-variation-settings: "opsz" 18;
+  font-size: clamp(18px, 1.35vw + 4px, 23px);
+  line-height: 1.38;
+  margin: clamp(26px, 3vw, 44px) 0 0;
+  max-width: 30ch;
+  color: var(--ink);
+}
+.lede sup, .label sup, .plate2 sup { font-family: var(--sans); font-size: .58em; font-weight: 600; color: var(--red); margin-left: 1px; }
+.lede sup a, .label sup a, .plate2 sup a { text-decoration: none; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 26px; margin-top: 28px; font-size: 14.5px; font-weight: 550; }
+.actions a { text-decoration: none; border-bottom: 1px solid currentColor; padding-bottom: 2px; }
+.actions .primary { background: var(--ink); color: var(--paper); border: 0; padding: 12px 18px 12px; }
+.actions .primary:hover { background: var(--red); color: #fff; }
+.actions small { display: block; font-weight: 400; color: var(--ink-3); font-size: 12px; margin-top: 6px; }
+
+.object { grid-column: 6 / span 7; position: relative; z-index: 3; margin: 0 calc(var(--m) * -0.4) var(--sink, -2.5%) 0; }
+.object svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+/* the museum label */
+.labelrow { position: relative; padding-top: 26px; padding-bottom: clamp(36px, 5vw, 70px); }
+.labelrow .catno { grid-column: 1 / span 5; align-self: start; font-family: var(--mono); font-size: 12px; color: var(--ink-3); display: flex; gap: 22px; flex-wrap: wrap; }
+.labelrow .catno b { color: var(--ink); font-weight: 400; }
+.label { grid-column: 6 / span 7; display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 4fr); column-gap: var(--g); font-size: 13.5px; line-height: 1.45; }
+.label .fig { font-family: var(--serif); font-variation-settings: "opsz" 14; font-size: 16px; line-height: 1.35; }
+.label .fig b { font-family: var(--sans); font-weight: 650; font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--red); display: block; margin-bottom: 4px; }
+.label dl { margin: 0; display: grid; grid-template-columns: 7.5em 1fr; row-gap: 5px; }
+.label dt { color: var(--ink-3); }
+.label dd { margin: 0; }
+
+/* ── plate II: the way back ──────────────────────────── */
+.plate2 { padding-top: clamp(48px, 7vw, 110px); padding-bottom: clamp(48px, 6vw, 90px); border-top: 1px solid var(--rule-hard); margin: 0 var(--m); padding-left: 0; padding-right: 0; }
+.p2-head { grid-column: 1 / span 3; }
+.p2-head .kicker { margin-bottom: 10px; }
+.p2-head h2 { font-family: var(--serif); font-weight: 400; font-variation-settings: "opsz" 60; font-size: clamp(36px, 3.4vw, 54px); line-height: .98; letter-spacing: -.02em; margin: 0; }
+.p2-lede { grid-column: 4 / span 8; font-family: var(--serif); font-variation-settings: "opsz" 36; font-weight: 300; font-size: clamp(26px, 2.6vw, 42px); line-height: 1.14; letter-spacing: -.012em; margin: 0; }
+.p2-lede em { font-style: italic; }
+.big18 {
+  grid-column: 1 / span 4; margin-top: clamp(40px, 6vw, 90px);
+  font-family: var(--serif); font-weight: 200; font-variation-settings: "opsz" 72;
+  font-size: clamp(170px, 24vw, 400px); line-height: .74; letter-spacing: -.06em; margin-left: -.06em;
+  font-variant-numeric: lining-nums;
+}
+.p2-body { grid-column: 5 / span 8; margin-top: clamp(40px, 6vw, 90px); align-self: end; }
+.p2-body p { font-family: var(--serif); font-variation-settings: "opsz" 18; font-size: clamp(18px, 1.3vw + 3px, 22px); line-height: 1.4; max-width: 34ch; margin: 0 0 14px; }
+.p2-body .src { font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+.instants { grid-column: 1 / -1; margin-top: clamp(36px, 4vw, 60px); border-top: 1px solid var(--rule-hard); }
+.instants ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: var(--g); }
+.instants li { display: grid; grid-template-columns: 3.4em 9.5em 1fr; align-items: baseline; padding: 9px 0 8px; border-bottom: 1px solid var(--rule); font-size: 13px; }
+.instants li .n { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+.instants li code { font-family: var(--mono); font-size: 12.5px; }
+.instants li span:last-child { color: var(--ink-2); }
+.instants .phase { grid-column: 1 / -1; font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; font-weight: 650; color: var(--red); padding: 18px 0 6px; border-bottom: 1px solid var(--rule-hard); display: block; }
+
+/* footnotes */
+.notes { padding-top: 0; padding-bottom: 56px; }
+.notes h3 { grid-column: 1 / span 3; font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; font-weight: 650; margin: 4px 0 0; }
+.notes ol { grid-column: 4 / span 9; margin: 0; padding: 0; list-style: none; columns: 2; column-gap: calc(var(--g) * 2); font-size: 13px; line-height: 1.5; color: var(--ink-2); }
+.notes li { break-inside: avoid; margin: 0 0 12px; padding-left: 1.6em; text-indent: -1.6em; }
+.notes li b { color: var(--red); font-weight: 650; display: inline-block; width: 1.6em; text-indent: 0; }
+.notes li strong { color: var(--ink); font-weight: 650; }
+.notes .zero { font-family: var(--serif); font-variation-settings: "opsz" 24; font-size: 1.25em; color: var(--red); }
+.colophon { padding-bottom: 28px; font-size: 12px; color: var(--ink-3); }
+.colophon span { grid-column: span 4; }
+.colophon span:last-child { text-align: right; }
+
+/* ── responsive ──────────────────────────────────────── */
+@media (max-width: 1080px) {
+  .hero-text { grid-column: 1 / -1; }
+  .object { grid-column: 1 / -1; margin: 28px 0 0; }
+  .lede { max-width: 36ch; }
+  .labelrow .catno { grid-column: 1 / -1; order: 2; margin-top: 18px; }
+  .label { grid-column: 1 / -1; }
+  .p2-head { grid-column: 1 / -1; margin-bottom: 18px; }
+  .p2-lede { grid-column: 1 / -1; }
+  .instants ol { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .notes h3 { grid-column: 1 / -1; margin-bottom: 14px; }
+  .notes ol { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .mast nav { display: none; }
+  .mast .mark { grid-column: 1 / span 7; }
+  .mast .mark i { display: none; }
+  .mast .no { grid-column: 8 / span 5; font-size: 11.5px; }
+  h1 { font-size: clamp(64px, 30vw, 140px); }
+  .instants li { grid-template-columns: 3em 9.8em 1fr; font-size: 12.5px; }
+  .instants li code { font-size: 11.5px; }
+  .object { margin: 22px -8px 0; }
+  .label { grid-template-columns: 1fr; row-gap: 14px; }
+  .big18 { grid-column: 1 / span 6; font-size: 46vw; }
+  .p2-body { grid-column: 7 / span 6; }
+  .p2-body p { font-size: 16px; }
+  .p2-body .src { display: none; }
+  .instants ol { grid-template-columns: 1fr; }
+  .notes ol { columns: 1; }
+  .colophon span { grid-column: 1 / -1; text-align: left !important; }
+}
+@media (max-width: 640px) { .p2-src-m { display: block; grid-column: 1 / -1; margin-top: 14px; font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); } }
+@media (min-width: 641px) { .p2-src-m { display: none; } }
+
+/* entrance: the object is lit, once */
+@media (prefers-reduced-motion: no-preference) {
+  .object { animation: lightup 1.6s cubic-bezier(.2,.7,.2,1) both .15s; }
+  .object .screen-img { animation: screenon 1.4s ease-out both .9s; }
+  @keyframes lightup { from { opacity: 0; transform: translateY(14px); filter: brightness(.6); } to { opacity: 1; transform: none; filter: none; } }
+  @keyframes screenon { from { opacity: 0; } 30% { opacity: .35; } to { opacity: 1; } }
+}
+</style>
+</head>
+<body>
+
+<header class="grid mast">
+  <div class="mark">AurOS <i>a catalogue of one restart</i></div>
+  <nav aria-label="Sections"><a href="#way-back">The way back</a><a href="#notes">Notes</a><a href="#download">Download</a></nav>
+  <div class="no">No. 04 &middot; pre-release v4</div>
+</header>
+
+<main>
+<section class="plate1" aria-labelledby="t1">
+  <div class="wall"><div class="grid hero">
+    <div class="hero-text">
+      <p class="kicker">Plate I</p>
+      <h1 id="t1">Still<br><em>works.</em></h1>
+      <p class="lede">A Windows PC from 2012 to 2018 that Windows&nbsp;11 won&rsquo;t install on. AurOS turns it into a fast, patched desktop: one download, one restart, and your files where you left them.<sup><a href="#n1">1</a></sup></p>
+      <div class="actions" id="download">
+        <a class="primary" href="https://github.com/ComputerDude771/auros-from-scratch/raw/image-desktop/AurOS-Installer-test.exe">Download the test build</a>
+        <a href="#way-back">How Windows comes back</a>
+      </div>
+    </div>
+
+    <figure class="object" aria-labelledby="fig1" style="margin-top:0;margin-bottom:0">
+      <svg viewBox="0 0 1000 640" role="img" aria-label="An illustrated laptop, its screen showing the AurOS desktop with Internet, Email and Photos windows open and a taskbar along the bottom">
+        <defs>
+          <linearGradient id="lid" x1="0" y1="0" x2=".35" y2="1">
+            <stop offset="0" stop-color="#2E2F33"/><stop offset=".45" stop-color="#1E1F22"/><stop offset="1" stop-color="#151618"/>
+          </linearGradient>
+          <linearGradient id="deck" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#1A1B1E"/><stop offset=".55" stop-color="#2A2B2F"/><stop offset="1" stop-color="#36373B"/>
+          </linearGradient>
+          <linearGradient id="lip" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#5A5B60"/><stop offset=".12" stop-color="#2B2C30"/><stop offset="1" stop-color="#121315"/>
+          </linearGradient>
+          <linearGradient id="glare" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#fff" stop-opacity=".07"/><stop offset=".36" stop-color="#fff" stop-opacity=".025"/><stop offset=".40" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+          </linearGradient>
+          <radialGradient id="shadow" cx=".5" cy=".5" r=".5">
+            <stop offset="0" stop-color="#000" stop-opacity=".42"/><stop offset=".6" stop-color="#000" stop-opacity=".12"/><stop offset="1" stop-color="#000" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="spec" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".3" stop-color="#fff" stop-opacity=".22"/><stop offset=".7" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+          </linearGradient>
+          <clipPath id="scr"><rect x="110" y="44" width="780" height="438.75" rx="2"/></clipPath>
+        </defs>
+        <!-- floor shadow -->
+        <ellipse cx="500" cy="614" rx="520" ry="26" fill="url(#shadow)"/>
+        <!-- lid -->
+        <rect x="70" y="8" width="860" height="522" rx="16" fill="url(#lid)"/>
+        <rect x="70.5" y="8.5" width="859" height="521" rx="15.5" fill="none" stroke="#fff" stroke-opacity=".07"/>
+        <rect x="104" y="38" width="792" height="450.75" rx="4" fill="#0A0A0B"/>
+        <circle cx="500" cy="23" r="3.6" fill="#0B0B0C"/><circle cx="499" cy="22" r="1.1" fill="#3A4A5A"/>
+        <g clip-path="url(#scr)">
+          <image class="screen-img" href="desktop-taskbar.webp" x="110" y="44" width="780" height="438.75" preserveAspectRatio="xMidYMid slice"/>
+          <rect x="110" y="44" width="780" height="438.75" fill="url(#glare)"/>
+        </g>
+        <!-- hinge -->
+        <rect x="118" y="528" width="764" height="12" rx="3" fill="#0E0F10"/>
+        <!-- deck, seen from just above -->
+        <path d="M70 540 L930 540 L958 594 L42 594 Z" fill="url(#deck)"/>
+        <path id="kb" d="M150 545.5 L850 545.5 L868 575 L132 575 Z" fill="#141517"/>
+        <g id="keys"></g>
+        <path d="M432 579 L568 579 L571 591 L429 591 Z" fill="#2B2C30" stroke="#000" stroke-opacity=".3" stroke-width=".7"/>
+        <!-- front lip -->
+        <path d="M42 594 L958 594 L958 601 Q958 612 945 612 L55 612 Q42 612 42 601 Z" fill="url(#lip)"/>
+        <rect x="120" y="594" width="760" height="1.2" fill="url(#spec)"/>
+        <path d="M468 594 L532 594 L528 598.5 L472 598.5 Z" fill="#0B0C0D"/>
+      </svg>
+    </figure>
+  </div></div>
+
+  <div class="floor"><div class="grid labelrow">
+    <div class="catno"><span><b>Cat.</b> AUR&#8209;04.1</span><span><b>Medium</b> render, illustration</span><span><b>Plates</b> II</span></div>
+    <div class="label" id="fig1">
+      <p class="fig" style="margin:0"><b>Fig. 1</b>A laptop of the kind Windows&nbsp;11 turns away, c.&nbsp;2014. Running AurOS.<sup><a href="#n3">3</a></sup></p>
+      <dl>
+        <dt>Object</dt><dd>A Windows PC, 2012&ndash;2018</dd>
+        <dt>Condition</dt><dd>Works</dd>
+        <dt>Treatment</dt><dd>AurOS, after one restart</dd>
+        <dt>Reversible</dt><dd>Yes: &ldquo;Put Windows back&rdquo;, byte for byte<sup><a href="#n2">2</a></sup></dd>
+      </dl>
+    </div>
+  </div></div>
+</section>
+
+<section class="grid plate2" id="way-back" aria-labelledby="t2">
+  <div class="p2-head">
+    <p class="kicker">Plate II</p>
+    <h2 id="t2">The way back</h2>
+  </div>
+  <p class="p2-lede">Conservators work to one rule: whatever you do to an object must be <em>reversible.</em> Until you tell AurOS it works, switching the PC on still starts Windows, and &ldquo;Put Windows back&rdquo; returns it exactly as it was.</p>
+
+  <div class="big18" aria-hidden="true">18</div>
+  <div class="p2-body">
+    <p>named instants at which the power was cut on purpose: thirteen during the install, five during the restore. After every one, Windows came back with every file byte-identical.<sup><a href="#n2">2</a></sup></p>
+    <p class="src">138 of 138 checks &middot; tools/powercuttest.sh &middot; docs/results/powercut.txt</p>
+  </div>
+  <p class="p2-src-m">138 of 138 checks &middot; tools/powercuttest.sh</p>
+
+  <div class="instants">
+    <ol id="instants"></ol>
+  </div>
+</section>
+
+<section class="grid notes" id="notes" aria-labelledby="tn">
+  <h3 id="tn">Notes</h3>
+  <ol>
+    <li id="n1"><b>1</b><strong>Real PCs whose drive AurOS has resized and written so far: <span class="zero">0</span>.</strong> Every install to date is on simulated machines under real UEFI firmware with Secure Boot on; the Windows half of the installer runs on a real Windows machine on every change. A spare PC is the next piece of evidence.</li>
+    <li id="n2"><b>2</b>The power-cut run used one firmware (OVMF), one virtual disk and a memory stick (v3). It tests the order in which writes reach the disk and that each commit is a single sector; it says nothing about a particular drive&rsquo;s cache or a failing battery.</li>
+    <li id="n3"><b>3</b>The screen in Fig.&nbsp;1 is the real AurOS desktop, painted by its own drawing code (taskbar layout, Nocturne theme). The laptop around it is an illustration, not a photograph of a tested machine.</li>
+    <li id="n4"><b>4</b>The test build isn&rsquo;t code-signed yet, so Windows will warn you about the download. Use a PC whose files you don&rsquo;t need.</li>
+  </ol>
+</section>
+<footer class="grid colophon">
+  <span>Set in Newsreader and Inter Tight.</span>
+  <span>MIT licensed &middot; built from source on Ubuntu 24.04</span>
+  <span>AurOS catalogue No. 04</span>
+</footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  // keys on the deck, in perspective: rows interpolate between the far edge and the near edge
+  var g = document.getElementById("keys"), NS = "http://www.w3.org/2000/svg";
+  var top = { y: 547.5, l: 154, r: 846 }, bot = { y: 573.5, l: 135, r: 865 }, rows = 5, cols = 15;
+  function at(t) { return { y: top.y + (bot.y - top.y) * t, l: top.l + (bot.l - top.l) * t, r: top.r + (bot.r - top.r) * t }; }
+  for (var i = 0; i < rows; i++) {
+    var a = at(i / rows + 0.02), b = at((i + 1) / rows - 0.02);
+    var n = i === rows - 1 ? 9 : cols;
+    for (var j = 0; j < n; j++) {
+      var f0, f1;
+      if (i === rows - 1) {            // bottom row: a long space bar in the middle
+        var w = [1, 1, 1, 1.4, 6, 1.4, 1, 1, 1], s = 14.8, acc = 0;
+        for (var k = 0; k < j; k++) acc += w[k];
+        f0 = acc / s; f1 = (acc + w[j]) / s;
+      } else { f0 = j / n; f1 = (j + 1) / n; }
+      var gap = 0.0042;
+      var x1 = a.l + (a.r - a.l) * (f0 + gap), x2 = a.l + (a.r - a.l) * (f1 - gap);
+      var x3 = b.l + (b.r - b.l) * (f1 - gap), x4 = b.l + (b.r - b.l) * (f0 + gap);
+      var p = document.createElementNS(NS, "path");
+      p.setAttribute("d", "M" + x1.toFixed(1) + " " + a.y.toFixed(1) + " L" + x2.toFixed(1) + " " + a.y.toFixed(1) + " L" + x3.toFixed(1) + " " + b.y.toFixed(1) + " L" + x4.toFixed(1) + " " + b.y.toFixed(1) + "Z");
+      p.setAttribute("fill", "#232427");
+      p.setAttribute("stroke", "#fff"); p.setAttribute("stroke-opacity", ".04"); p.setAttribute("stroke-width", ".5");
+      g.appendChild(p);
+    }
+  }
+
+  // the eighteen instants, as docs/results/powercut.txt records them
+  var untouched = "the disk byte-for-byte untouched";
+  var back = "every file identical";
+  var again = "running it again finishes the job";
+  var I = [
+    ["install"],
+    ["gate", untouched], ["capture-mid", untouched], ["shrink-begin", untouched],
+    ["shrink-end", back], ["write-mid", back], ["write-end", back], ["boot-mid", back], ["boot-end", back],
+    ["commit-array", back], ["commit-sector", back], ["commit-backup", back], ["boot-entry", back], ["settle-end", back],
+    ["restore"],
+    ["restore-array", again], ["restore-sector", again], ["restore-backup", again], ["restore-esp-mid", again], ["restore-grow", again]
+  ];
+  var ol = document.getElementById("instants"), k = 0;
+  I.forEach(function (r) {
+    var li = document.createElement("li");
+    if (r.length === 1) {
+      li.className = "phase";
+      li.textContent = r[0] === "install" ? "During the install · 13" : "During the restore · 5";
+    } else {
+      k++;
+      li.innerHTML = '<span class="n">II.' + (k < 10 ? "0" : "") + k + '</span><code></code><span></span>';
+      li.children[1].textContent = r[0];
+      li.children[2].textContent = r[1];
+    }
+    ol.appendChild(li);
+  });
+})();
+</script>
+</body>
+</html>

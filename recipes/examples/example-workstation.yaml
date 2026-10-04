@@ -1,0 +1,41 @@
+# ILLUSTRATIVE EXAMPLE — not a customer. No organisation named here exists.
+# One developer desktop that keeps the ordinary desktop and adds a working set.
+#
+# Ported from LATHE's auros-recipes/customers/example-workstation/recipe.yaml. What did not come
+# across, and why (each one is refused by recipes/lib/recipe.mjs with the same sentence):
+#   Podman Desktop              Flathub only; this image has no Flatpak
+#   Thunderbird                 a snap stub on Ubuntu 24.04, and this image removes snapd
+#   Visual Studio Code          Microsoft's repository is not added
+#   also_remove: games, sample wallpapers and media   the AurOS desktop has neither
+#   desktop.guided_first_boot   the first boot is the same everywhere
+#   theme accent #d9682e        themes are chosen whole; ember is the warm one
+#   hardware, updates, size_budget_gb, approved_by, helpdesk, must_remove_at_least — as in example-school
+
+schema: 1
+name: example-workstation
+for: >
+  One developer desktop belonging to the person who maintains these recipes. It keeps the
+  ordinary desktop and adds a working set on top rather than being stripped to a handful of
+  programs, and it is the only machine in these examples with a command line.
+organisation:
+  display_name: Example Studio
+language: English (United Kingdom)
+keyboard: English (UK)
+timezone: Europe/London
+apps:
+  - Files
+  - Firefox
+  - GIMP
+  - Image Viewer
+  - Inkscape
+  - Kate
+  - Konsole
+  - Text Editor
+prune:
+  keep_only_the_apps_above: false
+policy: open
+desktop:
+  layout: workbench
+  can_install_apps: true
+  can_reach_a_terminal: true
+theme: ember

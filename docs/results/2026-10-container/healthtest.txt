@@ -1,0 +1,30 @@
+$ sh tools/healthtest.sh
+# started 2026-10-04T23:17:38Z
+
+Would it refuse to start the one step that cannot be stopped?
+
+  the power
+    a desktop with no power supplies is allowed              ok
+    a laptop plugged in at 42% is allowed                    ok
+    a laptop on battery is refused even at 95%               ok
+    ...and is told how much is left                          ok
+    with two batteries it reads the fuller one               ok
+    a USB-C charger counts as being plugged in               ok
+
+  the drive
+    a healthy drive is good                                  ok
+    ONE pending sector is a refusal                          ok
+    ...and she is told to copy her files off TODAY           ok
+    an uncorrectable sector is a refusal                     ok
+    reallocated sectors alone are a warning, not a refusal   ok
+    a 48-bit raw value is read whole                         ok
+    an empty page reads as no bad sectors                    ok
+
+  and the real drive in this machine
+      unknown: This drive does not report its own health.
+    reading a real drive does not crash                      ok
+
+14 checks: it refuses a machine on battery, and it refuses a
+drive with a sector it can no longer read.
+exit=0
+seconds=1

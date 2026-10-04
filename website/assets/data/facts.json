@@ -1,0 +1,728 @@
+{
+ "powercut": {
+  "source": "docs/results/powercut.txt",
+  "instants": 18,
+  "install_instants": 13,
+  "restore_instants": 5,
+  "checks": 138,
+  "ok": 138,
+  "fail": 0,
+  "files_in_windows": 7,
+  "list": [
+   {
+    "name": "gate",
+    "phase": "install",
+    "checks": [
+     [
+      "the machine stops dead at gate",
+      "ok"
+     ],
+     [
+      "the disk is byte-for-byte untouched",
+      "ok"
+     ]
+    ]
+   },
+   {
+    "name": "capture-mid",
+    "phase": "install",
+    "checks": [
+     [
+      "the machine stops dead at capture-mid",
+      "ok"
+     ],
+     [
+      "the disk is byte-for-byte untouched",
+      "ok"
+     ],
+     [
+      "a half-written saved copy is refused",
+      "ok"
+     ]
+    ]
+   },
+   {
+    "name": "shrink-begin",
+    "phase": "install",
+    "checks": [
+     [
+      "the machine stops dead at shrink-begin",
+      "ok"
+     ],
+     [
+      "the disk is byte-for-byte untouched",
+      "ok"
+     ]
+    ]
+   },
+   {
+    "name": "shrink-end",
+    "phase": "install",
+    "checks": [
+     [
+      "the machine stops dead at shrink-end",
+      "ok"
+     ],
+     [
+      "after the cut: every file in Windows is still exactly what it was",
+      "ok"
+     ],
+     [
+      "and Windows can be put back",
+      "ok"
+     ],
+     [
+      "after shrink-end: the table is valid again",
+      "ok"
+     ],
+     [
+      "after shrink-end: the three original partitions are back",
+      "ok"
+     ],
+     [
+      "after shrink-end: Windows is its full size again",
+      "ok"
+     ],
+     [
+      "after shrink-end: the EFI partition is byte-for-byte what it was",
+      "ok"
+     ],
+     [
+      "after shrink-end: the Windows FILESYSTEM is its full size again",
+      "ok"
+     ],
+     [
+      "after shrink-end: and the installer says so itself",
+      "ok"
+     ]
+    ]
+   },
+   {
+    "name": "write-mid",
+    "phase": "install",
+    "checks": [
+     [
+      "the machine stops dead at write-mid",
+      "ok"
+     ],
+     [
+      "after the cut: every file in Windows is still exactly what it was",
+      "ok"
+     ],
+     [
+      "and Windows can be put back",
+      "ok"
+     ],
+     [
+      "after write-mid: the table is valid again",
+      "ok"
+     ],
+     [
+      "after write-mid: the three original partitions are back",
+      "ok"
+     ],
+     [
+      "after write-mid: Windows is its full size again",
+      "ok"
+     ],
+     [
+      "after write-mid: the EFI partition is byte-for-byte what it was",
+      "ok"
+     ],
+     [
+      "after write-mid: the Windows FILESYSTEM is its full size again",
+      "ok"
+     ],
+     [
+      "after write-mid: and the installer says so itself",
+      "ok"
+     ]
+    ]
+   },
+   {
+    "name": "write-end",
+    "phase": "install",
+    "checks": [
+     [
+      "the machine stops dead at write-end",
+      "ok"
+     ],
+     [
+      "after the cut: every file in Windows is still exactly what it was",
+      "ok"
+     ],
+     [
+      "and Windows can be put back",
+      "ok"
+     ],
+     [
+      "after write-end: the table is valid again",
+      "ok"
+     ],
+     [
+      "after write-end: the three original partitions are back",
+      "ok"
+     ],
+     [
+      "after write-end: Windows is its full size again",
+      "ok"
+     ],
+     [
+      "after write-end: the EFI partition is byte-for-byte what it was",
+      "ok"
+     ],
+     [
+      "after write-end: the Windows FILESYSTEM is its full size again",
+      "ok"
+     ],
+     [
+      "after write-end: and the installer says so itself",
+      "ok"
+     ]
+    ]
+   },
+   {
+    "name": "boot-mid",
+    "phase": "install",
+    "checks": [
+     [
+      "the machine stops dead at boot-mid",
+      "ok"
+     ],
+     [
+      "after the cut: every file in Windows is still exactly what it was",
+      "ok"
+     ],
+     [
+      "and Windows can be put back",
+      "ok"
+     ],
+     [
+      "after boot-mid: the table is valid again",
+      "ok"
+     ],
+     [
+      "after boot-mid: the three original partitions are back",
+      "ok"
+     ],
+     [
+      "after boot-mid: Windows is its full size again",
+      "ok"
+     ],
+     [
+      "after boot-mid: the EFI partition is byte-for-byte what it was",
+      "ok"
+     ],
+     [
+      "after boot-mid: the Windows FILESYSTEM is its full size again",
+      "ok"
+     ],
+     [
+      "after boot-mid: and the installer says so itself",
+      "ok"
+     ]
+    ]
+   },
+   {
+    "name": "boot-end",
+    "phase": "install",
+    "checks": [
+     [
+      "the machine stops dead at boot-end",
+      "ok"
+     ],
+     [
+      "after the cut: every file in Windows is still exactly what it was",
+      "ok"
+     ],
+     [
+      "and Windows can be put back",
+      "ok"
+     ],
+     [
+      "after boot-end: the table is valid again",
+      "ok"
+     ],
+     [
+      "after boot-end: the three original partitions are back",
+      "ok"
+     ],
+     [
+      "after boot-end: Windows is its full size again",
+      "ok"
+     ],
+     [
+      "after boot-end: the EFI partition is byte-for-byte what it was",
+      "ok"
+     ],
+     [
+      "after boot-end: the Windows FILESYSTEM is its full size again",
+      "ok"
+     ],
+     [
+      "after boot-end: and the installer says so itself",
+      "ok"
+     ]
+    ]
+   },
+   {
+    "name": "commit-array",
+    "phase": "install",
+    "checks": [
+     [
+      "the machine stops dead at commit-array",
+      "ok"
+     ],
+     [
+      "after the cut: every file in Windows is still exactly what it was",
+      "ok"
+     ],
+     [
+      "and Windows can be put back",
+      "ok"
+     ],
+     [
+      "after commit-array: the table is valid again",
+      "ok"
+     ],
+     [
+      "after commit-array: the three original partitions are back",
+      "ok"
+     ],
+     [
+      "after commit-array: Windows is its full size again",
+      "ok"
+     ],
+     [
+      "after commit-array: the EFI partition is byte-for-byte what it was",
+      "ok"
+     ],
+     [
+      "after commit-array: the Windows FILESYSTEM is its full size again",
+      "ok"
+     ],
+     [
+      "after commit-array: and the installer says so itself",
+      "ok"
+     ]
+    ]
+   },
+   {
+    "name": "commit-sector",
+    "phase": "install",
+    "checks": [
+     [
+      "the machine stops dead at commit-sector",
+      "ok"
+     ],
+     [
+      "after the cut: every file in Windows is still exactly what it was",
+      "ok"
+     ],
+     [
+      "and Windows can be put back",
+      "ok"
+     ],
+     [
+      "after commit-sector: the table is valid again",
+      "ok"
+     ],
+     [
+      "after commit-sector: the three original partitions are back",
+      "ok"
+     ],
+     [
+      "after commit-sector: Windows is its full size again",
+      "ok"
+     ],
+     [
+      "after commit-sector: the EFI partition is byte-for-byte what it was",
+      "ok"
+     ],
+     [
+      "after commit-sector: the Windows FILESYSTEM is its full size again",
+      "ok"
+     ],
+     [
+      "after commit-sector: and the installer says so itself",
+      "ok"
+     ]
+    ]
+   },
+   {
+    "name": "commit-backup",
+    "phase": "install",
+    "checks": [
+     [
+      "the machine stops dead at commit-backup",
+      "ok"
+     ],
+     [
+      "after the cut: every file in Windows is still exactly what it was",
+      "ok"
+     ],
+     [
+      "and Windows can be put back",
+      "ok"
+     ],
+     [
+      "after commit-backup: the table is valid again",
+      "ok"
+     ],
+     [
+      "after commit-backup: the three original partitions are back",
+      "ok"
+     ],
+     [
+      "after commit-backup: Windows is its full size again",
+      "ok"
+     ],
+     [
+      "after commit-backup: the EFI partition is byte-for-byte what it was",
+      "ok"
+     ],
+     [
+      "after commit-backup: the Windows FILESYSTEM is its full size again",
+      "ok"
+     ],
+     [
+      "after commit-backup: and the installer says so itself",
+      "ok"
+     ]
+    ]
+   },
+   {
+    "name": "boot-entry",
+    "phase": "install",
+    "checks": [
+     [
+      "the machine stops dead at boot-entry",
+      "ok"
+     ],
+     [
+      "after the cut: every file in Windows is still exactly what it was",
+      "ok"
+     ],
+     [
+      "and Windows can be put back",
+      "ok"
+     ],
+     [
+      "after boot-entry: the table is valid again",
+      "ok"
+     ],
+     [
+      "after boot-entry: the three original partitions are back",
+      "ok"
+     ],
+     [
+      "after boot-entry: Windows is its full size again",
+      "ok"
+     ],
+     [
+      "after boot-entry: the EFI partition is byte-for-byte what it was",
+      "ok"
+     ],
+     [
+      "after boot-entry: the Windows FILESYSTEM is its full size again",
+      "ok"
+     ],
+     [
+      "after boot-entry: and the installer says so itself",
+      "ok"
+     ]
+    ]
+   },
+   {
+    "name": "settle-end",
+    "phase": "install",
+    "checks": [
+     [
+      "the machine stops dead at settle-end",
+      "ok"
+     ],
+     [
+      "after the cut: every file in Windows is still exactly what it was",
+      "ok"
+     ],
+     [
+      "and Windows can be put back",
+      "ok"
+     ],
+     [
+      "after settle-end: the table is valid again",
+      "ok"
+     ],
+     [
+      "after settle-end: the three original partitions are back",
+      "ok"
+     ],
+     [
+      "after settle-end: Windows is its full size again",
+      "ok"
+     ],
+     [
+      "after settle-end: the EFI partition is byte-for-byte what it was",
+      "ok"
+     ],
+     [
+      "after settle-end: the Windows FILESYSTEM is its full size again",
+      "ok"
+     ],
+     [
+      "after settle-end: and the installer says so itself",
+      "ok"
+     ]
+    ]
+   },
+   {
+    "name": "restore-array",
+    "phase": "restore",
+    "checks": [
+     [
+      "the machine stops dead at restore-array",
+      "ok"
+     ],
+     [
+      "running it again finishes the job",
+      "ok"
+     ],
+     [
+      "after restore-array: the table is valid again",
+      "ok"
+     ],
+     [
+      "after restore-array: the three original partitions are back",
+      "ok"
+     ],
+     [
+      "after restore-array: Windows is its full size again",
+      "ok"
+     ],
+     [
+      "after restore-array: the EFI partition is byte-for-byte what it was",
+      "ok"
+     ],
+     [
+      "after restore-array: the Windows FILESYSTEM is its full size again",
+      "ok"
+     ],
+     [
+      "after restore-array: and the installer says so itself",
+      "ok"
+     ]
+    ]
+   },
+   {
+    "name": "restore-sector",
+    "phase": "restore",
+    "checks": [
+     [
+      "the machine stops dead at restore-sector",
+      "ok"
+     ],
+     [
+      "running it again finishes the job",
+      "ok"
+     ],
+     [
+      "after restore-sector: the table is valid again",
+      "ok"
+     ],
+     [
+      "after restore-sector: the three original partitions are back",
+      "ok"
+     ],
+     [
+      "after restore-sector: Windows is its full size again",
+      "ok"
+     ],
+     [
+      "after restore-sector: the EFI partition is byte-for-byte what it was",
+      "ok"
+     ],
+     [
+      "after restore-sector: the Windows FILESYSTEM is its full size again",
+      "ok"
+     ],
+     [
+      "after restore-sector: and the installer says so itself",
+      "ok"
+     ]
+    ]
+   },
+   {
+    "name": "restore-backup",
+    "phase": "restore",
+    "checks": [
+     [
+      "the machine stops dead at restore-backup",
+      "ok"
+     ],
+     [
+      "running it again finishes the job",
+      "ok"
+     ],
+     [
+      "after restore-backup: the table is valid again",
+      "ok"
+     ],
+     [
+      "after restore-backup: the three original partitions are back",
+      "ok"
+     ],
+     [
+      "after restore-backup: Windows is its full size again",
+      "ok"
+     ],
+     [
+      "after restore-backup: the EFI partition is byte-for-byte what it was",
+      "ok"
+     ],
+     [
+      "after restore-backup: the Windows FILESYSTEM is its full size again",
+      "ok"
+     ],
+     [
+      "after restore-backup: and the installer says so itself",
+      "ok"
+     ]
+    ]
+   },
+   {
+    "name": "restore-esp-mid",
+    "phase": "restore",
+    "checks": [
+     [
+      "the machine stops dead at restore-esp-mid",
+      "ok"
+     ],
+     [
+      "running it again finishes the job",
+      "ok"
+     ],
+     [
+      "after restore-esp-mid: the table is valid again",
+      "ok"
+     ],
+     [
+      "after restore-esp-mid: the three original partitions are back",
+      "ok"
+     ],
+     [
+      "after restore-esp-mid: Windows is its full size again",
+      "ok"
+     ],
+     [
+      "after restore-esp-mid: the EFI partition is byte-for-byte what it was",
+      "ok"
+     ],
+     [
+      "after restore-esp-mid: the Windows FILESYSTEM is its full size again",
+      "ok"
+     ],
+     [
+      "after restore-esp-mid: and the installer says so itself",
+      "ok"
+     ]
+    ]
+   },
+   {
+    "name": "restore-grow",
+    "phase": "restore",
+    "checks": [
+     [
+      "the machine stops dead at restore-grow",
+      "ok"
+     ],
+     [
+      "running it again finishes the job",
+      "ok"
+     ],
+     [
+      "after restore-grow: the table is valid again",
+      "ok"
+     ],
+     [
+      "after restore-grow: the three original partitions are back",
+      "ok"
+     ],
+     [
+      "after restore-grow: Windows is its full size again",
+      "ok"
+     ],
+     [
+      "after restore-grow: the EFI partition is byte-for-byte what it was",
+      "ok"
+     ],
+     [
+      "after restore-grow: the Windows FILESYSTEM is its full size again",
+      "ok"
+     ],
+     [
+      "after restore-grow: and the installer says so itself",
+      "ok"
+     ]
+    ]
+   }
+  ]
+ },
+ "real_pcs": {
+  "source": "lathe/hardware/compat.tsv",
+  "count": 0
+ },
+ "transcripts": {
+  "roundtrip": {
+   "source": "docs/results/roundtrip.txt",
+   "ok": 37,
+   "fail": 0
+  },
+  "nostick": {
+   "source": "docs/results/nostick.txt",
+   "ok": 45,
+   "fail": 0
+  },
+  "firstboot": {
+   "source": "docs/results/firstboot.txt",
+   "ok": 32,
+   "fail": 0
+  },
+  "putback": {
+   "source": "docs/results/putback.txt",
+   "ok": 16,
+   "fail": 0
+  },
+  "loader": {
+   "source": "docs/results/loader.txt",
+   "ok": 18,
+   "fail": 0
+  },
+  "screen": {
+   "source": "docs/results/screen.txt",
+   "ok": 24,
+   "fail": 0
+  },
+  "bootchain": {
+   "source": "docs/results/bootchain.txt",
+   "ok": 72,
+   "fail": 0
+  },
+  "bootupdate": {
+   "source": "docs/results/bootupdate.txt",
+   "ok": 27,
+   "fail": 0
+  },
+  "choicesboot": {
+   "source": "docs/results/choicesboot.txt",
+   "ok": 9,
+   "fail": 0
+  }
+ },
+ "image": {
+  "source": "docs/results/desktop.json",
+  "profile": "desktop",
+  "image_bytes": 5268045824,
+  "image_sha256": "effbe2c687aaaa33049fc0145211747b634e41dd44e75d086ea1188a28df54f4",
+  "artifact_sha256": "eee88357aa8f28185558a439263519b6c8a3a69ca1bf78ab9d0a86e04e085b4e"
+ }
+}

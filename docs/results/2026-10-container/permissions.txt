@@ -1,0 +1,87 @@
+$ sh tools/permissions.sh
+# started 2026-10-04T23:25:22Z
+can this computer do the things it offers to do?
+
+  Turn it off                      granted by this build
+  Start it again                   granted by this build
+  Let it sleep                     granted by this build
+  Open a USB stick                 granted by this build
+  Eject a USB stick                granted by this build
+  Safely remove a USB stick        granted by this build
+  Internet: look for wifi          granted by this build
+  Internet: join a network         granted by this build
+  Internet: connect                granted by this build
+  Install a downloaded program     granted by this build
+  Get more programs (the store)    granted by this build
+  Remove a program                 granted by this build
+  Update this computer             granted by this build
+  Settings: where you are          granted by this build
+
+and is she in the groups the rest of it uses?
+  setting up a printer             auros is in lpadmin
+  the screen brightness            auros is in video
+  the keyboard and touchpad        auros is in input
+  the sound card                   auros is in audio
+  changing the network             auros is in netdev
+  pairing headphones               auros is in bluetooth
+
+and can the desktop's own unit resolve the groups it demands?
+  SupplementaryGroups=video resolves                         ok
+  SupplementaryGroups=input resolves                         ok
+  SupplementaryGroups=audio resolves                         ok
+  SupplementaryGroups=bluetooth resolves                     ok
+  SupplementaryGroups=lpadmin resolves                       ok
+
+and does every permission this build grants actually exist?
+  org.freedesktop.login1.power-off                           ok
+  org.freedesktop.login1.power-off-multiple-sessions         ok
+  org.freedesktop.login1.reboot                              ok
+  org.freedesktop.login1.reboot-multiple-sessions            ok
+  org.freedesktop.login1.suspend                             ok
+  org.freedesktop.login1.suspend-multiple-sessions           ok
+  org.freedesktop.udisks2.filesystem-mount                   ok
+  org.freedesktop.udisks2.filesystem-mount-system            ok
+  org.freedesktop.udisks2.eject-media                        ok
+  org.freedesktop.udisks2.power-off-drive                    ok
+  org.freedesktop.udisks2.encrypted-unlock                   ok
+  org.freedesktop.timedate1.set-timezone                     ok
+  com.ubuntu.pkexec.gdebi.gtk                                ok
+  org.freedesktop.packagekit.package-install                 ok
+  org.freedesktop.packagekit.package-remove                  ok
+  org.freedesktop.packagekit.system-update                   ok
+  org.freedesktop.NetworkManager.network-control             ok
+  org.freedesktop.NetworkManager.enable-disable-network      ok
+  org.freedesktop.NetworkManager.enable-disable-wifi         ok
+  org.freedesktop.NetworkManager.wifi.scan                   ok
+  org.freedesktop.NetworkManager.settings.modify.own         ok
+  org.freedesktop.NetworkManager.settings.modify.system      ok
+  org.opensuse.cupspkhelper.mechanism.server-settings        ok
+  org.opensuse.cupspkhelper.mechanism.devices-get            ok
+  org.opensuse.cupspkhelper.mechanism.printer-set-default    ok
+  org.opensuse.cupspkhelper.mechanism.printer-enable         ok
+  org.opensuse.cupspkhelper.mechanism.printer-local-edit     ok
+  org.opensuse.cupspkhelper.mechanism.printer-remote-edit    ok
+  org.opensuse.cupspkhelper.mechanism.class-edit             ok
+  org.opensuse.cupspkhelper.mechanism.job-edit               ok
+  org.opensuse.cupspkhelper.mechanism.job-not-owned-edit     ok
+  org.opensuse.cupspkhelper.mechanism.all-edit               ok
+  org.opensuse.cupspkhelper.mechanism.printeraddremove       ok
+
+and will the desktop have an active session to be allowed by?
+  PAMName=aurshell, and its stack opens a logind session     ok
+  an expired password cannot stop her own systemd            ok
+  TTYPath=/dev/tty1, so the session is on seat0 vt1          ok
+  nothing else is trying to own vt1                          ok
+  no splash-without-plymouth vt.handoff trap                 ok
+
+  This section reads files. It cannot see a running system --
+  on a booted image, confirm with:
+    loginctl show-session $(loginctl list-sessions --no-legend | awk '{print $1}') \
+      -p Active -p State -p Class -p Type -p Seat -p VTNr
+    systemctl is-active user@$(id -u auros) ; cat /sys/class/tty/tty0/active
+
+all 14 things this computer offers to do are permitted,
+the groups the rest of it uses are in place, the unit can start,
+and nothing granted is a name for nothing.
+exit=0
+seconds=0

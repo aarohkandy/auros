@@ -1,0 +1,104 @@
+Ember  (/tmp/tmp.L1VjgVup6Y/ember.conf)
+  ok   14.23:1  (needs 4.5)  body text on the desktop
+  ok   12.55:1  (needs 4.5)  body text on a card
+  ok   15.02:1  (needs 4.5)  a heading on a card
+  ok   13.51:1  (needs 4.5)  text in the bar
+  ok    6.58:1  (needs 4.5)  the hint under an app name
+  ok    7.46:1  (needs 4.5)  secondary text on the desktop
+  ok    8.75:1  (needs 3.0)  the accent against the desktop
+  ok    7.72:1  (needs 3.0)  the accent on a card
+  ok    6.63:1  (needs 4.5)  an error
+  ok    8.78:1  (needs 3.0)  a confirmation
+  ok    9.71:1  (needs 3.0)  a warning
+  ok    4.04:1  (needs 3.0)  text that is deliberately quiet
+  ok    3.22:1  (needs 3.0)  a divider or border
+  ok    3.65:1  (needs 3.0)  a divider on the desktop
+  legible throughout
+
+Moss  (/tmp/tmp.L1VjgVup6Y/moss.conf)
+  ok   13.74:1  (needs 4.5)  body text on the desktop
+  ok   11.93:1  (needs 4.5)  body text on a card
+  ok   15.03:1  (needs 4.5)  a heading on a card
+  ok   12.93:1  (needs 4.5)  text in the bar
+  ok    6.38:1  (needs 4.5)  the hint under an app name
+  ok    7.34:1  (needs 4.5)  secondary text on the desktop
+  ok    8.87:1  (needs 3.0)  the accent against the desktop
+  ok    7.70:1  (needs 3.0)  the accent on a card
+  ok    5.52:1  (needs 4.5)  an error
+  ok    7.70:1  (needs 3.0)  a confirmation
+  ok    8.83:1  (needs 3.0)  a warning
+  ok    3.50:1  (needs 3.0)  text that is deliberately quiet
+  ok    3.61:1  (needs 3.0)  a divider or border
+  ok    4.16:1  (needs 3.0)  a divider on the desktop
+  legible throughout
+
+Nocturne  (/tmp/tmp.L1VjgVup6Y/nocturne.conf)
+  ok   13.95:1  (needs 4.5)  body text on the desktop
+  ok   12.41:1  (needs 4.5)  body text on a card
+  ok   15.64:1  (needs 4.5)  a heading on a card
+  ok   13.17:1  (needs 4.5)  text in the bar
+  ok    6.63:1  (needs 4.5)  the hint under an app name
+  ok    7.46:1  (needs 4.5)  secondary text on the desktop
+  ok    7.48:1  (needs 3.0)  the accent against the desktop
+  ok    6.65:1  (needs 3.0)  the accent on a card
+  ok    4.61:1  (needs 4.5)  an error
+  ok    7.28:1  (needs 3.0)  a confirmation
+  ok    6.65:1  (needs 3.0)  a warning
+  ok    3.43:1  (needs 3.0)  text that is deliberately quiet
+  ok    3.69:1  (needs 3.0)  a divider or border
+  ok    4.14:1  (needs 3.0)  a divider on the desktop
+  legible throughout
+
+Sandstone  (/tmp/tmp.L1VjgVup6Y/sandstone.conf)
+  ok   11.02:1  (needs 4.5)  body text on the desktop
+  ok   12.53:1  (needs 4.5)  body text on a card
+  ok   17.50:1  (needs 4.5)  a heading on a card
+  ok   10.18:1  (needs 4.5)  text in the bar
+  ok    5.72:1  (needs 4.5)  the hint under an app name
+  ok    5.04:1  (needs 4.5)  secondary text on the desktop
+  ok    3.46:1  (needs 3.0)  the accent against the desktop
+  ok    3.93:1  (needs 3.0)  the accent on a card
+  ok    5.44:1  (needs 4.5)  an error
+  ok    4.86:1  (needs 3.0)  a confirmation
+  ok    3.02:1  (needs 3.0)  a warning
+  ok    3.85:1  (needs 3.0)  text that is deliberately quiet
+  ok    4.05:1  (needs 3.0)  a divider or border
+  ok    3.56:1  (needs 3.0)  a divider on the desktop
+  legible throughout
+
+Slate  (/tmp/tmp.L1VjgVup6Y/slate.conf)
+  ok   13.59:1  (needs 4.5)  body text on the desktop
+  ok   11.70:1  (needs 4.5)  body text on a card
+  ok   14.79:1  (needs 4.5)  a heading on a card
+  ok   12.74:1  (needs 4.5)  text in the bar
+  ok    6.61:1  (needs 4.5)  the hint under an app name
+  ok    7.68:1  (needs 4.5)  secondary text on the desktop
+  ok    7.56:1  (needs 3.0)  the accent against the desktop
+  ok    6.52:1  (needs 3.0)  the accent on a card
+  ok    6.40:1  (needs 4.5)  an error
+  ok    8.12:1  (needs 3.0)  a confirmation
+  ok    9.06:1  (needs 3.0)  a warning
+  ok    4.13:1  (needs 3.0)  text that is deliberately quiet
+  ok    3.33:1  (needs 3.0)  a divider or border
+  ok    3.87:1  (needs 3.0)  a divider on the desktop
+  legible throughout
+
+Synthwave  (/tmp/tmp.L1VjgVup6Y/synthwave.conf)
+  ok   14.61:1  (needs 4.5)  body text on the desktop
+  ok   13.02:1  (needs 4.5)  body text on a card
+  ok   16.93:1  (needs 4.5)  a heading on a card
+  ok   13.91:1  (needs 4.5)  text in the bar
+  ok    5.87:1  (needs 4.5)  the hint under an app name
+  ok    6.59:1  (needs 4.5)  secondary text on the desktop
+  ok    6.66:1  (needs 3.0)  the accent against the desktop
+  ok    5.93:1  (needs 3.0)  the accent on a card
+  ok    5.69:1  (needs 4.5)  an error
+  ok   13.11:1  (needs 3.0)  a confirmation
+  ok   11.09:1  (needs 3.0)  a warning
+  ok    3.47:1  (needs 3.0)  text that is deliberately quiet
+  ok    3.54:1  (needs 3.0)  a divider or border
+  ok    3.97:1  (needs 3.0)  a divider on the desktop
+  legible throughout
+
+exit=0
+seconds=1

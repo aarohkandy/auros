@@ -1,0 +1,59 @@
+$ sh -c cd src/ferry && sh tests/run.sh
+# started 2026-10-04T23:26:06Z
+building fake Windows volume...
+hive reader:
+  ok   reads REG_EXPAND_SZ
+  ok   reads REG_DWORD as number
+  ok   value lookup is case-insensitive
+  ok   missing key exits nonzero
+  ok   lists subkeys
+attribute classifier:
+  ok   cloud placeholder is not classified as real data (placeholder)
+  ok   a real file is hydrated
+  ok   a missing path exits nonzero
+detect:
+  ok   detect emits valid JSON
+  ok   detect identifies Windows 10
+  ok   detect counts 4 WiFi profiles
+  ok   Documents resolved into OneDrive (redirection honoured)
+  ok   Videos on drive D: reported off-volume
+files:
+  ok   real Desktop file imported
+  ok   collision kept BOTH files (no overwrite)
+  ok   the pre-existing file was not overwritten
+  ok   Documents imported from the OneDrive redirect
+  ok   a OneDrive placeholder was NOT silently copied
+  ok   each placeholder is reported by name
+  ok   junk (desktop.ini/Thumbs.db) filtered out
+  ok   user-dirs.dirs written
+  ok   re-run is idempotent (no new files)
+firefox:
+  ok   key4.db (the login key) copied
+  ok   logins.json copied
+  ok   places.sqlite (bookmarks/history) copied
+  ok   profiles.ini copied
+  ok   cache NOT copied
+  ok   stale lock NOT copied
+  ok   compatibility.ini NOT copied
+wifi:
+  ok   open network imported
+  ok   cleartext WPA3 PSK imported
+  ok   WPA3 uses key-mgmt=sae
+  ok   hidden network marked hidden
+  ok   DPAPI network created without a bogus PSK
+  ok   DPAPI network flagged for the user
+  ok   enterprise EAP network reported, not faked
+  ok   keyfiles are mode 0600
+  ok   DPAPI helper seam fills the PSK when present
+settings (timezone mapping is the point):
+  ok   GMT Standard Time -> Europe/London (CLDR mapping)
+  ok   a time zone chosen in the installer is not overwritten
+safety gate:
+  ok   hibernated volume is refused (exit 3)
+  ok   detect still succeeds on a hibernated volume
+read-only guarantee:
+  ok   source Windows tree left byte-for-byte unchanged by every stage
+
+ferry tests: 43 passed, 0 failed
+exit=0
+seconds=7

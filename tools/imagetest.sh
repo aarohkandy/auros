@@ -183,6 +183,12 @@ int main(int argc, char **argv)
         image_src s; memset(&s, 0, sizeof s);
         snprintf(s.dev, sizeof s.dev, "%s", argv[2]);
         s.part_off = strtoull(argv[3], NULL, 10);
+        /* The image starts past the 4096-byte manifest, as image_find
+         * sets it (image.c, c.img_base = poff + MAN_BYTES). This line
+         * was missing after img_base was added for the no-stick mode:
+         * left at 0, the writer read the stick from its first byte and
+         * every write case failed on the hash. */
+        s.img_base = s.part_off + 4096;
         FILE *f = fopen(argv[2], "rb");
         unsigned char man[4096];
         if (!f || fseek(f, (long)s.part_off, SEEK_SET) != 0 ||

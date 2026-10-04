@@ -1,0 +1,23 @@
+with allowed_apps="true":
+  a file named after an allowed program is refused           ok
+  a forged StartupWMClass is refused                         ok
+  an allowed program with a shell suffix is refused          ok
+  the user's own directory is not searched at all            ok
+
+with no allow-list (an ordinary machine):
+  the user's own launchers are offered                       ok
+  a semicolon becomes an argument, not a second command      ok
+
+with blocked_apps="true" and no allow-list:
+  a blocked program is refused                               ok
+  everything else is still offered                           ok
+
+with the same program allowed AND blocked:
+  deny wins over allow                                       ok
+
+with things in that directory that are not files:
+  a fifo and a symlink to /dev/zero do not hang the scan     ok
+
+the allow-list refuses what it should and allows what it should
+exit=0
+seconds=5

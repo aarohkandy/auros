@@ -15,6 +15,7 @@
 # is how a person ends up with a folder full of files and no program.
 #
 #   sh tools/filetypes.sh
+#   ROOT=work/forge/desktop/rootfs sh tools/filetypes.sh   # a built rootfs
 #
 # Needs the packages in packages_files installed on THIS machine, since
 # the check is "does this .desktop exist". Exits 2 and says so if they
@@ -23,8 +24,36 @@ set -u
 cd "$(dirname "$0")/.."
 
 # Overridable so this can also be run against a rootfs a build has just
-# produced, rather than only against the machine it is running on.
-APPS="${APPS:-/usr/share/applications}"
+# produced, rather than only against the machine it is running on:
+#   ROOT=work/forge/desktop/rootfs sh tools/filetypes.sh
+# ROOT is where the programs a .desktop names are looked for too. With
+# only APPS pointed at a rootfs, the Exec check below asked THIS machine
+# for the programs and found none of them.
+ROOT="${ROOT:-}"
+APPS="${APPS:-$ROOT/usr/share/applications}"
+
+# Is PATH-or-absolute program $1 an executable file inside ROOT? A link
+# in a rootfs is often absolute (/usr/bin/x -> /etc/alternatives/x), and
+# from outside the chroot `-x` would follow it into the build host
+# (docs/handoff/TRAPS.md), so absolute targets are re-rooted by hand.
+in_root() {
+    case "$1" in
+        /*) set -- "$1" ;;
+        *)  _w=""
+            for _d in /usr/local/sbin /usr/local/bin /usr/sbin /usr/bin /sbin /bin; do
+                if [ -e "$ROOT$_d/$1" ] || [ -L "$ROOT$_d/$1" ]; then _w="$_d/$1"; break; fi
+            done
+            [ -n "$_w" ] || return 1
+            set -- "$_w" ;;
+    esac
+    _p=$1; _n=0
+    while [ -L "$ROOT$_p" ] && [ "$_n" -lt 40 ]; do
+        _t=$(readlink "$ROOT$_p")
+        case "$_t" in /*) _p=$_t ;; *) _p=$(dirname "$_p")/$_t ;; esac
+        _n=$((_n + 1))
+    done
+    [ -f "$ROOT$_p" ] && [ -x "$ROOT$_p" ]
+}
 FORGE=build/forge
 
 # The mimeapps.list block, taken out of forge rather than copied -- a
@@ -74,10 +103,14 @@ for line in $LIST; do
     [ -f "$APPS/$desk" ] || continue
     ex=$(sed -n 's/^Exec=\([^ %]*\).*/\1/p' "$APPS/$desk" | head -1)
     [ -n "$ex" ] || continue
-    case "$ex" in
-        /*) [ -x "$ex" ] && continue ;;
-        *)  command -v "$ex" >/dev/null 2>&1 && continue ;;
-    esac
+    if [ -n "$ROOT" ]; then
+        in_root "$ex" && continue
+    else
+        case "$ex" in
+            /*) [ -x "$ex" ] && continue ;;
+            *)  command -v "$ex" >/dev/null 2>&1 && continue ;;
+        esac
+    fi
     printf '  %-42s %s is not installed\n' "$desk" "$ex"
     fail=$((fail + 1))
 done

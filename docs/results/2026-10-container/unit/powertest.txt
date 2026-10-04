@@ -1,0 +1,53 @@
+does this computer know its own battery and screen?
+
+  a desktop computer
+    has no battery, and says so rather than 0%           ok
+    its percentage is 'unknown', not zero                ok
+    it has no screen brightness to change                ok
+    and setting it fails rather than pretending          ok
+
+  a laptop running on its battery
+    there is a battery                                   ok
+    it is 62% full                                       ok
+    nothing is plugged in                                ok
+    about two hours left                                 ok
+
+  the same laptop, full, plugged in
+    it is plugged in                                     ok
+    and NOT described as charging                        ok
+    no time estimate is invented                         ok
+
+  a laptop with two batteries
+    one full and one empty reads as half                 ok
+
+  a laptop with the battery taken out
+    it is not reported as a flat battery                 ok
+    but the machine still knows it is plugged in         ok
+
+  the screen
+    the real panel control is used, not acpi_video0      ok
+    setting 80% reports 80%                              ok
+    and reading it back agrees                           ok
+    it will not go all the way dark                      ok
+    a dark screen is still readable back                 ok
+
+  a screen with only seven steps
+    it is still a percentage                             ok
+    setting 100% works                                   ok
+    and lands on the top step                            ok
+    percent arithmetic is why this used to be dead       ok
+    one press up actually moves a 7-step panel           ok
+    and it reports what it REACHED, not what was asked   ok
+    one press down puts it back                          ok
+    one press up moves a 96000-step panel by something she can see ok
+    holding the dark key down never reaches a black screen ok
+
+  the sound server that is not up yet
+    with no sound server, there is no volume to show     ok
+    (a sound server socket can be made for the test)     ok
+    the frame loop keeps asking while there is no answer yet ok
+
+31 checks: the battery and the screen read correctly on
+machines this build host is not.
+exit=0
+seconds=4

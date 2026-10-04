@@ -1,0 +1,10 @@
+rail              0 differing px   ok
+tiles             0 differing px   ok
+locked            0 differing px   ok
+taskbar           0 differing px   ok
+dock              0 differing px   ok
+workbench         0 differing px   ok
+
+every archetype paints the same picture whatever the row stride is
+exit=0
+seconds=4

@@ -1,0 +1,3 @@
+exact for all 4243328 (window, sum) pairs, radius 1..128
+exit=0
+seconds=0

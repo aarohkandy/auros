@@ -1,0 +1,48 @@
+$ sh tools/gpttest.sh
+# started 2026-10-04T23:27:21Z
+
+Does the partition table survive being read and written back?
+
+  the checksum
+    CRC-32 of "123456789" is CBF43926                        ok
+
+  a table somebody else's tool made
+    an OEM-shaped GPT reads                                  ok
+    ...with 128 entry slots                                  ok
+    the header we write back is byte-identical               ok
+    the entry array we write back is byte-identical          ok
+
+  the gap, which is the whole point
+    the gap after Windows ends where WinRE begins            ok
+    ...and that is NOT the end of the disk                   ok
+
+  and what it refuses
+    a partition overlapping WinRE is refused                 ok
+    ...and it names which one                                ok
+    a partition inside the gap is accepted                   ok
+    growing an existing entry is refused                     ok
+    a full table refuses rather than growing                 ok
+    ...and says so in words                                  ok
+
+  when the primary is torn
+    a torn primary falls back to the backup                  ok
+    ...and says that is what it did                          ok
+
+  and the AurOS image itself
+    the built image's GPT round-trips too                    ok
+      p1=2048:1050623:AUROS-ESP
+      p2=1050624:10414046:AUROS-ROOT
+
+  and the layout that goes in the gap
+    a layout is found in the gap                             ok
+    the way back ends exactly where WinRE begins             ok
+    AurOS is aligned on a mebibyte                           ok
+    the product floor refuses a machine that is too small    ok
+    ...and says how much it does have                        ok
+    a Windows that would not get smaller is refused          ok
+    an image too big for the gap is refused                  ok
+
+23 checks: it reads a real table, writes back the same bytes,
+finds the gap in the middle, and refuses to touch what is not ours.
+exit=0
+seconds=7

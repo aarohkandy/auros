@@ -1,0 +1,9 @@
+a client SIGKILLed while mapped                ok
+a client SIGKILLed before it maps              ok
+three clients at once                          ok
+a client that connects and leaves, twenty times ok
+a client that binds globals and exits cleanly  ok
+
+5/5 — the compositor outlives its clients
+exit=0
+seconds=58

@@ -1,0 +1,36 @@
+$ sh tools/committest.sh
+# started 2026-10-04T23:16:27Z
+
+Is the commit really one sector -- and does the disk read as the
+old layout until that sector lands?
+
+  a disk with 4 partitions and a gap after Windows
+
+  building the new table
+    the new table is built                                   ok
+    and written                                              ok
+    the disk now has 7 partitions                            ok
+    and another tool agrees the table is valid               ok
+      p1:2048:534527
+      p2:534528:796671
+      p3:796672:1845247
+      p4:5498880:6291422
+      p5:1845248:4827135
+      p6:4827136:5089279
+      p7:5089280:5498879
+
+  and what a reader would have seen at each instant
+    after step 1 the disk still reads as the old layout      ok
+    after step 2 -- the one sector -- it reads as the new one ok
+    and after step 3 both copies of the table agree          ok
+
+  and a power cut before that sector
+    the machine still has exactly its old partitions         ok
+    ...with an intact backup table for a reader to fall back to ok
+    ...and the half-written primary is REJECTED, not believed ok
+    and on the committed disk Windows really is smaller      ok
+
+11 checks: the commit is one sector, and until it lands the
+disk reads exactly as it did before anything started.
+exit=0
+seconds=54

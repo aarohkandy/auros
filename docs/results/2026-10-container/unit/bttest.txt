@@ -1,0 +1,29 @@
+
+What bluetoothctl says becomes what she sees
+
+  the list
+    three devices, the repeat folded into one                ok
+    the one with a name keeps it                             ok
+    the one without a name is left blank, not given its address ok
+    ...and its address is still there to connect to          ok
+
+  the tags
+    nothing is claimed before anything is read               ok
+    two of the three are known to this computer              ok
+    ...and they are the right two                            ok
+    one of them is talking to it now                         ok
+    ...and it is the right one                               ok
+    'used before' did not become 'connected'                 ok
+    a device only the filtered list knows is not added       ok
+    nothing said marks nothing                               ok
+    ...and does not clear what was already known             ok
+
+  one device's own detail
+    info reads both                                          ok
+    and does not read a 'no' as a 'yes'                      ok
+    a device that has gone is reported as gone               ok
+
+16 checks: the list, and the two tags on it, are read out of
+what bluetoothctl actually prints.
+exit=0
+seconds=4

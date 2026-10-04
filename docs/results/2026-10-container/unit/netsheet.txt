@@ -1,0 +1,3 @@
+6 screens at 1024x600, text 200% -> /home/user/auros/docs/results/2026-10-container/unit/netsheet.png
+exit=0
+seconds=6

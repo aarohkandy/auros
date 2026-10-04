@@ -1,0 +1,95 @@
+#!/usr/bin/env node
+// auros-recipe — check, compile and explain an organisation recipe.
+//
+//   auros-recipe validate <recipe.yaml>...
+//   auros-recipe compile  <recipe.yaml> [-o profiles/<name>.profile]
+//   auros-recipe explain  <recipe.yaml>
+//
+// Exit codes, because scripts read them:
+//   0  the recipe is acceptable (and, for compile, the profile was written)
+//   1  the recipe is refused — the message says why
+//   2  the tool could not run: no such file, a bad command line, a file it will not overwrite
+// A refusal and a broken run are different answers, and collapsing them would let a broken
+// toolchain look like a clean one (LATHE D19).
+//
+// There is no --force and no --skip-checks, for the reason the recipe form has no field for them.
+
+import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { basename, dirname, resolve } from 'node:path'
+import { parseYaml, validate, compile, explain, YamlError, GENERATED_MARK } from '../lib/recipe.mjs'
+
+const USAGE = `usage:
+  auros-recipe validate <recipe.yaml>...
+  auros-recipe compile  <recipe.yaml> [-o profiles/<name>.profile]
+  auros-recipe explain  <recipe.yaml>`
+
+function fail (code, msg) { process.stderr.write(msg.endsWith('\n') ? msg : msg + '\n'); process.exit(code) }
+
+function load (file) {
+  let text
+  try { text = readFileSync(file, 'utf8') } catch (e) { fail(2, `auros-recipe: cannot read ${file}: ${e.code ?? e.message}`) }
+  try { return { recipe: parseYaml(text) } } catch (e) {
+    if (e instanceof YamlError) return { refusal: `${file}: ${e.message}` }
+    throw e
+  }
+}
+
+function report (file, errors) {
+  const lines = [`${file}: REFUSED — ${errors.length} problem${errors.length === 1 ? '' : 's'}`]
+  for (const e of errors) lines.push(`  ${e.path || '(recipe)'}: ${e.message}`)
+  return lines.join('\n')
+}
+
+const [cmd, ...args] = process.argv.slice(2)
+if (!cmd || cmd === '-h' || cmd === '--help') fail(cmd ? 0 : 2, USAGE)
+
+if (cmd === 'validate') {
+  if (args.length === 0) fail(2, USAGE)
+  let refused = 0
+  for (const file of args) {
+    const { recipe, refusal } = load(file)
+    if (refusal) { console.error(refusal); refused++; continue }
+    const v = validate(recipe)
+    if (v.ok) console.log(`${file}: ok`)
+    else { console.error(report(file, v.errors)); refused++ }
+  }
+  process.exit(refused ? 1 : 0)
+}
+
+if (cmd === 'compile' || cmd === 'explain') {
+  let out = null
+  const files = []
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '-o' && cmd === 'compile') { out = args[++i]; if (!out) fail(2, USAGE); continue }
+    if (args[i].startsWith('-')) fail(2, `auros-recipe: unknown option ${args[i]}\n${USAGE}`)
+    files.push(args[i])
+  }
+  if (files.length !== 1) fail(2, USAGE)
+  const file = files[0]
+  const { recipe, refusal } = load(file)
+  if (refusal) fail(1, refusal)
+  const v = validate(recipe)
+  if (!v.ok) fail(1, report(file, v.errors))
+
+  if (cmd === 'explain') { process.stdout.write(explain(recipe)); process.exit(0) }
+
+  const { profile } = compile(recipe)
+  if (out === null) { process.stdout.write(profile); process.exit(0) }
+
+  // The profile's file name IS its id to build/forge (`forge build <name>` finds profiles/<name>.profile,
+  // and the work tree is named after profile_id). A file whose name disagrees with what is inside it
+  // builds under one name and is found under another.
+  const want = `${recipe.name}.profile`
+  if (basename(out) !== want) fail(2, `auros-recipe: this recipe is named "${recipe.name}", so its profile must be written to ${want}, not ${basename(out)}.`)
+  // Never overwrite a hand-written profile. Every profile this tool writes starts with the mark.
+  if (existsSync(out)) {
+    const head = readFileSync(out, 'utf8').split('\n')[0]
+    if (head !== GENERATED_MARK) fail(2, `auros-recipe: ${out} exists and was not written by auros-recipe. Refusing to overwrite it.`)
+  }
+  if (!existsSync(dirname(resolve(out)))) fail(2, `auros-recipe: the directory for ${out} does not exist.`)
+  writeFileSync(out, profile)
+  console.log(`${file} -> ${out}`)
+  process.exit(0)
+}
+
+fail(2, `auros-recipe: unknown command "${cmd}"\n${USAGE}`)

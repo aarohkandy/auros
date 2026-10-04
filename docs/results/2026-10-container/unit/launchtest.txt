@@ -1,0 +1,11 @@
+can a program be started by clicking on it?
+  rail        8400 cold,  3960 with windows open,  4095 at 1024x600   ok -> /usr/bin/x-www-browser
+  tiles       9552 cold,     0 with windows open,  6084 at 1024x600   ok -> /usr/bin/x-www-browser
+  locked      2833 cold,  2063 with windows open,  1924 at 1024x600   ok -> /usr/bin/mail
+  taskbar     1408 cold,     0 with windows open,  1408 at 1024x600   ok -> /usr/bin/x-www-browser
+  dock         348 cold,    96 with windows open,   348 at 1024x600   ok -> /usr/bin/x-www-browser
+  workbench   3450 cold,     0 with windows open,  3450 at 1024x600   ok -> /usr/bin/x-www-browser
+
+every archetype can start a program by being clicked
+exit=0
+seconds=7

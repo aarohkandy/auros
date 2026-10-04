@@ -1082,8 +1082,16 @@ EOM
 XKBMODEL="pc105"
 XKBLAYOUT="$keyboard_layout"
 XKBVARIANT="${keyboard_variant:-}"
+XKBOPTIONS="${keyboard_options:-}"
 BACKSPACE="guess"
 EOL
+    # XKBOPTIONS is what makes a SECOND layout reachable. A profile can
+    # already say keyboard_layout="us,in" keyboard_variant=",marathi", and
+    # without an option naming the key that switches between them the
+    # second layout is installed and can never be typed in -- a field that
+    # reaches the image as nothing. src/aurwl reads this line from this
+    # file (kb_defaults); empty means none, which is what every profile
+    # that does not set keyboard_options has always had.
 
     # The groups this account needs, and why each one is here. Every
     # one of them is a thing that is refused without it, and refused
@@ -1826,6 +1834,29 @@ case "${1:-}" in
         load_profile "${2:?usage: forge clean PROFILE}"
         chroot_done 2>/dev/null || true
         rm -rf "${WORK:?}/$profile_id"; say "cleaned $profile_id" ;;
+    resolve)
+        # WHAT A PROFILE MEANS, without building it. Loads the profile the
+        # way `build` does -- the whole inherit chain, the same checks --
+        # and prints every key any file in that chain assigns, with the
+        # value the last one gave it. Needs no root and touches nothing:
+        # RFS is cleared before the EXIT trap runs, so chroot_done cannot
+        # reach into the work tree of a build that is running right now.
+        # recipes/ uses this to prove a compiled profile resolves to what
+        # the recipe said (recipes/test/forge.test.mjs).
+        load_profile "${2:?usage: forge resolve PROFILE}"
+        _chain="" _cur="$2"
+        while [ -n "$_cur" ]; do
+            _f="$PROFILE_DIR/$_cur.profile"; [ -f "$_f" ] || _f="$_cur"
+            _chain="$_f $_chain"
+            _cur=$(sed -n 's/^[[:space:]]*inherit="\{0,1\}\([A-Za-z0-9_-]*\)"\{0,1\}.*/\1/p' "$_f" | head -1)
+        done
+        printf '# resolved %s:' "$2"
+        for _f in $_chain; do printf ' %s' "$(basename "$_f")"; done
+        printf '\n'
+        for _k in $(sed -n 's/^\([a-z_][a-z0-9_]*\)=.*/\1/p' $_chain | grep -vx inherit | sort -u); do
+            printf '%s="%s"\n' "$_k" "$(printf '%s' "${!_k-}" | tr -s ' \n\t' ' ' | sed 's/^ //; s/ $//')"
+        done
+        RFS="" ;;
     list)
         for f in "$PROFILE_DIR"/*.profile; do
             [ -f "$f" ] || continue
@@ -1841,6 +1872,7 @@ forge — the AurOS image builder
   forge stage PROFILE N     run a single stage (1-7)
   forge shell PROFILE       chroot into the built rootfs
   forge clean PROFILE       remove the work tree
+  forge resolve PROFILE     print the merged profile; builds nothing
   forge list                list profiles
 
 Profiles live in $PROFILE_DIR

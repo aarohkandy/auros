@@ -1,0 +1,50 @@
+clicks land where the archetype paints
+rail
+   1366x768  consumed=43620  on bare wallpaper=0     (  0.0%)
+   1920x1080 consumed=90397  on bare wallpaper=0     (  0.0%)
+   1024x600  consumed=24241  on bare wallpaper=0     (  0.0%)
+   2560x1440 consumed=165543 on bare wallpaper=0     (  0.0%)
+tiles
+   1366x768  consumed=4788   on bare wallpaper=0     (  0.0%)
+   1920x1080 consumed=6720   on bare wallpaper=0     (  0.0%)
+   1024x600  consumed=3584   on bare wallpaper=0     (  0.0%)
+   2560x1440 consumed=8960   on bare wallpaper=0     (  0.0%)
+locked
+   1366x768  consumed=10350  on bare wallpaper=0     (  0.0%)
+   1920x1080 consumed=9009   on bare wallpaper=0     (  0.0%)
+   1024x600  consumed=7254   on bare wallpaper=0     (  0.0%)
+   2560x1440 consumed=12369  on bare wallpaper=0     (  0.0%)
+taskbar
+   1366x768  consumed=28075  on bare wallpaper=0     (  0.0%)
+   1920x1080 consumed=51490  on bare wallpaper=0     (  0.0%)
+   1024x600  consumed=17598  on bare wallpaper=0     (  0.0%)
+   2560x1440 consumed=56555  on bare wallpaper=0     (  0.0%)
+dock
+   1366x768  consumed=28669  on bare wallpaper=0     (  0.0%)
+   1920x1080 consumed=50766  on bare wallpaper=0     (  0.0%)
+   1024x600  consumed=17913  on bare wallpaper=0     (  0.0%)
+   2560x1440 consumed=52477  on bare wallpaper=0     (  0.0%)
+workbench
+   1366x768  consumed=53790  on bare wallpaper=0     (  0.0%)
+   1920x1080 consumed=113238 on bare wallpaper=0     (  0.0%)
+   1024x600  consumed=29766  on bare wallpaper=0     (  0.0%)
+   2560x1440 consumed=208458 on bare wallpaper=0     (  0.0%)
+
+what lights up can be clicked
+rail
+   171 points react to the pointer, 0 of those ignore a click (0%)
+tiles
+   0 points react to the pointer, 0 of those ignore a click (0%)
+   NOTE: nothing in this archetype responds to hover at all
+locked
+   110 points react to the pointer, 0 of those ignore a click (0%)
+taskbar
+   25 points react to the pointer, 0 of those ignore a click (0%)
+dock
+   48 points react to the pointer, 0 of those ignore a click (0%)
+workbench
+   72 points react to the pointer, 0 of those ignore a click (0%)
+
+every archetype hit-tests where it paints, and nothing highlights that cannot be clicked
+exit=0
+seconds=52

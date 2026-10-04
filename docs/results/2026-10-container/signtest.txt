@@ -1,0 +1,31 @@
+$ sh tools/signtest.sh
+# started 2026-10-04T23:23:13Z
+
+Is the thing a stranger double-clicks actually signed?
+
+  signing subject.exe, 34M
+
+  before anything is signed
+    an unsigned binary is reported as unsigned               ok
+    it knows it has something to sign with                   ok
+    and knows when it has not                                ok
+
+  signing it
+    it signs                                                 ok
+    and the signature verifies against our own CA            ok
+    and says out loud that it was not timestamped            ok
+    with a SHA-256 digest, not SHA-1                         ok
+    the file changed, so something was actually added        ok
+    and it is still a Windows program                        ok
+
+  and the things that would make it worthless
+    signing twice replaces rather than stacks                ok
+    a byte changed afterwards breaks the signature           ok
+
+  and a release that has nothing to sign with
+    a release build refuses to publish an unsigned installer ok
+
+12 checks: it signs, it verifies what it signed, a changed byte
+breaks it, and a release with no key does not get built.
+exit=0
+seconds=24

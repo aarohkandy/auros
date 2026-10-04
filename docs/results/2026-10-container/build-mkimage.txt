@@ -1,0 +1,46 @@
+$ ./build/mkimage desktop
+# started 2026-10-04T23:22:42Z
+
+[38;2;125;211;192m▸[0m sizing
+[38;2;110;120;134m   rootfs 2973MB + esp 512MB + slack 1536MB = 5085MB[0m
+
+[38;2;125;211;192m▸[0m creating /home/user/auros/out/auros-desktop.img
+
+[38;2;125;211;192m▸[0m partitioning (GPT)
+
+Number  Start (sector)    End (sector)  Size       Code  Name
+   1            2048         1050623   512.0 MiB   EF00  AUROS-ESP
+   2         1050624        10414046   4.5 GiB     8304  AUROS-ROOT
+[38;2;110;120;134m   esp  /dev/loop0  (offset 1048576, 512MB)[0m
+[38;2;110;120;134m   root /dev/loop1  (offset 537919488, 4571MB)[0m
+
+[38;2;125;211;192m▸[0m filesystems
+[38;2;110;120;134m   root UUID 5bcc23df-451f-462f-af75-d97ce28e494f[0m
+
+[38;2;125;211;192m▸[0m copying rootfs
+
+[38;2;125;211;192m▸[0m bootloader + initramfs
+update-initramfs: Generating /boot/initrd.img-6.8.0-146-generic
+
+[38;2;125;211;192m▸[0m writing grub.cfg
+[38;2;110;120;134m   kernel 6.8.0-146-generic[0m
+bootchain: grub.cfg: AurOS 6.8.0-146-generic
+
+[38;2;125;211;192m▸[0m installing the signed boot chain
+[38;2;110;120;134m   shim: shimx64.efi.dualsigned  (2 signature(s))[0m
+[38;2;110;120;134m   fallback CSV: shimx64.efi,AurOS,,AurOS[0m
+
+[38;2;125;211;192m▸[0m writing the ESP with mtools
+Could not get geometry of device (Inappropriate ioctl for device)Could not get geometry of device (Inappropriate ioctl for device)Could not get geometry of device (Inappropriate ioctl for device)Could not get geometry of device (Inappropriate ioctl for device)Could not get geometry of device (Inappropriate ioctl for device)Could not get geometry of device (Inappropriate ioctl for device)Could not get geometry of device (Inappropriate ioctl for device)Could not get geometry of device (Inappropriate ioctl for device)Could not get geometry of device (Inappropriate ioctl for device)Could not get geometry of device (Inappropriate ioctl for device)Could not get geometry of device (Inappropriate ioctl for device)[38;2;110;120;134m   ESP contents: 12 entries under /EFI/BOOT[0m
+
+[38;2;125;211;192m▸[0m verifying the boot chain
+[38;2;110;120;134m   present: /boot/grub/grub.cfg[0m
+[38;2;110;120;134m   present: ESP:/EFI/BOOT/BOOTX64.EFI[0m
+[38;2;110;120;134m   present: ESP:/EFI/BOOT/GRUBX64.EFI[0m
+[38;2;110;120;134m   present: kernel[0m
+[38;2;110;120;134m   present: initramfs[0m
+[38;2;110;120;134m   grub.cfg: 5 menu entries, 4 booting a kernel[0m
+
+[38;2;125;211;192m::[0m /home/user/auros/out/auros-desktop.img  (5.0G)
+exit=0
+seconds=36

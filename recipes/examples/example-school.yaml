@@ -1,0 +1,49 @@
+# ILLUSTRATIVE EXAMPLE — not a customer. No organisation named here exists.
+# 180 shared classroom laptops at a Marathi-medium school.
+#
+# Ported from LATHE's auros-recipes/customers/example-school/recipe.yaml. What did not come across,
+# and why (each one is refused by recipes/lib/recipe.mjs with the same sentence):
+#   Google Chrome, Scratch     not in Ubuntu's archive as a real program (see REFUSED_APPS)
+#   organisation.helpdesk      AurOS has no help screen to show it on yet
+#   hardware, size_budget_gb   nothing in the engine reads them
+#   windows_apps               AurOS does not run Windows programs, and says so
+#   updates.install_between    no machine would keep the window (LATHE's own D38)
+#   first_boot_message         the first-boot screen does not show one yet
+#   approved_by                the commit of the compiled profile is the approval
+#   prune.also_remove          under keep_only: true it removes nothing more
+#   prune.must_remove_at_least nothing measures what a build removed
+#   theme accent, text_scale   themes are chosen whole, by name
+#   layout browser-first       the nearest AurOS layout is dock (a Chromebook's shelf)
+
+schema: 1
+name: example-school
+for: >
+  The 180 shared classroom laptops at a Marathi-medium secondary school. Pupils sign in to
+  Google Workspace in the browser and do all their work there. Teachers use the same laptops.
+  Nobody installs anything by hand on these machines.
+organisation:
+  display_name: Example Vidyalaya
+language: Marathi
+other_languages: [English (India), Hindi]
+keyboard: English (US)
+second_script: Marathi (InScript)
+switch_scripts_with: Windows key + Spacebar
+timezone: Asia/Kolkata
+apps:
+  - Calculator
+  - Document Viewer
+  - Files
+  - Firefox
+  - GCompris
+  - Image Viewer
+  - Text Editor
+  - Tux Paint
+  - Typing Tutor
+  - VLC Media Player
+prune:
+  keep_only_the_apps_above: true
+  also_keep: [printing]
+policy: managed
+desktop:
+  layout: dock              # pupils already know this shape from school Chromebooks
+theme: sandstone            # LATHE's "light"; the one light AurOS theme

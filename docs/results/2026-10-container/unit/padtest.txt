@@ -1,0 +1,28 @@
+device classification
+  ok    USB mouse                                      REL 
+  ok    USB keyboard                                   KBD 
+  ok    Synaptics touchpad (PS/2)                      PAD 
+  ok    Elan clickpad (i2c-hid)                        PAD 
+  ok    touchscreen                                    ABS DIRECT 
+  ok    VM absolute tablet (virtio/usb-tablet)         ABS 
+  ok    graphics tablet (pen)                          ABS 
+  ok    keyboard with built-in trackpad (K400 class)   KBD REL 
+  ok    touchpad that also reports relative (some HID pads) REL PAD 
+  ok    power button / lid switch                      (ignored)
+  ok    media-key keyboard (few letters)               (ignored)
+
+touchpad behaviour
+  ok    finger landing does not move the pointer      
+  ok    20 units of finger -> 30 px of pointer        
+  ok    1 unit still moves the pointer                
+  ok    two fingers do not move the pointer           
+  ok    a jump across the pad is ignored              
+  ok    quick, still tap clicks                       
+  ok    a long press is not a tap                     
+  ok    a drag is not a tap                           
+  ok    a two-finger tap does not left-click          
+  ok    the finger-down after a tap does not fling    
+
+every device profile classifies correctly
+exit=0
+seconds=0

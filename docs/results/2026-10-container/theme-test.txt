@@ -1,0 +1,30 @@
+$ sh tools/theme-test.sh
+# started 2026-10-04T23:17:37Z
+colour algebra (against a fixture, not a shipped theme)
+  ok    @accent|0x@                        0x7DD3C0
+  ok    @accent|hex@                       7DD3C0
+  ok    @accent|rgb@                       125,211,192
+  ok    @accent|lighten:18|0x@             0x94DBCB
+  ok    @accent|darken:20|lighten:10|0x@   0x74B2A4
+  ok    @bg_alt|mix:bg:20|0x@              0x0F141D
+  ok    @accent|on|0x@                     0x0B0E14
+  ok    @bg|on|0x@                         0xF3F7FD
+  ok    @nosuchkey|0x@                     @@MISSING:nosuchkey@@
+  ok    @accent|nosuchop@                  @@BADOP:nosuchop@@
+  ok    plain text, no tokens              plain text, no tokens
+  ok    @accent|0x@ and @bg|0x@            0x7DD3C0 and 0x0B0E14
+
+every template x every theme
+  ok    ember        all templates resolve
+  ok    moss         all templates resolve
+  ok    nocturne     all templates resolve
+  ok    sandstone    all templates resolve
+  ok    slate        all templates resolve
+  ok    synthwave    all templates resolve
+
+mawk and gawk agree
+  skipped: need both mawk and gawk installed
+
+72 checks passed
+exit=0
+seconds=1

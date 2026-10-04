@@ -1,0 +1,54 @@
+$ sh tools/ntfstest.sh
+# started 2026-10-04T23:24:52Z
+
+Does the NTFS reader see what is actually on the volume?
+
+  a volume that is fine
+    a freshly made volume reads as healthy                   ok
+    ...with nothing asleep in it                             ok
+    ...and a log with nothing outstanding                    ok
+    ...and the sector size off the boot record               ok
+
+  the one that must never be resized
+    a BitLocker volume is refused                            ok
+    ...and is told how to turn it off                        ok
+
+  and the ones that are simply not ready
+    a volume with no NTFS on it is refused                   ok
+    ...as a partition with nothing on it                     ok
+    a volume full of ciphertext is refused                   ok
+    ...and named as encryption, not as a mistake             ok
+    a volume Windows wants to check is refused               ok
+    ...and the flag word says why                            ok
+
+  a Windows that is asleep rather than closed
+    a hibernated Windows is refused                          ok
+    ...and the reason is named                               ok
+    ...and she is told the one thing that clears it          ok
+    a hibernation file already used up is not a refusal      ok
+    ...and is reported as not asleep                         ok
+    only the header decides, not the whole file              ok
+
+  a log with work still in it
+    a log with a client still holding it is refused          ok
+    ...and the later restart page is the one believed        ok
+    ...whichever of the two is the later one                 ok
+    a log whose later page is clean is allowed               ok
+    ...and reported clean                                    ok
+
+  and nothing it is handed can make it read past the end
+    a scribbled-on MFT gives an answer rather than a crash   ok
+
+  and a record that was half-written when the power went
+    a torn $Volume record is not called clean                ok
+    ...and the dirty flag is reported unknown                ok
+
+  and the hash the journal is checked with
+    the empty string hashes to what FIPS 180-4 says          ok
+    and so does "abc"                                        ok
+    and a megabyte of random data agrees with sha256sum      ok
+
+29 checks: the reader sees the volume as it is, and refuses
+every state that a resize must not start from.
+exit=0
+seconds=27

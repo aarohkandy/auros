@@ -219,6 +219,11 @@ if [ -f src/aurbridge/wizard.c ]; then
       | grep -v 'stub_log(' | while IFS= read -r line; do
         n=${line%%:*}
         printf '%s\n' "$line" | grep -o 'L"[^"]*"' | while IFS= read -r lit; do
+            # A module file name (GetModuleHandleW(L"kernel32.dll")) is
+            # read by Windows' loader, never painted. Only an exact
+            # "name.dll" literal is skipped; a sentence that mentions a
+            # .dll still has every word in it checked.
+            case "$lit" in L\"*[!\ ].dll\") case "$lit" in *\ *) ;; *) continue ;; esac ;; esac
             hit=$(printf '%s' "$lit" | tr 'A-Z' 'a-z' | grep -oE "$PAT" | head -1)
             [ -n "$hit" ] && printf 'HIT\t%s:%s\t%s\t%s\n' "src/aurbridge/wizard.c" "$n" "$hit" "$lit"
         done

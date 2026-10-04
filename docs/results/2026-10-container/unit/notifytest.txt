@@ -1,0 +1,76 @@
+dbus-daemon[11628]: [session uid=0 pid=11628] org.freedesktop.DBus.Error.AccessDenied: Failed to set fd limit to 65536: Operation not permitted
+aurshell: serving org.freedesktop.Notifications — programs can say things now
+dbus-daemon[11715]: [session uid=0 pid=11715] org.freedesktop.DBus.Error.AccessDenied: Failed to set fd limit to 65536: Operation not permitted
+aurshell: the session bus changed — announcing notifications on the new one
+aurshell: serving org.freedesktop.Notifications — programs can say things now
+
+When a program has something to tell her, does she see it?
+
+  where the cards go, on every screen and every text size
+    116 cards measured, none under 44px                        ok
+    no card is drawn over another                              ok
+    no card is off the screen, over the band, or over the clock ok
+
+  a real program, on a real bus
+    the shell claims org.freedesktop.Notifications             ok
+    ...and offers a file descriptor to wait on                 ok
+    nothing is showing before anything is sent                 ok
+    a program's message is accepted                            ok
+    ...and appears on her screen                               ok
+    the same message saying something new replaces itself      ok
+    six at once do not become six cards                        ok
+    there is something to press                                ok
+    pressing a card takes it away                              ok
+    pressing where there is no card does nothing               ok
+
+  and what a program is NOT allowed to do to her screen
+    a two-thousand-character summary is accepted without crashing ok
+    ...and becomes one card                                    ok
+    ...cut to what a card can hold                             ok
+    angle brackets in a filename are hers, not markup          ok
+    an unclosed < does not eat the rest of the line            ok
+    real markup is removed, and only the markup                ok
+    a link becomes its words                                   ok
+    newlines and tabs become one space                         ok
+    padding cannot push the words off the end                  ok
+    control characters are not drawn as boxes                  ok
+    a long line in her language is never cut through a letter  ok
+    (a raw client can be opened)                               ok
+    no arguments at all is ANSWERED, not left hanging          ok
+    ...with an error, and no card appears                      ok
+    the wrong type in place 2 is ANSWERED, not left hanging    ok
+    ...with an error, and no card appears                      ok
+    a truncated argument list is ANSWERED, not left hanging    ok
+    ...with an error, and no card appears                      ok
+    the shell is still serving after a malformed call          ok
+    ...and still accepts a good one                            ok
+
+  and when the shell moves to logind's bus
+    (a second bus can be started)                              ok
+    ...and it is a different one                               ok
+    the shell notices and re-announces itself there            ok
+    ...and a program on the NEW bus can reach it               ok
+    ...and the message arrives                                 ok
+
+  what a sending program may and may not decide
+    a program may say its message is urgent                    ok
+    ...but may NOT make it stay for ever                       ok
+    ...and it does go, by itself                               ok
+    the shell can say something that stays                     ok
+    ...and retiring does not retire it                         ok
+    six downloads finishing do not remove the battery warning  ok
+    ...and the screen still holds no more than it can draw     ok
+    a message replacing nothing becomes a new one              ok
+    ...with an id that is not already somebody else's          ok
+    on a small screen at her largest text, every card is drawn ok
+
+  the rest of what a program may ask
+    a program can take its own message back off the screen     ok
+    it says it can show a body                                 ok
+    ...and does NOT claim buttons it will not draw             ok
+    it gives the name up when it is done                       ok
+
+52 checks: programs can say things, she can get rid of them,
+and none of them can take over her screen.
+exit=0
+seconds=12

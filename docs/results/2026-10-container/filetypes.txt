@@ -1,0 +1,44 @@
+$ sh tools/filetypes.sh
+# started 2026-10-04T23:25:57Z
+does every file type open something that exists?
+  application/vnd.debian.binary-package      gdebi.desktop
+  image/jpeg                                 org.xfce.ristretto.desktop
+  image/png                                  org.xfce.ristretto.desktop
+  image/gif                                  org.xfce.ristretto.desktop
+  image/bmp                                  org.xfce.ristretto.desktop
+  image/tiff                                 org.xfce.ristretto.desktop
+  image/webp                                 org.xfce.ristretto.desktop
+  application/pdf                            atril.desktop
+  text/plain                                 org.xfce.mousepad.desktop
+  text/markdown                              org.xfce.mousepad.desktop
+  text/csv                                   org.xfce.mousepad.desktop
+  application/zip                            xarchiver.desktop
+  application/x-tar                          xarchiver.desktop
+  application/gzip                           xarchiver.desktop
+  application/x-7z-compressed                xarchiver.desktop
+  application/vnd.rar                        xarchiver.desktop
+  inode/directory                            thunar.desktop
+
+and does each of those actually run something?
+
+  a downloaded .deb opens gdebi.desktop
+
+and is each program called something she would recognise?
+  thunar                                     installed
+  mpv                                        installed
+  mate-calc                                  installed
+  system-config-printer                      installed
+  gdebi                                      installed
+  atril                                      installed
+  org.xfce.ristretto                         installed
+  org.xfce.mousepad                          installed
+  xarchiver                                  installed
+  org.gnome.Software                         installed
+
+does the rename out-rank the name the package ships?
+  ok    the override drops the packagers' localised names
+
+all 17 file types open a program that is installed,
+and every rename reaches the screen
+exit=0
+seconds=0

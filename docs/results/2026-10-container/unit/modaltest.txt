@@ -1,0 +1,47 @@
+
+Is a panel actually modal?
+
+  only one thing covers the desktop at a time
+    opening help opens exactly one thing                       ok
+    ...and SHELL_PANEL_OPEN sees help                          ok
+    opening wifi opens exactly one thing                       ok
+    ...and SHELL_PANEL_OPEN sees wifi                          ok
+    opening settings opens exactly one thing                   ok
+    ...and SHELL_PANEL_OPEN sees settings                      ok
+    opening headphones opens exactly one thing                 ok
+    ...and SHELL_PANEL_OPEN sees headphones                    ok
+    opening the power question opens exactly one thing         ok
+    ...and SHELL_PANEL_OPEN sees the power question            ok
+    every pair of panels, in both orders                       ok
+    with nothing open, nothing is covering the desktop         ok
+
+  every one of them can be left without a mouse
+    Escape closes help                                         ok
+    so does any other key, the way any click does              ok
+    Escape closes the power question                           ok
+    ...and asks the machine to do nothing                      ok
+    Return with nothing chosen does nothing at all             ok
+    the power question offers something to choose              ok
+    choice 1: the keyboard and the mouse agree                 ok
+    choice 2: the keyboard and the mouse agree                 ok
+    choice 3: the keyboard and the mouse agree                 ok
+    Up from nothing lands on the last choice, not the first    ok
+    no key escapes the power question                          ok
+    the pointer moving elsewhere does not erase what she chose ok
+
+  nothing behind a panel answers an event
+    every guard in main.c asks SHELL_PANEL_OPEN                ok
+    SHELL_PANEL_OPEN names every *_open field in shell.h       ok
+    and names nothing shell.h does not have                    ok
+    and this test covers all 6 of them                         ok
+    SHELL_PANEL_OPEN covers help                               ok
+    SHELL_PANEL_OPEN covers wifi                               ok
+    SHELL_PANEL_OPEN covers settings                           ok
+    SHELL_PANEL_OPEN covers headphones                         ok
+    SHELL_PANEL_OPEN covers the power question                 ok
+    SHELL_PANEL_OPEN covers the welcome question               ok
+
+53 checks: a panel covers the desktop, takes every event,
+and can always be left.
+exit=0
+seconds=5

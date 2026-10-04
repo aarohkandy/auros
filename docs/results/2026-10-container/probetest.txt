@@ -1,0 +1,30 @@
+$ sh tools/probetest.sh
+# started 2026-10-04T23:17:39Z
+
+Would it refuse a machine that cannot get online -- and blame the
+right thing when it cannot tell?
+
+  a machine that works
+    wireless present: allowed                                ok
+    ...and the wireless is counted                           ok
+    no wireless but a cable: allowed                         ok
+
+  a machine that cannot get online
+    no wireless, no cable: refused                           ok
+    ...and she is told Windows still works                   ok
+    a wireless interface is not mistaken for a cable         ok
+
+  and the fault that is OURS, not the machine's
+    zero drivers loaded is not a hardware verdict            ok
+    ...and the blame is put where it belongs                 ok
+    an image without this kernel's modules is our fault too  ok
+    our fault is reported before the machine's               ok
+
+  and what we just wrote not mounting at all
+    a root that will not mount is caught                     ok
+    ...and nothing has been changed                          ok
+
+12 checks: it refuses a machine that cannot get online, and it
+does not call our own fault a fault of hers.
+exit=0
+seconds=2

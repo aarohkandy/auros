@@ -16,12 +16,47 @@
 #                      or the jobs above prove nothing
 #   windows-download   WinHTTP fetches the published image pieces and
 #                      the installer's own inflater checks them
+#
+# RUN BY HAND ONLY (Actions -> windows -> Run workflow). No push or
+# schedule trigger: a failing run on every push is a failure e-mail on
+# every push, and the owner asked for none of those. Parked in
+# .github/workflows.parked/; moving it to .github/workflows/ is what
+# activates it.
+#
+# What it needs, on aarohkandy/auros:
+#   - no secrets. Every job uses the default read-only GITHUB_TOKEN
+#     (artifact upload/download) and public URLs.
+#   - the three jobs marked "external" download from the public
+#     repository ComputerDude771/auros-from-scratch (branch
+#     image-desktop, and commit d2735b6 for the known-bad build). If
+#     that repository is made private, renamed or its files move, run
+#     with external_checks unticked, or change the URLs below.
+#   - build/aurbridge here builds WITHOUT the staging environment inside
+#     (that needs a forged rootfs, about 10 GB, not done on a runner); the
+#     jobs below only start the .exe, preflight, navigate and download,
+#     so they do not need it. A release build (AUROS_RELEASE=1) would.
+#   - signing is not done here: build/sign reads AUROS_SIGN_* (see
+#     docs/SIGNING.md) and nothing is configured, so the .exe files are
+#     unsigned, as the published test installer is.
 name: windows
 
 on:
-  push:
-    branches: ['claude/**']
   workflow_dispatch:
+    inputs:
+      external_checks:
+        description: >-
+          Also run the jobs that download from
+          ComputerDude771/auros-from-scratch (the published installer, the
+          known-bad build, the published image)
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   # The installer published on branch image-desktop. Change both lines
@@ -235,6 +270,8 @@ jobs:
           "the wizard was running after 8 seconds"
 
   windows-published:
+    # external: downloads from ComputerDude771/auros-from-scratch
+    if: ${{ inputs.external_checks }}
     runs-on: windows-latest
     steps:
       - name: download what a person downloads
@@ -265,6 +302,8 @@ jobs:
           "the published installer was running after 8 seconds"
 
   windows-known-bad:
+    # external: downloads from ComputerDude771/auros-from-scratch
+    if: ${{ inputs.external_checks }}
     runs-on: windows-latest
     steps:
       - name: the build that failed on the first real PC fails here too
@@ -285,6 +324,8 @@ jobs:
           if ($started) { throw "the known-bad build started: this machine cannot tell a good installer from a bad one" }
 
   windows-download:
+    # external: downloads from ComputerDude771/auros-from-scratch
+    if: ${{ inputs.external_checks }}
     needs: build
     runs-on: windows-latest
     timeout-minutes: 60

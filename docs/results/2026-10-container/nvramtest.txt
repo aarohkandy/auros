@@ -1,0 +1,45 @@
+$ sh tools/nvramtest.sh
+# started 2026-10-04T23:24:40Z
+
+Does the boot entry say what the firmware needs to hear?
+
+  the load option, decoded by something that did not write it
+    the description comes back                               ok
+    and the loader path                                      ok
+    and it is marked ACTIVE                                  ok
+    Hard Drive node, File node, End -- the short form UEFI wants ok
+    the partition number, start and length survive the trip  ok
+    and the partition GUID keeps its on-disk byte order      ok
+    a command line lands after the device path, not inside it ok
+    an entry naming no partition is refused, not written     ok
+
+  choosing which Boot#### to be
+    an empty menu gets Boot0000                              ok
+    and the variable is really there                         ok
+    non-volatile, boot and runtime, then the option itself   ok
+    it takes the lowest gap and steps over what is in use    ok
+    and does not touch anything already there                ok
+    a previous attempt's own entry is replaced, not duplicated ok
+
+  the one-shot
+    BootNext is written                                      ok
+    as two bytes, little-endian, behind its attributes       ok
+    nothing in this file can write BootOrder                 ok
+
+  tidying away the entry the Windows half made
+    both copies of it go                                     ok
+    and Windows Boot Manager and AurOS stay                  ok
+    a description is matched whole, never as a prefix        ok
+
+  and the build refuses an nvram.c that has stopped being one
+    one that names a device                                  ok
+    one that opens something read-write                      ok
+    one that no longer writes anything                       ok
+    one that writes somewhere else                           ok
+    ...and the real tree still builds                        ok
+
+25 checks: the entry decodes to what the firmware needs, it takes
+a slot nothing else is using, BootOrder is out of reach, and the build
+refuses an nvram.c that is not one.
+exit=0
+seconds=12
