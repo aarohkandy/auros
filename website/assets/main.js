@@ -25,7 +25,7 @@
   else window.addEventListener("load", function () { setTimeout(startSky, 200); });
 
   /* ── the laptop: push in ───────────────────────────────────────── */
-  var hero = $(".hero"), rig = $("#rig"), copy = $(".hero-copy"), cue = $(".scroll-cue");
+  var hero = $(".hero"), rig = $("#rig"), copy = $(".hero-copy"), cue = $(".scroll-cue"), sky = $(".sky");
   var machine = rig && $(".machine", rig), lid = rig && $(".lid", rig), black = rig && $(".screen .black", rig),
       boot = rig && $(".screen .aur-boot", rig);
   if (hero && rig && motion) {
@@ -48,7 +48,9 @@
       var e = ease(p);
       var vw = window.innerWidth, vh = window.innerHeight;
       // scale so the screen ends up a little larger than the viewport
-      var S = Math.max(vw / base.sw, vh / base.sh) * 1.04;
+      // (a phone is portrait and the screen is not: there it fills the
+      // width, and the night around it goes black instead)
+      var S = vw <= 860 ? vw / base.sw * 1.02 : Math.max(vw / base.sw, vh / base.sh) * 1.04;
       var k = 1 + (S - 1) * e;
       var dx = (vw / 2 - base.sx) * e, dy = (vh / 2 - base.sy) * e;
       // the screen's centre relative to the transform origin, scaled
@@ -60,6 +62,7 @@
       machine.style.transform = "rotateX(" + (rx * (1 - e)) + "deg) rotateY(" + (ry * (1 - e)) + "deg)";
       lid.style.setProperty("--lid", (12 * (1 - e)) + "deg");
       copy.style.opacity = String(Math.max(0, 1 - p * 3));
+      sky.style.opacity = String(1 - Math.min(1, Math.max(0, (p - 0.25) / 0.45)));
       copy.style.transform = "translateY(" + (-p * 120) + "px)";
       if (cue) cue.style.opacity = String(Math.max(0, 1 - p * 6));
       // and the screen goes dark: the one restart
@@ -67,7 +70,7 @@
       // ...and comes back as the staging screen the next section is about
       boot.style.opacity = String(Math.min(1, Math.max(0, (p - 0.84) / 0.12)));
     };
-    var onScroll = function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+    var onScroll = function () { if (!ticking) { ticking = true; requestAnimationFrame(function () { try { update(); } catch (err) { /* keep scrolling usable */ } }); } };
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", function () { base = null; onScroll(); });
     // the lid animation sets its own transform; measure after it ends
@@ -127,7 +130,11 @@
         var vw = window.innerWidth, vh = window.innerHeight;
         var S0 = Math.max(vw / fr.width, vh / fr.height) * 1.02;
         var k = S0 + (1 - S0) * e;
-        var tx = (vw / 2 - (fr.left + fr.width / 2)) * (1 - e), ty = (vh / 2 - (fr.top + fr.height / 2)) * (1 - e);
+        // measured relative to the pinned stage, so it is right before
+        // the stage has reached the top as well as after
+        var sr = stage.getBoundingClientRect();
+        var tx = (vw / 2 - (fr.left + fr.width / 2)) * (1 - e),
+            ty = (vh / 2 - (fr.top - sr.top + fr.height / 2)) * (1 - e);
         bz.style.transformOrigin = "50% 50%";
         bz.style.transform = e >= 1 ? "" : "translate(" + tx + "px," + ty + "px) scale(" + k + ")";
         stage.style.setProperty("--intro", e.toFixed(3));

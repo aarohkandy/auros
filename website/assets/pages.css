@@ -1,0 +1,36 @@
+/* pages.css — the secondary pages (desktop, wallpaper, guide, safety
+ * when it uses nocturne.css) dressed as the landing page: the night,
+ * Archivo / Atkinson / Martian Mono, one brass accent. Loaded after
+ * assets/nocturne.css and overrides its tokens; the light/dark switch
+ * is retired because the site is a night now. */
+@font-face { font-family: "Archivo"; src: url("fonts/archivo.woff2") format("woff2"); font-weight: 200 600; font-stretch: 100% 125%; font-display: swap; }
+@font-face { font-family: "Atkinson"; src: url("fonts/atkinson-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Atkinson"; src: url("fonts/atkinson-700.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Martian Mono"; src: url("fonts/martian-mono.woff2") format("woff2"); font-weight: 300 700; font-stretch: 75% 112.5%; font-display: swap; }
+
+html[lang], html[lang][data-theme], html[lang]:not([data-theme]) {
+  color-scheme: dark;
+  --bg: #05070a; --bg-alt: #0a0e13; --surface: #10151c; --surface-hi: #171d25;
+  --overlay: #5d6670; --muted: #7d858b; --subtle: #a9aeb1; --fg: #d6d8d4; --fg-hi: #ece8df;
+  --accent: #c89b4a; --accent-alt: #7c8b9b; --accent-warm: #a97b3e;
+  --ok: #6fcf9a; --warn: #c89b4a; --err: #e0796b; --info: #7c8b9b;
+  --on-accent: #17120a; --link: #ddb365; --rule: #1d242c; --tint: #0a0e13; --paper-grain: 0;
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-text: "Atkinson", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "Martian Mono", ui-monospace, Menlo, Consolas, monospace;
+  --radius: 4px; --radius-sm: 3px;
+}
+body { background: #05070a; }
+h1, h2 { font-family: var(--f-display); font-stretch: 125%; font-weight: 300; letter-spacing: -0.035em; }
+h1 { line-height: 1.0; }
+.theme-toggle { display: none !important; }
+.site-head { background: rgba(5, 7, 10, .92); border-bottom: 1px solid var(--rule); }
+.brand .glyph { color: var(--accent); }
+.kicker { font-family: var(--f-mono); letter-spacing: .06em; }
+.btn { border-radius: 3px; }
+/* a band of the same sky across the top of each page */
+.page-hero { position: relative; isolation: isolate; }
+.page-hero::before { content: ""; position: absolute; z-index: -1; inset: -120px 0 auto 0; height: 520px;
+  background: linear-gradient(180deg, rgba(5,7,10,.2), #05070a 92%), url("sky/still-1600.webp") center 30% / cover no-repeat;
+  opacity: .75; pointer-events: none; }
+@media print { .page-hero::before { display: none; } }

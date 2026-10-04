@@ -85,6 +85,16 @@ describe('programs map onto what desktop.profile installs', () => {
   })
 })
 
+describe('copies of this module elsewhere in the repository', () => {
+  // The website carries its own copy of recipe.mjs for the browser. A copy is a second source of
+  // truth the moment it differs; this is what notices.
+  const copy = join(ROOT, 'website', 'assets', 'recipe.mjs')
+  test('website/assets/recipe.mjs, where it exists, is recipes/lib/recipe.mjs byte for byte', { skip: !existsSync(copy) && 'no copy in website/assets' }, () => {
+    assert.ok(readFileSync(copy, 'utf8') === readFileSync(join(ROOT, 'recipes', 'lib', 'recipe.mjs'), 'utf8'),
+      'website/assets/recipe.mjs has drifted from recipes/lib/recipe.mjs. Copy it again: cp recipes/lib/recipe.mjs website/assets/recipe.mjs')
+  })
+})
+
 describe('names, checked against the machine that will read them (where it exists here)', () => {
   const SUPPORTED = '/usr/share/i18n/SUPPORTED'
   test('every locale is one glibc can generate', { skip: !existsSync(SUPPORTED) && `no ${SUPPORTED} on this machine` }, () => {

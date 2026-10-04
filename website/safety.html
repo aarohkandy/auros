@@ -1,12 +1,96 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" class="nojs">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AurOS</title>
-<meta http-equiv="refresh" content="0; url=index.html#defects">
-<link rel="canonical" href="index.html#defects">
-<style>body{background:#0E1013;color:#D9DDE1;font:16px/1.5 system-ui,sans-serif;padding:24px}a{color:#C89B4A}</style>
+<title>AurOS — what can go wrong</title>
+<meta name="description" content="AurOS has not been installed on a real PC yet. What can go wrong, what AurOS does about it, and what does not come across from Windows.">
+<meta name="theme-color" content="#05070a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%2305070A'/%3E%3Cpath%20d='M16%206L26%2016L16%2026L6%2016Z'%20fill='%23C89B4A'/%3E%3C/svg%3E">
+<link rel="preload" href="assets/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/site.css">
+<script>document.documentElement.className="js";</script>
 </head>
-<body><p>This page is now part of <a href="index.html#defects">the drive</a>.</p></body>
+<body class="page-safety">
+<a class="skip" href="#main">Skip to the page</a>
+<header class="top">
+  <div class="wrap">
+    <a class="mark" href="./" aria-label="AurOS, home"><i aria-hidden="true"></i>AurOS</a>
+    <nav class="nav" aria-label="Sections">
+      <a href="./#restart">One restart</a>
+      <a href="./#wayback">The way back</a>
+      <a href="./#desktop">The desktop</a>
+      <a href="./#orgs">Schools &amp; nonprofits</a>
+      <a class="btn" href="./#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="s-hero">
+    <div class="s-sky" aria-hidden="true">
+      <picture>
+        <source type="image/avif" srcset="assets/sky/still-1600.avif">
+        <img src="assets/sky/still-1600.webp" alt="" width="1600" height="1000">
+      </picture>
+    </div>
+    <div class="wrap s-hero-in">
+      <p class="kicker"><b>Safety</b> Read this before the download</p>
+      <h1>What can go wrong.</h1>
+      <p class="lede">AurOS has been tested on simulated machines and its installer has run on real Windows in CI. It has been installed on <b class="num zero" data-source="lathe/hardware/compat.tsv">0</b> real PCs. Here is what we know can go wrong, what AurOS does about it, and what does not come across from Windows.</p>
+    </div>
+  </section>
+
+  <section class="s-sec wrap" aria-labelledby="first-h">
+    <h2 id="first-h">First</h2>
+    <ol class="first">
+      <li><b>Back up anything you cannot lose.</b> To a USB stick or another computer, before you run it. This is pre-release software and the first real PCs are the test.</li>
+      <li><b>Plug it in.</b> On battery it stops: <q>Plug it in and try again.</q></li>
+      <li><b>Expect a warning from Windows.</b> The installer is not signed yet, so Windows SmartScreen warns before it opens it.</li>
+      <li><b>Shut Windows down properly first.</b> From the Start menu, not by holding the power button.</li>
+    </ol>
+  </section>
+
+  <section class="s-sec wrap" aria-labelledby="wrong-h">
+    <h2 id="wrong-h">If something goes wrong</h2>
+    <p class="s-intro">The installer checks before it changes anything, and refuses rather than guess. These are its own words, from <span class="mono">src/aurstage/install.c</span>.</p>
+    <div class="rows" role="table" aria-label="What can go wrong and what AurOS does">
+      <div class="row head" role="row"><span role="columnheader">If</span><span role="columnheader">AurOS says, and does</span></div>
+      <div class="row" role="row"><span role="cell">The power goes in the middle</span><span role="cell">Cut on purpose at <b class="num" data-source="docs/results/powercut.txt">18</b> named instants in testing; Windows came back with every file identical, <b class="num" data-source="docs/results/powercut.txt">138</b> of <b class="num" data-source="docs/results/powercut.txt">138</b> checks. On a simulated disk: a real drive that lies about having flushed its cache is a property of that drive, and is not tested.</span></div>
+      <div class="row" role="row"><span role="cell">Windows was not shut down properly, or is hibernated (Fast Startup)</span><span role="cell"><q>AurOS cannot tell whether this Windows drive was closed down properly.</q> <q>Start Windows, shut it down from the Start menu, and try again.</q> Nothing is changed.</span></div>
+      <div class="row" role="row"><span role="cell">The drive is failing</span><span role="cell"><q>Copy your files onto a USB stick today and have the drive replaced.</q> It reads every sector of the space it would use before it uses it.</span></div>
+      <div class="row" role="row"><span role="cell">The drive is encrypted by other software</span><span role="cell"><q>That has to be turned off and the drive decrypted first.</q></span></div>
+      <div class="row" role="row"><span role="cell">The computer is not the one the installer looked at</span><span role="cell"><q>This is not the computer the installer was prepared for.</q> It refuses.</span></div>
+      <div class="row" role="row"><span role="cell">Its firmware is unusual</span><span role="cell">Tested on one firmware (OVMF), with Secure Boot on. A 2014 laptop’s firmware is not that. The installer’s check runs first and writes nothing.</span></div>
+      <div class="row" role="row"><span role="cell">You don’t like it</span><span role="cell">Choose <b>No, go back to Windows</b> on the first start, or <b>Put Windows back</b> from AurOS’s start-up menu. Windows comes back as it was. Until you press <b>Yes, it all works</b>, switching on still starts Windows.</span></div>
+    </div>
+  </section>
+
+  <section class="s-sec wrap" aria-labelledby="not-h">
+    <h2 id="not-h">What doesn’t come across</h2>
+    <p class="s-intro">True for every move from Windows, not only this one. The list AurOS shows after the first start is the same list, from <span class="mono">src/ferry/ferry-report</span>.</p>
+    <ul class="bare">
+      <li><span>Windows programs</span><span>They were built for Windows and do not run here. Not Office, not Photoshop, not the program that came with the printer. Use the web version or a Linux one.</span></li>
+      <li><span>Saved passwords and cookies in Chrome and Edge</span><span>Locked to your Windows sign-in. AurOS can ask for your old Windows password to unlock them; otherwise sign in to the browser and let it sync.</span></li>
+      <li><span>Windows Credential Manager entries, remote desktop and app tokens</span><span>Encrypted to your Windows login and unrecoverable offline.</span></li>
+      <li><span>Wi-Fi passwords</span><span>Not yet: the network names come across, the passwords have to be typed once.</span></li>
+      <li><span>OneDrive files that are online-only</span><span>They live on the server, not the disk. Download them in OneDrive first.</span></li>
+      <li><span>Files on a locked BitLocker drive, or encrypted with EFS</span><span>Unreadable until unlocked in Windows.</span></li>
+      <li><span>Films, books and music with DRM</span><span>Licensed to the old machine.</span></li>
+      <li><span>Windows Hello: PIN, fingerprint, face</span><span>Sealed to this PC’s security chip.</span></li>
+      <li><span>Drivers</span><span>Linux supplies its own.</span></li>
+    </ul>
+  </section>
+
+  <section class="s-sec wrap" aria-labelledby="yes-h">
+    <h2 id="yes-h">What does</h2>
+    <p class="s-intro s-does">Your Documents, Pictures, Music, Videos, Desktop and Downloads. The whole Firefox profile, saved passwords included. Your wallpaper, keyboard layout, language and time zone. The Windows drive is only ever read, never written, while that happens.</p>
+    <p class="source">Sources: <span class="mono">src/ferry/ferry-common.sh</span>, <span class="mono">docs/FERRY.md</span>, <span class="mono">docs/results/choicesboot.txt</span>, <span class="mono">HANDOFF-TRIAGE.md</span>.</p>
+  </section>
+</main>
+
+<footer class="foot foot-small">
+  <div class="wrap foot-base mono"><span><a href="./">AurOS</a> · MIT licensed</span><span><a href="./#download">Download the test build</a></span><span><a href="https://github.com/ComputerDude771/auros-from-scratch/tree/HEAD/docs/results">Every test transcript</a></span></div>
+</footer>
+</body>
 </html>

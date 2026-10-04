@@ -85,7 +85,9 @@ const RULES = [
     notNegated: true },
   { id: 'office-adobe-claim', why: 'Microsoft Office and Adobe programs do not run on AurOS. They belong on the does-not-come-across list, never in a caveat.',
     re: /\b(?:microsoft office|office 365|photoshop|adobe (?:creative|acrobat|photoshop))\b[^.\n]{0,60}\b(?:works?|runs?|supported|compatible|available)\b/gi,
-    notNegated: true },
+    // "Microsoft Office does not run on AurOS" is the sentence this rule exists to make people
+    // write. LATHE's version fired on it, because the negation sits INSIDE the match.
+    notNegated: true, notNegatedWithin: /\b(?:not|never|no|cannot|can't|doesn't|don't|won't|isn't|aren't)\b/i },
   { id: 'universal-hardware', why: 'Nothing has run on a real PC yet, and a statement about EVERY PC is a statement about machines nobody has seen. Say what preflight checks instead.',
     re: /\b(?:works?|runs?|installs?|boots?) (?:on|with) (?:every|any|all|each)(?: (?:old|windows|modern|single))? (?:pcs?|computers?|laptops?|machines?|hardware|devices?)\b|\b(?:compatible with|supports?) (?:every|all|any) (?:pcs?|computers?|laptops?|hardware|machines?)\b|\bno matter (?:what|which) (?:pc|computer|laptop|hardware)\b/gi,
     notNegated: true },
@@ -247,14 +249,26 @@ function scan (file, base) {
     for (const el of citedElements(raw)) {
       const lineNo = raw.slice(0, el.index).split('\n').length
       if (allowed(rawLines, lineNo)) { citedOk.push([el.index, el.end]); continue }
-      const src = resolve(ROOT, el.source)
-      if (!el.source || !src.startsWith(ROOT) || !existsSync(src) || !statSync(src).isFile()) {
-        findings.push({ file: rel, line: lineNo, rule: 'data-source-missing', match: el.source || '(empty)', context: el.text.trim().slice(0, 140) })
+      // One path, or several separated by spaces: every one must exist, and every number must appear
+      // in at least one of them. A compat.tsv also vouches for the one number it cannot contain as
+      // text: how many physical rows it has ("Real PCs installed so far: 0").
+      const paths = el.source.split(/\s+/).filter(Boolean)
+      const missing = paths.filter((p) => { const f = resolve(ROOT, p); return !f.startsWith(ROOT + '/') || !existsSync(f) || !statSync(f).isFile() })
+      if (paths.length === 0 || missing.length) {
+        findings.push({ file: rel, line: lineNo, rule: 'data-source-missing', match: missing.join(' ') || '(empty)', context: el.text.trim().slice(0, 140) })
         continue
       }
-      const evidence = digitsOnly(readFileSync(src, 'utf8'))
+      const evidence = paths.map((p) => {
+        const t = readFileSync(resolve(ROOT, p), 'utf8')
+        if (basename(p) !== 'compat.tsv') return digitsOnly(t)
+        const rows = t.split('\n').filter((l) => l.trim() && !l.startsWith('#'))
+        const i = (rows[0] ?? '').split('\t').map((h) => h.trim()).indexOf('source')
+        const physical = i < 0 ? 0 : rows.slice(1).filter((l) => (l.split('\t')[i] || '').trim() === 'physical').length
+        return `${digitsOnly(t)}\n${physical}\n`
+      }).join('\n')
+      const has = (n) => new RegExp(`(?<![\\d.])${n.replace(/\./g, '\\.')}(?![\\d]|\\.\\d)`).test(evidence)
       const nums = [...el.text.matchAll(NUMBER)].map((n) => digitsOnly(n[0]))
-      const absent = nums.filter((n) => !evidence.includes(n))
+      const absent = nums.filter((n) => !has(n))
       if (nums.length === 0 || absent.length) {
         findings.push({ file: rel, line: lineNo, rule: 'data-source-mismatch', match: nums.length ? absent.join(', ') : '(no number in the element)', context: `${el.text.trim().slice(0, 100)}  [cites ${el.source}]` })
         continue
@@ -287,6 +301,7 @@ function scan (file, base) {
       }
       if (rule.notNegated && NEGATED_BEFORE.test(before)) continue
       if (rule.alsoNegatedBy && rule.alsoNegatedBy.test(before)) continue
+      if (rule.notNegatedWithin && rule.notNegatedWithin.test(m[0])) continue
       if (rule.needsNear) {
         const win = text.slice(Math.max(0, m.index - rule.nearWindow), m.index + rule.nearWindow)
         if (rule.needsNear.test(win)) continue

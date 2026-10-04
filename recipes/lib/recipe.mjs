@@ -362,7 +362,7 @@ const NOT_IN_THE_ENGINE = {
   windows_apps: 'AurOS does not run Windows programs, and says so on its website. A switch to turn on a compatibility layer would be a promise; LibreOffice and Firefox cover what most people needed Windows programs for.',
   updates: 'Ubuntu\'s security updates install themselves once a day on apt\'s own timer, and AurOS has no setting for when. LATHE recorded an update window that no machine ever kept (its D38); this form refuses one until the engine can keep it.',
   first_boot_message: 'The first-boot screen does not show a message from the profile yet.',
-  size_budget_gb: 'build/forge does not measure the image against a budget, so a budget written here would never fail a build.',
+  size_budget_gb: 'build/forge does not measure the image against a budget, so a budget written here could not stop a build that exceeded it.',
   approved_by: 'Who approved this fleet is recorded by whoever commits the compiled profile: the commit is the signature. A name written inside the file being approved proves nothing.',
   'prune.must_remove_at_least': 'build/forge does not count what a build removed, so this floor could only be checked against the plan the compiler itself writes — an alarm that cannot go off. What is removed is listed by explain instead.',
   'desktop.taskbar_and_start_menu': 'Choose desktop.layout: taskbar instead — that is the bar along the bottom.',
