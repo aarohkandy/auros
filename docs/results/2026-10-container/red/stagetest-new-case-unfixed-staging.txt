@@ -1,0 +1,8 @@
+$ sh tools/stagetest.sh
+# started 2026-10-05T01:25:24Z
+
+Does the staging environment leave the disk alone?
+
+  building a synthetic machine
+
+  look and do not touch
