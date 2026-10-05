@@ -83,7 +83,7 @@
     var screen = new R.Screen(aurEl);
     var track = $(".restart-track"), fig = $(".r-screen");
     var nEl = $("#r-n"), lEl = $("#r-label");
-    var segWin = $("#seg-win"), segAur = $("#seg-aur"), dWin = $("#d-win"), dAur = $("#d-aur");
+    var dHead = $("#d-head"), segWin = $("#seg-win"), segAur = $("#seg-aur"), dWin = $("#d-win"), dAur = $("#d-aur");
     // the illustration: a 256 GB drive (238.4 GiB); EFI 0.1, recovery 1.0,
     // Windows 237.3 of which 61.2 used (the fixture's shrunk size)
     var WIN = 237.3, USED = 61.2, FREED = WIN - USED;
@@ -115,6 +115,19 @@
         segAur.style.setProperty("--w", aur.toFixed(2));
         segAur.style.setProperty("--fill", copy + "%");
         dWin.textContent = win.toFixed(1);
+        // the read/write head: where on the drive each step is working
+        var TOT = 0.1 + WIN + 1, at = null;
+        if (!st.handover) {
+          if (st.step === 0) at = 0.1 + USED + (WIN - USED) * Math.min(1, q / 0.2);
+          else if (st.step === 1) at = 0.05;
+          else if (st.step === 2) at = 0.1 + win;
+          else if (st.step === 3) at = 0.1 + win + aur * Math.max(0, st.pct) / 100;
+          else if (st.step === 4) at = 0.1 + win + aur * (0.9 + 0.1 * Math.max(0, st.pct) / 100);
+          else if (st.step === 5) at = 0.1 + win + aur * 0.5;
+          else at = 0.02;
+        }
+        dHead.style.opacity = at == null ? "0" : "1";
+        if (at != null) dHead.style.left = (at / TOT * 100).toFixed(2) + "%";
         dAur.textContent = aur.toFixed(1);
       }
       fig.classList.toggle("welcome", p > 0.88);
@@ -151,8 +164,50 @@
   var tl = $("#tl"), trBody = $("#tr-body"), trName = $("#tr-name");
   if (tl) {
     var facts = null;
+    var scope = $("#scope"), scName = $("#sc-name"), scOk = $("#sc-ok"), cur = 0, auto = null;
+    var NS = "http://www.w3.org/2000/svg";
+    // The scope: the machine's power, drawn as a trace across the 18
+    // instants. At the chosen one it falls to nothing; after it, a second
+    // trace comes back up: switched on again, Windows starts.
+    var drawScope = function (i) {
+      if (!scope) return;
+      var w = scope.clientWidth || 800, h = scope.clientHeight || 220;
+      scope.setAttribute("viewBox", "0 0 " + w + " " + h);
+      var sr = scope.getBoundingClientRect();
+      var xs = Array.prototype.map.call(tl.querySelectorAll("li.tick"), function (li) {
+        var r = li.getBoundingClientRect(); return r.left + r.width / 2 - sr.left;
+      });
+      var x = xs[i], hi = h * 0.26, lo = h * 0.86, d = "M0 " + hi;
+      for (var px = 6; px < x; px += 6) d += " L" + px + " " + (hi + Math.sin(px * 0.21) * 1.6 + Math.sin(px * 0.047 + i) * 2.4).toFixed(1);
+      d += " L" + x + " " + hi + " L" + (x + 2) + " " + lo + " L" + w + " " + lo;
+      var back = "M" + (x + 26) + " " + lo + " C" + (x + 60) + " " + lo + " " + (x + 50) + " " + (hi + 14) + " " + (x + 96) + " " + (hi + 14) + " L" + w + " " + (hi + 14);
+      scope.textContent = "";
+      var grid = document.createElementNS(NS, "g"); grid.setAttribute("class", "sc-grid");
+      for (var gy = 1; gy < 4; gy++) { var l = document.createElementNS(NS, "line"); l.setAttribute("x1", 0); l.setAttribute("x2", w); l.setAttribute("y1", h * gy / 4); l.setAttribute("y2", h * gy / 4); grid.appendChild(l); }
+      xs.forEach(function (gx, j) { var l = document.createElementNS(NS, "line"); l.setAttribute("x1", gx); l.setAttribute("x2", gx); l.setAttribute("y1", h * 0.08); l.setAttribute("y2", h); l.setAttribute("class", j === i ? "on" : ""); grid.appendChild(l); });
+      scope.appendChild(grid);
+      var mk = function (dd, cls) { var p = document.createElementNS(NS, "path"); p.setAttribute("d", dd); p.setAttribute("class", cls); scope.appendChild(p); return p; };
+      mk(d, "sc-glow"); var tr = mk(d, "sc-trace"); var bk = mk(back, "sc-back");
+      var c = document.createElementNS(NS, "circle"); c.setAttribute("cx", x); c.setAttribute("cy", lo); c.setAttribute("r", 4); c.setAttribute("class", "sc-dot"); scope.appendChild(c);
+      if (motion) [tr, bk].forEach(function (p, k) {
+        var L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L;
+        p.getBoundingClientRect();
+        p.style.transition = "stroke-dashoffset " + (k ? 0.7 : 1.1) + "s ease " + (k ? 1.0 : 0) + "s";
+        p.style.strokeDashoffset = 0;
+      });
+      var lab = document.createElementNS(NS, "text");
+      lab.setAttribute("x", Math.min(x + 104, w - 4)); lab.setAttribute("y", hi + 4);
+      lab.setAttribute("text-anchor", x + 104 > w - 140 ? "end" : "start");
+      lab.setAttribute("class", "sc-lab"); lab.textContent = "Windows comes back";
+      if (x + 104 < w - 20) scope.appendChild(lab);
+    };
     var show = function (i) {
       if (!facts) return;
+      cur = i;
+      var it0 = facts.powercut.list[i];
+      scName.textContent = "power cut at " + it0.name;
+      scOk.textContent = it0.checks.filter(function (c) { return c[1] === "ok"; }).length + " of " + it0.checks.length + " ok";
+      drawScope(i);
       var it = facts.powercut.list[i];
       trName.textContent = "── " + it.name;
       trBody.textContent = "";
@@ -175,10 +230,22 @@
       f.powercut.list.forEach(function (it, i) { if (it.name === "shrink-end") start = i; });
       show(start);
     }).catch(function () {});
+    var stopAuto = function () { if (auto) { clearInterval(auto); auto = null; } };
     tl.addEventListener("click", function (e) {
       var li = e.target.closest("li.tick");
-      if (li) show(+li.getAttribute("data-i"));
+      if (li) { stopAuto(); show(+li.getAttribute("data-i")); }
     });
+    // while it is on screen and nobody has chosen, walk through the cuts
+    if (motion && "IntersectionObserver" in window) {
+      var touched = false;
+      tl.addEventListener("focusin", function () { touched = true; stopAuto(); });
+      new IntersectionObserver(function (es) {
+        if (es[0].isIntersecting && !touched && !auto) auto = setInterval(function () { if (facts) show((cur + 1) % facts.powercut.list.length); }, 3200);
+        else if (!es[0].isIntersecting) stopAuto();
+      }, { threshold: 0.4 }).observe(tl.parentNode);
+      tl.addEventListener("pointerdown", function () { touched = true; stopAuto(); });
+    }
+    window.addEventListener("resize", function () { if (facts) drawScope(cur); });
     tl.addEventListener("keydown", function (e) {
       var li = e.target.closest("li.tick"); if (!li) return;
       var i = +li.getAttribute("data-i"), n = tl.children.length;
@@ -235,56 +302,88 @@
         fs.forEach(function (f) { all.set(f, o); o += f.length; });
         return crypto.subtle.digest("SHA-256", all);
       };
+      var pbWin = $("#pb-win"), pbAur = $("#pb-aur"), say = $("#pb-say");
+      var WIN0 = 61.2, AUR0 = 176.1;
       whole(files).then(function (h1) {
         write($("#pr-before"), hex(h1));
-        // put back: the bytes go out to a copy and come back again
+        // Put Windows back: AurOS's space goes back to Windows, then the
+        // files are read again and fingerprinted. (Here the bytes make a
+        // round trip through a copy; on the test machine they never move.)
+        say.textContent = "Putting Windows back…";
+        prints.classList.add("restoring");
         var copies = files.map(function (f) { return f.slice(0); });
-        setTimeout(function () {
+        var T = motion ? 2600 : 0, t0 = performance.now();
+        var step = function (now) {
+          var k = T ? Math.min(1, (now - t0) / T) : 1;
+          var e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+          pbWin.style.setProperty("--w", (WIN0 + AUR0 * e).toFixed(2));
+          pbWin.style.setProperty("--used", (WIN0 / (WIN0 + AUR0 * e) * 100).toFixed(2) + "%");
+          pbAur.style.setProperty("--w", (AUR0 * (1 - e)).toFixed(2));
+          if (k < 1) { requestAnimationFrame(step); return; }
           whole(copies).then(function (h2) {
             write($("#pr-after"), hex(h2));
             var same = hex(h1) === hex(h2);
+            prints.classList.remove("restoring");
+            prints.classList.add(same ? "same" : "diff");
+            say.textContent = same ? "After: Windows is its full size again. Same bytes, same fingerprint." : "After: the fingerprints differ.";
             $(".print-eq", prints).classList.toggle("same", same);
-            Array.prototype.forEach.call(document.querySelectorAll("#p-files li"), function (li) { li.classList.add("ok"); });
+            Array.prototype.forEach.call(document.querySelectorAll("#p-files li"), function (li, i) {
+              setTimeout(function () { li.classList.add("ok"); }, motion ? i * 90 : 0);
+            });
           });
-        }, motion ? 900 : 0);
+        };
+        requestAnimationFrame(step);
       });
     };
     var io = new IntersectionObserver(function (es) {
       if (es[0].isIntersecting) { io.disconnect(); run(); }
-    }, { rootMargin: "0px 0px -20% 0px" });
+    }, { rootMargin: "0px 0px -15% 0px" });
     io.observe(prints);
   }
 
-  /* ── 4. the gallery ────────────────────────────────────────────── */
+  /* ── 4. the gallery: the same laptop, every look ────────────────── */
   var gallery = $("#gallery");
   if (gallery) {
-    var frame = $(".g-frame", gallery), tabs = gallery.querySelectorAll(".g-tab");
+    var gscreen = $(".rig-g .screen", gallery), glass = $(".glass", gscreen), grig = $("#rig-g"),
+        tabs = gallery.querySelectorAll(".g-tab");
     var gName = $("#g-name"), gDesc = $("#g-desc"), gSrc = $("#g-src");
+    // The light a screen throws is its own average colour (measured from
+    // each render), brightened to a hue and scaled by how bright it is.
+    var light = function (tone) {
+      var c = tone.split(",").map(Number), m = Math.max(c[0], c[1], c[2], 1);
+      var lum = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255;
+      var hue = c.map(function (v) { return Math.round(150 + 105 * v / m); });
+      var a = 0.16 + lum * 0.5;
+      grig.style.setProperty("--spill", "rgba(" + hue.join(",") + "," + a.toFixed(2) + ")");
+      grig.style.setProperty("--spill-ground", "rgba(" + hue.join(",") + "," + (a * 0.45).toFixed(2) + ")");
+      gallery.style.setProperty("--pool", "rgba(" + hue.join(",") + "," + (0.05 + lum * 0.16).toFixed(3) + ")");
+    };
     var pick = function (btn) {
       Array.prototype.forEach.call(tabs, function (t) { t.setAttribute("aria-selected", t === btn ? "true" : "false"); t.tabIndex = t === btn ? 0 : -1; });
-      var name = btn.getAttribute("data-img"); // theme-x or shell-x
-      var isTheme = name.indexOf("theme-") === 0;
+      var name = btn.getAttribute("data-img"), isTheme = name.indexOf("theme-") === 0;
       var b = "assets/renders/" + name;
       var pic = document.createElement("picture");
       pic.className = "g-img";
-      pic.innerHTML = '<source type="image/avif" srcset="' + b + '-1366.avif 1366w, ' + b + '-2732.avif 2732w" sizes="(max-width: 960px) 100vw, 92vw">' +
-        '<img src="' + b + '-1366.webp" srcset="' + b + '-683.webp 683w, ' + b + '-1366.webp 1366w, ' + b + '-2732.webp 2732w" sizes="(max-width: 960px) 100vw, 92vw" width="1366" height="768" decoding="async" alt="">';
+      pic.innerHTML = '<source type="image/avif" srcset="' + b + '-1366.avif 1366w, ' + b + '-2732.avif 2732w" sizes="(max-width: 960px) 92vw, 64vw">' +
+        '<img src="' + b + '-1366.webp" srcset="' + b + '-683.webp 683w, ' + b + '-1366.webp 1366w, ' + b + '-2732.webp 2732w" sizes="(max-width: 960px) 92vw, 64vw" width="1366" height="768" decoding="async" alt="">';
       var img = $("img", pic);
       img.alt = "The AurOS desktop: " + btn.textContent + (isTheme ? " look, Everything in a row layout." : " layout, Nocturne look, three programs open.");
       var swap = function () {
-        frame.appendChild(pic);
-        requestAnimationFrame(function () {
+        gscreen.insertBefore(pic, glass);
+        requestAnimationFrame(function () { requestAnimationFrame(function () {
           pic.classList.add("on");
-          var old = frame.querySelectorAll(".g-img");
-          setTimeout(function () { Array.prototype.forEach.call(old, function (o) { if (o !== pic) o.remove(); }); }, 700);
-        });
+          light(btn.getAttribute("data-tone") || "23,26,29");
+          var old = gscreen.querySelectorAll(".g-img");
+          setTimeout(function () { Array.prototype.forEach.call(old, function (o) { if (o !== pic) o.remove(); }); }, 800);
+        }); });
       };
       if (img.decode) img.decode().then(swap, swap); else swap();
       gName.textContent = btn.textContent;
       gDesc.textContent = btn.getAttribute("data-desc");
       gSrc.textContent = (isTheme ? btn.getAttribute("data-src") + " · shells/rail.shell" : "themes/nocturne.theme · " + btn.getAttribute("data-src")) +
-        " · rendered by website/tools/render-shell.c through src/aurshell";
+        " · rendered through src/aurshell at 1366 × 768";
     };
+    light("23,26,29");
     Array.prototype.forEach.call(tabs, function (t, i) {
       t.tabIndex = t.getAttribute("aria-selected") === "true" ? 0 : -1;
       t.addEventListener("click", function () { pick(t); });

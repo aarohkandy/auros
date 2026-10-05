@@ -298,6 +298,21 @@ describe('malformed files fail CLOSED — exit 2, never a quiet pass', () => {
     assert.match(m.out, /missing required column "verdict"/)
   })
 
+  test('REFUSES a header that names a column twice — two readers would read two different columns', () => {
+    // Found by the adversarial review. With "source" twice, this lint read the LAST one and
+    // tools/honesty-gate.mjs (indexOf) the FIRST: a row reading physical…vm passed here as an honest
+    // vm row, and lifted the gate's fabricated-experience rule as a physical one.
+    const dup = `${HEADER}\tsource`
+    const r = row({ model: 'qemu', source: 'physical', verdict: 'boots', tested_on: '2026-09-21', tester: 'ci' }) + '\tvm'
+    const res = lint(`${dup}\n${r}\n`)
+    assert.equal(res.exit, 2, `a duplicated column was accepted:\n${res.out}`)
+    assert.match(res.out, /"source" appears twice/)
+    accepts(lint(file(VM_HONEST)), 'the same file without the duplicate column')
+  })
+  test('REJECTS a row with MORE fields than the header — the extra ones are claims nobody reads', () => {
+    const res = rejects(lint(file(VM_HONEST + '\tok')), 'a field past the last column')
+    assert.match(res.out, /more fields than the header/)
+  })
   test('REFUSES a row with fewer fields than the header, without crashing', () => {
     const r = lint(`${HEADER}\nqemu\tvm\n`)
     assert.notEqual(r.exit, 0, 'a short row was accepted')

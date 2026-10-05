@@ -107,6 +107,21 @@ const MUST_FIRE = [
   { name: '[HARD] HTML: a number is a substring of the source, not a number in it', file: 'a.html', rule: 'data-source-mismatch', extra: { 'r.md': 'It ran 1138 checks.\n' }, text: '<p>It ran <span data-source="r.md">138</span> checks.</p>\n' },
   { name: '[HARD] HTML: "1 real PC" cited to a compat.tsv with no physical rows', file: 'a.html', rule: 'data-source-mismatch', text: '<p>Real PCs installed so far: <b data-source="hardware/compat.tsv">1</b></p>\n' },
   { name: 'a cited workflow that does not exist, with a cadence', file: 'a.md', rule: 'cited-workflow-missing', text: 'Rebuilt nightly by .github/workflows/nightly.yml.\n' },
+  // Found by the adversarial review: claims a reader sees that the gate did not.
+  { name: '[HARD] a claim wrapped across two source lines (HTML)', file: 'a.html', rule: 'social-proof', text: '<p>AurOS is trusted\n   by schools across the county.</p>\n' },
+  { name: '[HARD] a claim wrapped across two source lines (Markdown)', file: 'a.md', rule: 'universal-hardware', text: 'AurOS works on\nevery PC made since 2012.\n' },
+  { name: '"used by" with a number in it', file: 'a.md', rule: 'social-proof', text: 'Used by 500 schools in three countries.\n' },
+  { name: '"loved by", "chosen by" and their relatives', file: 'a.md', rule: 'social-proof', text: 'Loved by teachers, chosen by head teachers.\n' },
+  { name: 'a bare count with a plus sign', file: 'a.md', rule: 'social-proof', text: '500+ schools have switched.\n' },
+  { name: 'thousands of schools, no verb needed', file: 'a.md', rule: 'social-proof', text: 'Thousands of schools rely on it every morning.\n' },
+  { name: '[HARD] "not only" is an intensifier, not a negation', file: 'a.md', rule: 'social-proof', text: 'Not only is it free, it is trusted by schools across the county.\n' },
+  { name: '[HARD] "no wonder" is not a negation either', file: 'a.md', rule: 'social-proof', text: 'No wonder it is trusted by schools everywhere.\n' },
+  { name: '[HARD] HTML: a word split by an inline tag reads as one word', file: 'a.html', rule: 'social-proof', text: '<p>Trus<span>ted</span> by schools.</p>\n' },
+  { name: '[HARD] HTML: a soft hyphen inside a word', file: 'a.html', rule: 'social-proof', text: '<p>Read our testi&shy;monials.</p>\n' },
+  { name: '[HARD] HTML: a zero-width space between words', file: 'a.html', rule: 'social-proof', text: '<p>Trusted&#8203; by schools.</p>\n' },
+  { name: '[HARD] HTML: a button\'s value is text on the screen', file: 'a.html', rule: 'social-proof', text: '<input type="submit" value="Join thousands of happy users">\n' },
+  { name: '[HARD] HTML: CSS content: is text on the screen', file: 'a.html', rule: 'social-proof', text: '<style>.hero::after { content: "Trusted by schools"; }</style>\n<p>AurOS</p>\n' },
+  { name: '[HARD] JS: a \\u escape in a string', file: 'a.js', rule: 'social-proof', text: 'el.textContent = "\\u0054rusted by schools"\n' },
   { name: 'a cadence claimed for a parked workflow', file: 'a.md', rule: 'cited-workflow-schedule', extra: { '.github/workflows.parked/nightly.yml': 'on:\n  schedule:\n    - cron: "0 3 * * *"\n' }, text: 'Rebuilt nightly by .github/workflows.parked/nightly.yml.\n' },
 ]
 
@@ -142,6 +157,10 @@ const MUST_NOT_FIRE = [
   { name: 'a workflow file is configuration, not copy', file: 'build.yml', text: 'name: build\non:\n  schedule:\n    - cron: "0 3 * * *"\n' },
   { name: 'a factual statement about kiosk policy', file: 'a.md', text: 'On a kiosk there is no desktop: the first program starts and fills the screen.\n' },
   { name: 'a statement about the competitor being inaction', file: 'a.md', text: 'The real alternative is doing nothing, which is free and which works until the security updates stop.\n' },
+  { name: 'a wrapped negation still negates', file: 'a.md', text: 'We have no\ntestimonials, and no case studies.\n' },
+  { name: '"used by default" is not social proof', file: 'a.md', text: 'The dock is used by default; the rail is used by the kiosk.\n' },
+  { name: 'HTML: two blocks are two sentences, not one', file: 'a.html', text: '<h2>Trusted</h2>\n<p>by nobody yet: there are no customers.</p>\n' },
+  { name: 'HTML: a CSS comment and a non-content property stay invisible', file: 'a.html', text: '<style>/* trusted by */ .x { font-family: "Trusted by"; }</style>\n<p>AurOS</p>\n' },
   { name: 'the illustrative fleet sizes, labelled as illustrations', file: 'a.md', text: 'The examples show a 180-machine school and a 40-machine kiosk fleet. They are illustrations, not customers.\n' },
 ]
 

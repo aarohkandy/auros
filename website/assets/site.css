@@ -404,12 +404,25 @@ section { position: relative; }
 .g-tab:hover { color: var(--ink); border-color: var(--rule-2); }
 .g-tab[aria-selected="true"] { color: var(--ink); border-color: var(--brass); background: rgba(200,155,74,.12); }
 .g-tab:focus-visible { outline: 2px solid var(--brass-hi); outline-offset: 2px; }
-.g-stage { grid-column: 1 / -1; margin: 0; }
-.g-frame { position: relative; aspect-ratio: 1366 / 768; background: #0b0d10; border-radius: 6px; overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(255,255,255,.07), 0 0 0 10px #0d0f12, 0 0 0 11px rgba(255,255,255,.06), 0 60px 160px -40px rgba(0,0,0,.95), 0 0 120px -30px rgba(111, 207, 154, .10); }
-.g-img { position: absolute; inset: 0; opacity: 0; transition: opacity .55s ease; }
-.g-img.on { opacity: 1; }
-.g-img img { width: 100%; height: 100%; object-fit: cover; }
+.gallery { position: relative; }
+.desk { overflow: clip; }
+.g-stage { grid-column: 1 / -1; margin: 0; position: relative; padding-top: 24px; }
+.g-pool { position: absolute; left: 50%; top: 40%; width: 140%; height: 120%; transform: translate(-50%, -50%); pointer-events: none;
+  background: radial-gradient(50% 50% at 50% 50%, var(--pool, rgba(160, 175, 190, .06)), rgba(0,0,0,0) 70%); transition: background .8s; z-index: 0; }
+.rig.rig-g { position: relative; left: auto; bottom: auto; margin: 0 auto calc(var(--w) * 0.36);
+  --w: min(62vw, 880px, 104vh); perspective: calc(var(--w) * 5); perspective-origin: 50% -70%; z-index: 1; }
+.rig-g .machine { transform: rotateX(-9deg); }
+.rig-g .ground { top: 70%; }
+.rig-g .spill, .rig-g .ground, .rig-g .lid-front { transition: background .8s, box-shadow .8s; }
+.rig-g .screen .g-img { position: absolute; inset: 0; opacity: 0; transition: opacity .6s ease; }
+.rig-g .screen .g-img.on { opacity: 1; }
+.rig-g .screen img { width: 100%; height: 100%; object-fit: cover; }
+.g-stage .g-cap { position: relative; z-index: 2; justify-content: center; text-align: center; margin-top: 0; }
+.g-tabs { justify-content: center; margin-top: 30px; }
+@media (max-width: 960px) {
+  .rig.rig-g { --w: 90vw; margin-left: auto; margin-right: auto; margin-bottom: calc(var(--w) * 0.34); }
+  .g-stage .g-cap { text-align: left; justify-content: flex-start; }
+}
 .g-cap { display: flex; flex-wrap: wrap; column-gap: 18px; row-gap: 6px; margin-top: 26px; align-items: baseline; }
 .g-name { font-family: var(--display); font-stretch: 125%; font-weight: 400; font-size: 22px; letter-spacing: -.01em; }
 .g-desc { color: var(--ink-2); font-size: 16px; }
@@ -557,3 +570,58 @@ q { quotes: "“" "”"; color: var(--ink); font-family: "DejaVu Sans", var(--te
 /* without JavaScript: say so instead of showing controls that do nothing */
 .nojs .cfg-form, .nojs .cfg-out .file, .nojs .plan, .nojs .print-pair, .nojs .p-files, .nojs .cfg-out > .source { display: none; }
 .nojs .cfg { align-content: start; }
+
+/* ── 3, pass 2: the scope, and the restore ─────────────────────────── */
+.scope { position: relative; height: clamp(180px, 26vh, 280px); margin-bottom: 4px;
+  background: radial-gradient(120% 90% at 50% 40%, rgba(111,207,154,.05), rgba(0,0,0,0) 70%), #06090b;
+  border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; }
+.scope svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.sc-grid line { stroke: rgba(236,232,223,.06); stroke-width: 1; }
+.sc-grid line.on { stroke: rgba(221,179,101,.35); stroke-dasharray: 3 4; }
+.sc-trace { fill: none; stroke: #8ff0bd; stroke-width: 2; stroke-linejoin: round; }
+.sc-glow { fill: none; stroke: rgba(111,207,154,.28); stroke-width: 9; filter: blur(4px); }
+.sc-back { fill: none; stroke: var(--brass-hi); stroke-width: 2; stroke-dasharray: 5 5; }
+.sc-dot { fill: var(--brass-hi); }
+.sc-lab { fill: var(--brass-hi); font: 12px var(--mono); }
+.scope-read { position: absolute; left: 16px; right: 16px; top: 12px; display: flex; justify-content: space-between; margin: 0;
+  font-size: 12px; color: #8ff0bd; letter-spacing: .02em; }
+.scope-read #sc-name { color: var(--ink); }
+.tl { height: 150px; }
+.tick button { height: 120px; }
+.tick button::after { height: 14px; }
+
+.pb { grid-column: 5 / span 8; }
+.pb-bar { height: 54px; }
+.pb-bar .seg em { font-size: 12px; }
+.pb-say { margin: 12px 0 0; color: var(--ink-2); font-size: 12px; min-height: 1.6em; }
+.prints.restoring .pb-say { color: var(--brass-hi); }
+.prints.same .pb-say { color: var(--green); }
+.print-eq.same { text-shadow: 0 0 24px rgba(111,207,154,.6); }
+.disk-bar { height: 48px; }
+.disk .seg em, .pb .seg em { font-size: 12px; }
+@media (max-width: 960px) { .pb { grid-column: 1 / -1; } .disk-bar { height: 40px; } }
+.disk-bar { position: relative; }
+.d-head { position: absolute; top: -8px; bottom: -8px; width: 2px; margin-left: -1px; background: var(--brass-hi);
+  box-shadow: 0 0 12px 2px rgba(221,179,101,.55); opacity: 0; transition: left .25s linear, opacity .3s; }
+.d-head::before { content: ""; position: absolute; left: -4px; top: -6px; border: 5px solid transparent; border-top-color: var(--brass-hi); }
+.nojs .d-head, .js:not(.motion) .d-head { display: none; }
+
+/* ── 5, pass 2: what is taken out carries the weight ──────────────── */
+.plan { grid-template-columns: 1fr 1.6fr; }
+.plan-n { margin: 0 0 12px; display: flex; flex-direction: column; gap: 2px; }
+.plan-n b { font-family: var(--display); font-stretch: 125%; font-weight: 300; line-height: 1; letter-spacing: -.03em; }
+.plan-n span { font-size: 10.5px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .06em; }
+.keep .plan-n b { font-size: 40px; color: var(--ink-2); }
+.keep .plan-n b::before { content: "+"; color: var(--green); }
+.gone .plan-n b { font-size: 76px; color: var(--ink); }
+.gone .plan-n b::before { content: "−"; color: var(--red); }
+.plan .gone li { text-decoration: line-through; text-decoration-color: rgba(224,121,107,.75); text-decoration-thickness: 1.5px; color: var(--ink-2); }
+.plan .gone li::before { content: ""; }
+.plan .gone li small { text-decoration: line-through; text-decoration-color: rgba(224,121,107,.5); }
+@media (max-width: 560px) { .plan { grid-template-columns: 1fr; } .gone .plan-n b { font-size: 60px; } }
+
+/* ── 7, pass 2: the footer is a night of its own ───────────────────── */
+.foot { min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; justify-content: flex-end; padding-top: 30vh; }
+.foot .dl h2 { font-size: clamp(40px, 6vw, 96px); }
+.foot-sky img { object-position: 50% 45%; }
+.foot-sky::after { background: linear-gradient(180deg, var(--night) 0%, rgba(5,7,10,.15) 28%, rgba(5,7,10,.2) 50%, rgba(5,7,10,.88) 82%, var(--night) 100%); }

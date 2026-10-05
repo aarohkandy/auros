@@ -1,0 +1,6 @@
+$ sh tools/choicesboottest.sh
+# started 2026-10-05T00:22:16Z
+
+Does the real image start up the way the installer was told to?
+
+  booting the image from firmware (this is slow under emulation)

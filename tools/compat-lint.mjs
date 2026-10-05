@@ -48,6 +48,12 @@ const header = lines[0].split('\t').map(h => h.trim())
 for (const required of ['model', 'year', 'source', 'verdict', 'ids', 'tpm', 'tester', 'tested_on', ...PHYSICAL_ONLY]) {
   if (!header.includes(required)) { console.error(`compat-lint: header is missing required column "${required}"`); process.exit(2) }
 }
+// A column named twice is two answers to one question, and the readers of this file disagree about
+// which one counts: this lint's map kept the LAST, tools/honesty-gate.mjs's indexOf takes the FIRST.
+// A row reading physical…vm then passed here as vm and counted there as physical. (Adversarial review.)
+for (const [i, h] of header.entries()) {
+  if (h !== '' && header.indexOf(h) !== i) { console.error(`compat-lint: header column "${h}" appears twice — failing closed`); process.exit(2) }
+}
 const idx = Object.fromEntries(header.map((h, i) => [h, i]))
 const rows = lines.slice(1)
 
@@ -55,6 +61,9 @@ const problems = []
 rows.forEach((raw, n) => {
   const c = raw.split('\t')
   const lineNo = n + 2
+  if (c.length > header.length && c.slice(header.length).some((f) => f.trim() !== '')) {
+    problems.push(`${PATH}:${lineNo}  this row has more fields than the header has columns. What is past the last column is read by nothing, so a claim there passes unseen; a stray tab has shifted the row.`)
+  }
   const source = (c[idx.source] ?? '').trim()
   if (!['vm', 'physical'].includes(source)) {
     problems.push(`${PATH}:${lineNo}  source is "${source}" — must be exactly "vm" or "physical". An unlabelled row cannot be trusted or filtered.`)

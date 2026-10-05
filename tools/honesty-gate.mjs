@@ -36,8 +36,9 @@ import { fileURLToPath } from 'node:url'
 
 const HERE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
-const SCAN_EXT = new Set(['.md', '.mdx', '.astro', '.ts', '.tsx', '.js', '.mjs', '.jsx', '.html', '.htm', '.json', '.yaml', '.yml'])
-const SITE_EXT = new Set(['.html', '.htm', '.js', '.mjs'])
+const SCAN_EXT = new Set(['.md', '.mdx', '.astro', '.ts', '.tsx', '.js', '.mjs', '.jsx', '.html', '.htm', '.json', '.yaml', '.yml', '.css'])
+// .css: a stylesheet's `content:` strings are on the screen (found by adversarial review).
+const SITE_EXT = new Set(['.html', '.htm', '.js', '.mjs', '.css'])
 const SKIP_DIR = new Set(['node_modules', '.git', 'dist', '.astro', 'coverage', '.wrangler', 'fonts'])
 const IS_TEST = /\.(test|spec)\.[jt]sx?$/
 // In CODE, a pure comment line cannot reach a customer. Markdown and HTML text are content: every
@@ -49,6 +50,10 @@ const PURE_COMMENT = /^\s*(\/\/|\*|\/\*|<!--)/
 // testimonials") is the rule being described, not exercised. Deliberately NOT widened: every word
 // added to a suppression list is a word an author can put in front of a real claim.
 const NEGATED_BEFORE = /\b(no|not|never|without|avoid|forbid(?:s|den)?|refuse[sd]?|fabricat\w*|invent\w*|do not|don't|must not|may not|zero)\b[^.]{0,55}$/
+// Idioms that START with a negation word and negate nothing: "Not only is it free, it is trusted by
+// schools" is a claim with an intensifier in front of it. They are removed from the text the guard
+// reads, which NARROWS the suppression — the opposite of widening it. (Found by adversarial review.)
+const NOT_A_NEGATION = /\b(?:not only|no wonder|no doubt|without (?:a )?doubt|never again|no more|no longer|no matter)\b/g
 // Licence words about SOMEBODY ELSE'S software are not claims about ours.
 const THIRD_PARTY = /\b(?:windows|microsoft|third[- ]party|upstream|their own|its own|under (?:their|its)|vendor|apple|google|nvidia|firmware|drivers?|codecs?|ubuntu|debian|canonical|linux kernel|kernel|firefox|mozilla|gnu|fonts?|typefaces?|package[sd]?|libraries|library|components?)\b/i
 
@@ -64,7 +69,7 @@ const THIRD_PARTY = /\b(?:windows|microsoft|third[- ]party|upstream|their own|it
 //   thirdPartyOk          skip when the sentence is about somebody else's software
 const RULES = [
   { id: 'social-proof', why: 'AurOS has no customers yet. Implying otherwise is the fastest way to be worth distrusting.',
-    re: /\b(trusted by|used by (?:schools|hundreds|thousands|over|families|businesses)|our (?:customers|users) (?:say|report|love)|(?:happy|satisfied) (?:customers|users|schools|families)|join (?:hundreds|thousands)|rated \d(?:\.\d)? (?:stars|out of)|as featured in|testimonials?|case stud(?:y|ies))\b/gi,
+    re: /\b(trusted by|used by (?:schools|hundreds|thousands|over|families|businesses|[\d,]{2,})|(?:loved|chosen|relied (?:up)?on|endorsed|praised|adored|preferred) by (?:teachers|schools|parents|families|students|users|customers|businesses|charities|organi[sz]ations|it (?:staff|teams|departments)|admins|administrators|hundreds|thousands|millions|over|[\d,]{2,})|[\d,]{2,}\s*\+\s*(?:schools?|users?|customers?|organi[sz]ations?|families|teachers|students|businesses|charities|councils|installs?|downloads?)|(?:dozens|hundreds|thousands|millions) of (?:schools|users|customers|families|organi[sz]ations|businesses|teachers|students|charities|councils|happy|satisfied)|our (?:customers|users) (?:say|report|love)|(?:happy|satisfied) (?:customers|users|schools|families)|join (?:hundreds|thousands)|rated \d(?:\.\d)? (?:stars|out of)|as featured in|testimonials?|case stud(?:y|ies))\b/gi,
     notNegated: true },
   { id: 'device-count', why: 'A count of machines in the field is a claim about users AurOS does not have.',
     re: /\b(?:over|more than|already|now)\s+[\d,]{2,}\s*(?:\+\s*)?(?:devices?|machines?|laptops?|pcs?|computers?|schools?|organi[sz]ations?|students?|users?|people|installs?)\b/gi,
@@ -179,25 +184,44 @@ const LICENCE = (() => {
 })()
 
 // ── turning a file into what a reader sees, line numbers intact ──────────────────────────────────
-const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', rsquo: "'", lsquo: "'", ldquo: '"', rdquo: '"', mdash: '—', ndash: '–', hellip: '…', middot: '·', times: '×', pound: '£', euro: '€', rarr: '→', larr: '←' }
+const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', ensp: ' ', emsp: ' ', thinsp: ' ', shy: '\u00ad', zwsp: '\u200b', zwj: '\u200d', zwnj: '\u200c', rsquo: "'", lsquo: "'", ldquo: '"', rdquo: '"', mdash: '—', ndash: '–', hellip: '…', middot: '·', times: '×', pound: '£', euro: '€', rarr: '→', larr: '←' }
 const decode = (s) => s.replace(/&(#x[0-9a-fA-F]+|#\d+|[a-zA-Z]+);/g, (m, e) => {
   if (e[0] === '#') { const n = e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10); return Number.isFinite(n) ? String.fromCodePoint(n) : m }
   return ENTITIES[e] ?? m
 })
-const smart = (s) => s.replace(/[‘’ʼ]/g, "'").replace(/[“”]/g, '"')
+// Characters that draw nothing: a soft hyphen or a zero-width space inside "testi­monials" hides the
+// word from a pattern and not from a reader. Removed, which moves nothing to another line.
+const INVISIBLE = /[\u00ad\u200b-\u200f\u2060-\u2064\ufeff]/g
+const smart = (s) => s.replace(INVISIBLE, '').replace(/[‘’ʼ]/g, "'").replace(/[“”]/g, '"')
+// \u0054rusted in a script is "Trusted" on the screen. Escapes that would decode to a line break
+// become a space, so line numbers stay where they are.
+const jsUnescape = (s) => s.replace(/\\u\{([0-9a-fA-F]{1,6})\}|\\u([0-9a-fA-F]{4})|\\x([0-9a-fA-F]{2})/g, (m, a, b, c) => {
+  const n = parseInt(a ?? b ?? c, 16)
+  if (!(n <= 0x10ffff)) return m
+  return /[\n\r\u2028\u2029]/.test(String.fromCodePoint(n)) ? ' ' : String.fromCodePoint(n)
+})
 const keepNewlines = (s) => s.replace(/[^\n]/g, ' ')
-const VISIBLE_ATTR = /\b(?:alt|title|aria-label|placeholder|content)\s*=\s*("([^"]*)"|'([^']*)')/gi
+const VISIBLE_ATTR = /\b(?:alt|title|aria-label|placeholder|content|value)\s*=\s*("([^"]*)"|'([^']*)')/gi
+// Inline elements run into the text around them: <span>Trus</span>ted is the word a reader sees.
+// Every other tag ends a sentence (a heading and the paragraph under it are not one sentence).
+const INLINE_TAG = /^<\/?(?:a|abbr|b|bdi|bdo|cite|code|data|del|dfn|em|font|i|ins|kbd|mark|q|s|samp|small|span|strong|sub|sup|time|u|var|wbr)\b/i
+// What a stylesheet puts on the screen: the strings of `content:`. Everything else in it is invisible.
+function cssVisible (css) {
+  return css.replace(/\/\*[\s\S]*?\*\//g, keepNewlines).split('\n').map((l) =>
+    [...l.matchAll(/\bcontent\s*:\s*(?:"((?:\\.|[^"\\])*)"|'((?:\\.|[^'\\])*)')/gi)].map((m) => m[1] ?? m[2]).join(' . ')).join('\n')
+}
 
 function visibleHtml (raw) {
   let t = raw
   t = t.replace(/<!--[\s\S]*?-->/g, keepNewlines)
-  t = t.replace(/<style\b[\s\S]*?<\/style>/gi, keepNewlines)
+  t = t.replace(/(<style\b[^>]*>)([\s\S]*?)(<\/style>)/gi, (m, a, body, c) => keepNewlines(a) + ' . ' + cssVisible(body) + ' . ' + keepNewlines(c))
   // Inside a script, a pure comment line is not shipped copy; everything else (strings) may be.
-  t = t.replace(/(<script\b[^>]*>)([\s\S]*?)(<\/script>)/gi, (m, a, body, c) => keepNewlines(a) + body.split('\n').map((l) => (PURE_COMMENT.test(l) ? '' : l)).join('\n') + keepNewlines(c))
+  t = t.replace(/(<script\b[^>]*>)([\s\S]*?)(<\/script>)/gi, (m, a, body, c) => keepNewlines(a) + ' . ' + jsUnescape(body.split('\n').map((l) => (PURE_COMMENT.test(l) ? '' : l)).join('\n')) + ' . ' + keepNewlines(c))
   t = t.replace(/<[^>]*>/g, (tag) => {
-    const attrs = [...tag.matchAll(VISIBLE_ATTR)].map((m) => m[2] ?? m[3]).join(' ')
-    const nl = (tag.match(/\n/g) || []).length
-    return ` ${attrs} ` + '\n'.repeat(nl)
+    const attrs = [...tag.matchAll(VISIBLE_ATTR)].map((m) => m[2] ?? m[3]).join(' . ')
+    const nl = '\n'.repeat((tag.match(/\n/g) || []).length)
+    if (INLINE_TAG.test(tag) && !attrs) return nl
+    return ` . ${attrs}${attrs ? ' . ' : ''}` + nl
   })
   // Runs of spaces left by removed tags are one space to a reader: "Trusted <b>by</b> schools" is
   // the sentence "Trusted by schools". Newlines are kept, so line numbers still point at the file.
@@ -237,7 +261,26 @@ function scan (file, base) {
   const raw = readFileSync(file, 'utf8')
   const ext = extname(file).toLowerCase()
   const isHtml = ext === '.html' || ext === '.htm'
-  const text = isHtml ? visibleHtml(raw) : smart(raw)
+  const isCode = CODE_EXT.has(ext)
+  const text = isHtml ? visibleHtml(raw)
+    : ext === '.css' ? smart(decode(cssVisible(raw)))
+      : isCode ? smart(jsUnescape(raw.split('\n').map((l) => (PURE_COMMENT.test(l) ? '' : l)).join('\n')))
+        : smart(raw)
+  // A sentence wraps across source lines; a reader never sees the break. The rules run over FLAT: every
+  // run of whitespace one space, a blank line a sentence end, and AT[] mapping each character back to
+  // TEXT for its line number. (Found by adversarial review: "trusted\n by schools" passed.)
+  let flat = ''
+  const at = []
+  for (let i = 0; i < text.length;) {
+    if (/\s/.test(text[i])) {
+      let j = i; let nls = 0
+      while (j < text.length && /\s/.test(text[j])) { if (text[j] === '\n') nls++; j++ }
+      const sep = nls >= 2 ? ' . ' : ' '
+      for (const ch of sep) { flat += ch; at.push(i) }
+      i = j
+    } else { flat += text[i]; at.push(i); i++ }
+  }
+  at.push(text.length)
   const rawLines = raw.split('\n')
   const lines = text.split('\n')
   const rel = relative(base, file) || basename(file)
@@ -290,24 +333,24 @@ function scan (file, base) {
     if (rule.licence && rule.licence !== LICENCE.kind) continue
     rule.re.lastIndex = 0
     let m
-    while ((m = rule.re.exec(text)) !== null) {
-      const lineNo = lineAt(m.index)
+    while ((m = rule.re.exec(flat)) !== null) {
+      const lineNo = lineAt(at[m.index])
       const line = lines[lineNo - 1] ?? ''
-      const before = text.slice(Math.max(0, m.index - 60), m.index).toLowerCase()
+      const before = flat.slice(Math.max(0, m.index - 60), m.index).toLowerCase()
       if (rule.requiresNoPhysical) {
-        const after = text.slice(m.index + m[0].length, m.index + m[0].length + 40).toLowerCase()
+        const after = flat.slice(m.index + m[0].length, m.index + m[0].length + 40).toLowerCase()
         if (/^\W{0,3}(?:nothing|none|no\b|not\b|yet\b|, when we have any|when we have any)/.test(after)) continue
-        if (/\buntil\s*$/.test(text.slice(Math.max(0, m.index - 12), m.index).toLowerCase())) continue
+        if (/\buntil\s*$/.test(flat.slice(Math.max(0, m.index - 12), m.index).toLowerCase())) continue
       }
-      if (rule.notNegated && NEGATED_BEFORE.test(before)) continue
+      if (rule.notNegated && NEGATED_BEFORE.test(before.replace(NOT_A_NEGATION, ' '))) continue
       if (rule.alsoNegatedBy && rule.alsoNegatedBy.test(before)) continue
       if (rule.notNegatedWithin && rule.notNegatedWithin.test(m[0])) continue
       if (rule.needsNear) {
-        const win = text.slice(Math.max(0, m.index - rule.nearWindow), m.index + rule.nearWindow)
+        const win = flat.slice(Math.max(0, m.index - rule.nearWindow), m.index + rule.nearWindow)
         if (rule.needsNear.test(win)) continue
       }
       if (rule.thirdPartyOk) {
-        const sentence = text.slice(Math.max(0, m.index - 80), m.index + m[0].length + 40)
+        const sentence = flat.slice(Math.max(0, m.index - 80), m.index + m[0].length + 40)
         if (THIRD_PARTY.test(sentence)) continue
       }
       if (rule.licenceNamed && LICENCE.own.test(m[0].trim())) continue

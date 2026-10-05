@@ -39,8 +39,8 @@ function sandbox () {
   writeFileSync(join(d, 'README.md'), '# AurOS\n\nSee LICENSE.\n')
   return d
 }
-function verify (dir, only) {
-  const env = { ...process.env }
+function verify (dir, only, extraEnv = {}) {
+  const env = { ...process.env, ...extraEnv }
   delete env.VERIFY_SLOW
   if (only === undefined) delete env.VERIFY_ONLY; else env.VERIFY_ONLY = only
   const r = spawnSync('bash', ['verify'], { cwd: dir, env, encoding: 'utf8', timeout: 600_000 })
@@ -111,6 +111,21 @@ describe('one thing broken, verify red', () => {
     const d = sandbox()
     writeFileSync(join(d, 'profiles', 'broken.profile'), 'inherit="no-such-parent"\nprofile_id="broken"\n')
     red(verify(d, 'forge-resolve'), 'build/forge resolve')
+  })
+  // Found by the adversarial review: two ways a suite went green over nothing, or never answered.
+  test('a test file that runs no tests is not a pass (node --test reports it as one passing "test")', () => {
+    const d = sandbox()
+    writeFileSync(join(d, 'recipes', 'test', 'cli.test.mjs'), '// every test in this file was deleted\n')
+    const r = verify(d, 'recipes')
+    red(r, 'recipes:')
+    assert.match(r.out, /ran no tests/)
+  })
+  test('a suite that hangs is a failure with a reason, not a verify that never ends', () => {
+    const d = sandbox()
+    writeFileSync(join(d, 'tools', 'compat-lint.mjs'), 'setInterval(() => {}, 1000)\n')
+    const r = verify(d, 'compat', { VERIFY_TIMEOUT: '5' })
+    red(r, 'compat.tsv honesty')
+    assert.match(r.out, /timed out after 5s/)
   })
   test('nothing ran is not a pass: only skips, or an unknown suite id', () => {
     const d = sandbox()
