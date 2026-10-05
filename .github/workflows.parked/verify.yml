@@ -41,6 +41,6 @@ jobs:
             build-essential pkg-config shellcheck \
             libwayland-dev libwayland-bin wayland-protocols libxkbcommon-dev \
             libdbus-1-dev libglib2.0-bin dbus libdrm-dev weston \
-            fonts-dejavu-core
+            fonts-dejavu-core locales xkb-data
       - name: ./verify
         run: ./verify

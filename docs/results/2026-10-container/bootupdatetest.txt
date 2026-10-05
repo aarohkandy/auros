@@ -26,3 +26,17 @@ After a kernel, grub and shim update, does AurOS still start with Secure Boot on
     ...and still has Put Windows back                                ok
 
   boot 2: the next start, through the shim the update installed
+    the firmware started AurOS's entry                               ok
+    ...with Secure Boot on (SecureBoot=1, read inside AurOS)         ok
+    grub started the new kernel                                      ok
+    no Secure Boot refusal on the way (grub's loadfont)              ok
+    the desktop came up                                              ok
+
+  boot 3: the new kernel damaged; grub must fall back by itself
+    grub fell back to the previous kernel                            ok
+    ...and the desktop came up                                       ok
+    Windows' disk: byte-for-byte what it was, after three starts and an update ok
+
+bootupdatetest: 27/27
+exit=0
+seconds=536

@@ -1,0 +1,12 @@
+$ sh tools/failtest.sh
+# started 2026-10-05T00:53:33Z
+when the desktop does not start, does she see words?
+
+  the desktop in this image is now set to fail on purpose
+  booting it (this is emulated, so it is slow)
+  at t+75s there are words on the screen
+
+a machine whose desktop cannot start says so, in words,
+on the screen the person is looking at.
+exit=0
+seconds=76
