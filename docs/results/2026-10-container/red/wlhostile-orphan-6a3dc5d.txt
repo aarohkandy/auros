@@ -1,0 +1,9 @@
+# wlhostile.c as imported (6a3dc5d), case 12, then the process table 5 s later
+12. a hundred thousand surfaces                          Error sending request: Resource temporarily unavailable
+error in client communication (pid 10636)
+simple-shm exiting
+refused, still serving
+
+1/1 — the compositor refused every one and kept working
+exit=0
+10636     1      11 85.1 Rs   /tmp/claude-0/-home-user-auros/92851b89-597a-595e-b7af-206089a1996a/scratchpad/wl/old --client 12

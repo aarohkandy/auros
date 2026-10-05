@@ -30,6 +30,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/prctl.h>
+#include <signal.h>
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <time.h>
@@ -512,7 +514,26 @@ static int run_case(const char *self, int which)
 
 int main(int argc, char **argv)
 {
-    if (argc == 3 && !strcmp(argv[1], "--client")) return be_hostile(atoi(argv[2]));
+    if (argc == 3 && !strcmp(argv[1], "--client")) {
+        /* THE HOSTILE CLIENT MUST NOT OUTLIVE ITS CASE. aurwl_spawn()
+         * puts it in a session of its own, so nothing the harness does
+         * to its own process group reaches it, and case 12's client --
+         * disconnected mid-flood with its send buffer full -- spins in
+         * libwayland's roundtrip forever: two of them were found still
+         * burning a core each, forty minutes after a green run. Die
+         * with the case process that spawned it. */
+        pid_t boss = getppid();
+        prctl(PR_SET_PDEATHSIG, SIGKILL);
+        if (getppid() != boss) _exit(2);
+        return be_hostile(atoi(argv[2]));
+    }
+
+    /* A case that does not finish is a FAILED case, not a hung run.
+     * Each one takes about seven seconds; the deadline is generous on
+     * purpose, and settable for a slow machine. */
+    int limit_s = 60;
+    const char *lim = getenv("WLHOSTILE_CASE_TIMEOUT");
+    if (lim && atoi(lim) > 0) limit_s = atoi(lim);
 
     int only = (argc == 2) ? atoi(argv[1]) : 0;
     int bad = 0, ran = 0;
@@ -524,10 +545,20 @@ int main(int argc, char **argv)
          * as a failed case, not end the run. */
         pid_t pid = fork();
         if (pid == 0) _exit(run_case(argv[0], i));
-        int st = 0;
-        waitpid(pid, &st, 0);
+        int st = 0, hung = 0;
+        uint32_t t0 = now_ms();
+        while (waitpid(pid, &st, WNOHANG) == 0) {
+            if (now_ms() - t0 > (uint32_t)limit_s * 1000u) {
+                kill(pid, SIGKILL);       /* its clients die with it */
+                waitpid(pid, &st, 0);
+                hung = 1;
+                break;
+            }
+            usleep(50 * 1000);
+        }
         ran++;
-        if (WIFSIGNALED(st)) { printf("CRASH (signal %d)\n", WTERMSIG(st)); bad++; }
+        if (hung) { printf("HUNG: no answer in %d s, killed\n", limit_s); bad++; }
+        else if (WIFSIGNALED(st)) { printf("CRASH (signal %d)\n", WTERMSIG(st)); bad++; }
         else if (WEXITSTATUS(st) != 0) { printf("compositor stopped serving clients\n"); bad++; }
         else printf("refused, still serving\n");
     }

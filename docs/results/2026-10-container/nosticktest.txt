@@ -50,3 +50,4 @@ Does it install AurOS with no memory stick, and leave Windows intact?
     ...and grub's configuration is beside it, saying whose it is ok
     ...having written nothing outside \EFI\AurOS, and left Ubuntu's alone ok
     the start-up files are on the machine's EFI partition        ok
+    the old entry (the kernel itself) is refused under Secure Boot ok

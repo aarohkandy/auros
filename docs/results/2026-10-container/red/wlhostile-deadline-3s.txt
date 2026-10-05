@@ -1,0 +1,8 @@
+# wlhostile case 12 with WLHOSTILE_CASE_TIMEOUT=3 (shorter than one case): must FAIL, not hang
+12. a hundred thousand surfaces                          Error sending request: Resource temporarily unavailable
+error in client communication (pid 7744)
+HUNG: no answer in 3 s, killed
+
+1 of 1 hostile clients got through
+exit=1
+no hostile client left running

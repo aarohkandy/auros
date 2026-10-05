@@ -1,24 +1,24 @@
-1. a subsurface placed below itself                     error in client communication (pid 32448)
+1. a subsurface placed below itself                     error in client communication (pid 31338)
 wl_subsurface@12: error 0: a subsurface cannot be its own sibling
 simple-shm exiting
 refused, still serving
-2. a subsurface placed above itself, then orphaned      error in client communication (pid 32537)
+2. a subsurface placed above itself, then orphaned      error in client communication (pid 32181)
 wl_subsurface@12: error 0: a subsurface cannot be its own sibling
 simple-shm exiting
 refused, still serving
-3. two roles on one surface, written through after free error in client communication (pid 342)
+3. two roles on one surface, written through after free error in client communication (pid 1448)
 xdg_surface@12: error 0: this surface already has a role
 simple-shm exiting
 refused, still serving
 4. a buffer destroyed between attach and commit         simple-shm exiting
 refused, still serving
-5. an xdg_surface destroyed under a live toplevel       refused, still serving
-6. two popups naming each other as parent               simple-shm exiting
-error in client communication (pid 690)
+5. an xdg_surface destroyed under a live toplevel       simple-shm exiting
+refused, still serving
+6. two popups naming each other as parent               error in client communication (pid 16122)
 xdg_surface@13: error 3: popup parent loop
 simple-shm exiting
 refused, still serving
-7. four thousand nested synchronized subsurfaces        error in client communication (pid 695)
+7. four thousand nested synchronized subsurfaces        error in client communication (pid 20083)
 Error sending request: Broken pipe
 simple-shm exiting
 refused, still serving
@@ -28,23 +28,23 @@ refused, still serving
 refused, still serving
 10. copying to the clipboard twice                       simple-shm exiting
 refused, still serving
-11. a hundred thousand pointers                          error in client communication (pid 728)
+11. a hundred thousand pointers                          error in client communication (pid 27662)
 Error sending request: Broken pipe
 simple-shm exiting
 refused, still serving
 12. a hundred thousand surfaces                          Error sending request: Resource temporarily unavailable
-error in client communication (pid 733)
+error in client communication (pid 31955)
 simple-shm exiting
 refused, still serving
-13. a subsurface that then asks to be a window           error in client communication (pid 738)
+13. a subsurface that then asks to be a window           error in client communication (pid 32679)
 xdg_surface@13: error 0: this surface is already part of another window and cannot also be a window
 simple-shm exiting
 refused, still serving
-14. a mapped window that then asks to be the cursor      error in client communication (pid 749)
+14. a mapped window that then asks to be the cursor      error in client communication (pid 1675)
 wl_pointer@16: error 0: this surface is already a window and cannot also be a pointer or a drag icon
 simple-shm exiting
 refused, still serving
-15. acking a configure that was never sent               error in client communication (pid 844)
+15. acking a configure that was never sent               error in client communication (pid 6144)
 xdg_surface@12: error 4: no configure with serial 3735928559 was sent
 simple-shm exiting
 refused, still serving
