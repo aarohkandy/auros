@@ -85,7 +85,7 @@
     "  vec3 col=mix(vec3(.020,.034,.046),vec3(.006,.009,.018),pow(clamp(y/(1.-hz),0.,1.),.5));",
     "  vec3 rd=normalize(vec3(p.x*.9,y*1.05+.012,1.));",
     "  vec3 a=aurora(rd,t*.6,j);",
-    "  a+=vec3(.02,.09,.06)*exp(-max(y,0.)*7.)*(.6+.4*fbm3(vec2(p.x*1.5,t*.01)));",   // the glow it throws on the low sky
+    "  a+=vec3(.035,.15,.10)*exp(-max(y,0.)*5.5)*(.55+.45*fbm3(vec2(p.x*1.2,t*.01)));",   // the glow it throws on the low sky: the mountains cut black against it
     "  a*=.9+.1*sin(t*.07);",
     "  float al=dot(a,vec3(.3,.6,.1));",
     "  if(stars){",
@@ -114,7 +114,7 @@
     "  float rf=ridge(p.x,1.6,.11,3.7)+.006;",
     "  float rf2=ridge(p.x+4.,2.6,.06,8.3)+.003;",
     "  float px1=1.2/uRes.y;",
-    "  vec3 m1=vec3(.010,.016,.020)+a*.04;",
+    "  vec3 m1=vec3(.006,.010,.012)+a*.02;",
     "  vec3 m2=vec3(.004,.006,.008);",
     "  col=mix(col,m1,smoothstep(rf+px1,rf-px1,y));",
     "  col=mix(col,m2,smoothstep(rf2+px1,rf2-px1,y));",

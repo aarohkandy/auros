@@ -11,7 +11,7 @@ branch's tree; raw transcripts are in `docs/results/`.
 |---|---|---|
 | `tools/installtest.sh` | 37 | Installs for real on a synthetic Windows machine (real NTFS, 7 files with known md5s), starts AurOS, puts Windows back twice (from the stick, then from the copy on the computer), refuses a damaged image, a damaged boot chain and a stick for another profile, and keeps every Windows file identical. |
 | `tools/loadertest.sh` | 18 | With the stick out and no `-kernel`, firmware alone starts the installed AurOS, including **under Secure Boot with Microsoft's keys**. |
-| `tools/powercuttest.sh` | 138 | Power cut at each of 17 named instants of install and restore; Windows always comes back with every file intact. |
+| `tools/powercuttest.sh` | 138 | Power cut at each of 18 named instants of install and restore; Windows always comes back with every file intact. |
 | `tools/matrixtest.sh` | 10 | 512-byte and 4Kn disks, a 1 GiB OEM ESP, first partition at LBA 34 are accepted; BitLocker, hibernated Windows, MBR, legacy BIOS, two Windows drives and no room are refused. |
 | `tools/imagetest.sh` | 23 | The image is found by its content, including the right one of two on a stick; a flipped byte is caught; an interrupted write leaves nothing mountable. |
 | `tools/bridgetest.sh` | 13 | The Windows half and the staging half agree byte-for-byte on the journal, cpio, gzip and GPT. |

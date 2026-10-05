@@ -56,7 +56,7 @@ real PC fails there too.
 
 **Proven in simulation, under real UEFI firmware** (OVMF, Microsoft's
 keys, Secure Boot on): install and put back, with and without a memory
-stick (`installtest` 37, `nosticktest` 45), power cuts at 17 named
+stick (`installtest` 37, `nosticktest` 45), power cuts at 18 named
 moments (`powercuttest`), the real image's first boot and its choices
 (`firstboottest`, `choicesboottest`), and "Put Windows back" from the
 button in AurOS through AurOS's own menu to the restore

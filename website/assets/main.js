@@ -57,8 +57,8 @@
       rig.style.transform = "translate(" + (dx - (base.sx - base.ox) * (k - 1)) + "px," +
         (dy - (base.sy - base.oy) * (k - 1)) + "px) scale(" + k + ")";
       // the camera comes round to face the screen as it closes in
-      var ry = rig.dataset.ry ? +rig.dataset.ry : (vw <= 860 ? -6 : -14);
-      var rx = vw <= 860 ? -10 : -9;
+      var ry = vw <= 860 ? -6 : -9;
+      var rx = vw <= 860 ? -10 : -11;
       machine.style.transform = "rotateX(" + (rx * (1 - e)) + "deg) rotateY(" + (ry * (1 - e)) + "deg)";
       lid.style.setProperty("--lid", (12 * (1 - e)) + "deg");
       copy.style.opacity = String(Math.max(0, 1 - p * 3));

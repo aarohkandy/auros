@@ -120,12 +120,12 @@ h3 { font-family: var(--display); font-stretch: 112%; font-weight: 500; font-siz
 .hero-note a { color: var(--ink-2); }
 
 /* the laptop: built in CSS 3D. Sizes are fractions of --w. */
-.rig { position: absolute; z-index: 4; --w: min(40vw, 66vh, 680px);
-  left: calc(50% + 5vw); bottom: calc(var(--w) * 0.27 + 5vh); width: var(--w); height: calc(var(--w) * 0.66);
-  perspective: calc(var(--w) * 4.6); perspective-origin: 50% -30%;
+.rig { position: absolute; z-index: 4; --w: min(38vw, 60vh, 640px);
+  left: calc(50% + 7vw); bottom: calc(var(--w) * 0.24 + 6vh); width: var(--w); height: calc(var(--w) * 0.66);
+  perspective: calc(var(--w) * 6); perspective-origin: 50% -10%;
   transform-origin: 50% 60%; will-change: transform; }
 .machine { position: absolute; inset: 0; transform-style: preserve-3d;
-  transform: rotateX(-9deg) rotateY(-14deg); }
+  transform: rotateX(-11deg) rotateY(-9deg); }
 .lid { position: absolute; left: 0; right: 0; bottom: 0; height: 100%;
   transform-style: preserve-3d; transform-origin: 50% 100%;
   transform: rotateX(var(--lid, 12deg)); }
@@ -158,7 +158,7 @@ h3 { font-family: var(--display); font-stretch: 112%; font-weight: 500; font-siz
 .boot-anim .lid { animation: lidopen 1.9s cubic-bezier(.2,.7,.2,1) .15s both; }
 @keyframes lidopen { from { transform: rotateX(-82deg); } to { transform: rotateX(var(--lid, 12deg)); } }
 
-.deck { position: absolute; left: 0; right: 0; top: 100%; height: calc(var(--w) * 0.66);
+.deck { position: absolute; left: 0; right: 0; top: 100%; height: calc(var(--w) * 0.62);
   transform-origin: 50% 0; transform: rotateX(90deg); transform-style: preserve-3d;
   border-radius: 2px 2px calc(var(--w) * 0.02) calc(var(--w) * 0.02);
   background: linear-gradient(180deg, #2c2e32 0%, #26282b 55%, #202225 100%);

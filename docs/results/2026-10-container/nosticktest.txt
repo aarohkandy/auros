@@ -51,3 +51,12 @@ Does it install AurOS with no memory stick, and leave Windows intact?
     ...having written nothing outside \EFI\AurOS, and left Ubuntu's alone ok
     the start-up files are on the machine's EFI partition        ok
     the old entry (the kernel itself) is refused under Secure Boot ok
+    through shim and grub it installs, and AurOS starts          ok
+    ...knowing the disk by its partition table, not the serial   ok
+    ...and the installer reported success                        ok
+    ...with a real Ubuntu's grub.cfg on the same partition, untouched ok
+    ...with the kernel locked down, as Secure Boot makes it      ok
+    ...where the NTFS reader, a module, still loaded             ok
+    ...and EFI variables could be written: AurOS's entry in, the installer's out ok
+
+  a Secured-core PC, whose firmware does not trust the key shim is signed with

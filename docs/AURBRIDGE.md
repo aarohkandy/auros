@@ -1045,7 +1045,7 @@ better than nothing and better in one respect than a cord and a
 stopwatch: the installer names its own dangerous instants (`fault.h`)
 and a fault-injection build can be told to stop dead at exactly one of
 them, so every run is the same run and a failure is reproducible by its
-name. Fourteen of them — nine during the install and five during the
+name. Eighteen of them — thirteen during the install and five during the
 restore — each followed by a restore and a byte-for-byte comparison
 against the machine as it was.
 
