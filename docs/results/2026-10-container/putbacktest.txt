@@ -1,0 +1,8 @@
+$ sh tools/putbacktest.sh
+# started 2026-10-05T00:25:48Z
+
+Does "Put Windows back" in AurOS reach the restore, with Secure Boot on?
+
+    the image carries grub's environment block                     ok
+    ...and a Put Windows back entry in its menu                    ok
+  boot 1: AurOS, where she presses Put Windows back
