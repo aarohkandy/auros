@@ -20,3 +20,42 @@ If the power goes at the worst possible instant, does Windows come back?
     a half-written saved copy is refused                       ok
 
   ── shrink-begin
+    the machine stops dead at shrink-begin                     ok
+    the disk is byte-for-byte untouched                        ok
+
+  ── shrink-end
+    the machine stops dead at shrink-end                       ok
+    after the cut: every file in Windows is still exactly what it was ok
+    and Windows can be put back                                ok
+    after shrink-end: the table is valid again                 ok
+    after shrink-end: the three original partitions are back   ok
+    after shrink-end: Windows is its full size again           ok
+    after shrink-end: the EFI partition is byte-for-byte what it was ok
+    after shrink-end: the Windows FILESYSTEM is its full size again ok
+    after shrink-end: and the installer says so itself         ok
+
+  ── write-mid
+    the machine stops dead at write-mid                        ok
+    after the cut: every file in Windows is still exactly what it was ok
+    and Windows can be put back                                ok
+    after write-mid: the table is valid again                  ok
+    after write-mid: the three original partitions are back    ok
+    after write-mid: Windows is its full size again            ok
+    after write-mid: the EFI partition is byte-for-byte what it was ok
+    after write-mid: the Windows FILESYSTEM is its full size again ok
+    after write-mid: and the installer says so itself          ok
+
+  ── write-end
+    the machine stops dead at write-end                        ok
+    after the cut: every file in Windows is still exactly what it was ok
+    and Windows can be put back                                ok
+    after write-end: the table is valid again                  ok
+    after write-end: the three original partitions are back    ok
+    after write-end: Windows is its full size again            ok
+    after write-end: the EFI partition is byte-for-byte what it was ok
+    after write-end: the Windows FILESYSTEM is its full size again ok
+    after write-end: and the installer says so itself          ok
+
+  ── boot-mid
+    the machine stops dead at boot-mid                         ok
+    after the cut: every file in Windows is still exactly what it was ok
