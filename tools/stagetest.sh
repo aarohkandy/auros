@@ -298,6 +298,15 @@ run_case "a healthy machine: it says it could be converted" \
 # And the floor, at its shipped value, on the same machine.
 run_case "too small to be worth converting: refused" "aurstage.dry" \
          "not enough room"
+# And the number it gives is a need, so it is rounded UP. With a 2 GB
+# floor this machine needs 2 GB + its 100 MiB EFI partition copied as
+# the way back + the 512 MiB AurOS starts from = 2.64 GB, and has about
+# 2.1 GB to spare. Rounded down -- as it was -- the row said need_gb=2
+# and the sentence "needs 2 GB ... can spare 2 GB", a refusal that
+# contradicts itself.
+run_case "the room it asks for is rounded up, not down" \
+         "aurstage.dry aurstage.min_gb=2" \
+         "verdict=no-room record=none free_mib=[0-9]* need_gb=3"
 
 echo
 echo "  and the states a resize must never start from"

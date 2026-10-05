@@ -6,3 +6,8 @@ If the power goes at the worst possible instant, does Windows come back?
   a 3 GiB machine with 7 files in Windows, and an AurOS stick
 
   first, one ordinary install, so there is something to undo
+    it installs                                                ok
+
+  the power goes during the install
+
+  ── gate

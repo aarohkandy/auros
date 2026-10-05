@@ -53,6 +53,17 @@
  * against the floor it was judged by. */
 #define AUROS_NEEDS_GB_DEFAULT 24ull
 
+/* A NEED IS ROUNDED UP, what is free is rounded down. Both used to be
+ * rounded down, so a machine with 24.6 GB to find and 24.3 GB to spare
+ * was refused with "AurOS needs 24 GB free ... this computer can spare
+ * 24 GB" -- a refusal that contradicts itself -- and the report row
+ * said need_gb=1 for a need of 1.64 GB, which reads as "six megabytes
+ * short" to anyone comparing it with free_mib. */
+static unsigned long long gb_up(uint64_t bytes)
+{
+    return (unsigned long long)((bytes + 999999999ull) / 1000000000ull);
+}
+
 static uint64_t needs_bytes(void)
 {
     char v[32];
@@ -441,12 +452,12 @@ static void dry_run(const stage_machine *m)
         stage_say("         AurOS needs %llu GB free -- itself, the part it "
                   "starts from and a way back to Windows -- and this "
                   "computer can spare %llu GB.",
-                  (unsigned long long)(need / 1000000000ull),
+                  gb_up(need),
                   (unsigned long long)(freeable / 1000000000ull));
         char c[64];
         snprintf(c, sizeof c, "free_mib=%llu need_gb=%llu",
                  (unsigned long long)(freeable / (1024 * 1024)),
-                 (unsigned long long)(need / 1000000000ull));
+                 gb_up(need));
         verdict_line("no-room", c);
         return;
     }
@@ -506,7 +517,7 @@ static void dry_run(const stage_machine *m)
              on->name, win->name,
              on->logical_sector, on->physical_sector, ns.bytes_per_cluster,
              (unsigned long long)(freeable / (1024 * 1024)),
-             (unsigned long long)(need / 1000000000ull),
+             gb_up(need),
              smart_verdict_name(sm.verdict), pw_ok ? "ok" : "battery",
              (!fde_unsure && ns.dirty == NTFS_NO &&
               ns.hibernated == NTFS_NO && ns.log_dirty == NTFS_NO)

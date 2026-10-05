@@ -1,5 +1,7 @@
 # HANDOFF — AurOS triage
 
+> **Resolved 2026-10-05.** The merge is done; read [`HANDOFF.md`](HANDOFF.md). Kept as the record of how the decision was framed.
+
 **Date:** 2026-10-04 · **For:** the next agent (or Aaroh) · **Author:** build agent
 
 Aaroh has two AurOS codebases and wasn't sure which is better, so both are
