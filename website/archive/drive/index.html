@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AurOS</title>
-<meta name="description" content="An old PC explains, in its own words, how AurOS keeps it going: one download, one restart, Secure Boot left on, and Windows can come back exactly as it was. Pre-release.">
+<meta name="description" content="An old PC explains, in its own words, how AurOS keeps it going: one download, one restart once preflight has checked it, Secure Boot left on, and Windows can come back exactly as it was. Pre-release.">
 <meta name="theme-color" content="#0E1013">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%230E1013'/%3E%3Cpath%20d='M16%206L26%2016L16%2026L6%2016Z'%20fill='%23C89B4A'/%3E%3C/svg%3E">
 <link rel="preload" href="assets/fonts/atkinson-700.woff2" as="font" type="font/woff2" crossorigin>
@@ -32,7 +32,7 @@
     <header class="hero" id="top">
       <p class="kicker">AurOS is a free operating system that gives an old Windows&nbsp;PC a second life.</p>
       <h1>I&rsquo;m <span class="age"><button type="button" id="age-down" aria-label="Younger">&minus;</button><output id="age" aria-live="polite">11</output><button type="button" id="age-up" aria-label="Older">+</button></span> years old. I still work.</h1>
-      <p class="lede">In <span class="countdown" id="days">373 days</span>, on 12 October 2027, Microsoft stops sending me security updates. <span id="why">Not because anything in me broke. Windows 11 won&rsquo;t install on me: my processor is older than its list allows.</span> AurOS keeps me safe and up to date instead. <strong>One download in Windows, one restart, and every file stays put.</strong></p>
+      <p class="lede">In <span class="countdown" id="days">about a year</span>, on 12 October 2027, Microsoft stops sending me security updates. <span id="why">Not because anything in me broke. Windows 11 won&rsquo;t install on me: my processor is older than its list allows.</span> AurOS keeps me safe and up to date instead. <strong>One download in Windows, one restart if preflight says I can take it, and every file stays put.</strong></p>
       <p class="aside">Windows stays on my drive the whole time. Don&rsquo;t like AurOS? It comes back <em>exactly</em> as it was &mdash; that&rsquo;s the part we tested hardest. Want to see? Scroll down: <strong>this whole page is my actual hard drive, and you can watch me switch over right here.</strong></p>
 
       <!-- ── my drive ──────────────────────────────────────── -->
@@ -230,7 +230,7 @@
       <p class="big">A drive that hides its bad sectors is lying to you. These are mine: what&rsquo;s still wrong, and what was wrong and has been fixed.</p>
       <div class="sectors">
         <div class="sector bad"><span class="addr"><span>open</span><i>bad</i></span><b>Not yet tried on a real PC&rsquo;s drive.</b><p>Everything above is simulation plus a real Windows machine running the installer. A spare PC is the next piece of evidence.</p></div>
-        <div class="sector bad"><span class="addr"><span>open</span><i>bad</i></span><b>Windows will warn you about the download.</b><p>The installer isn&rsquo;t code-signed yet; that takes a company and a certificate. Avast and AVG hold it for a few hours.</p></div>
+        <div class="sector bad"><span class="addr"><span>open</span><i>bad</i></span><b>Windows will warn you about the download.</b><p>The installer isn&rsquo;t code-signed yet; that takes a company and a certificate. Avast and AVG hold it until their lab has looked at it.</p></div>
         <div class="sector bad"><span class="addr"><span>open</span><i>bad</i></span><b>No Firefox in this build.</b><p>The machine that builds it can&rsquo;t reach Mozilla, so it ships GNOME Web instead and says so.</p></div>
         <div class="sector bad"><span class="addr"><span>open</span><i>bad</i></span><b>Wi-Fi passwords don&rsquo;t come across yet.</b><p>The network names do. You type each password once.</p></div>
         <div class="sector bad"><span class="addr"><span>open</span><i>bad</i></span><b>Some PCs are turned away.</b><p>Ones that start the old way (BIOS), failing drives, some setups with several drives. Always before anything changes.</p></div>
@@ -239,7 +239,7 @@
         <div class="sector remapped"><span class="addr"><span>v4</span><i>remapped</i></span><b>A kernel that wouldn&rsquo;t start meant I never started.</b><p>The fallback to the previous kernel didn&rsquo;t work. It does now, and it&rsquo;s tested with a broken kernel.</p></div>
         <div class="sector remapped"><span class="addr"><span>v4</span><i>remapped</i></span><b>&ldquo;Nothing has been changed&rdquo;, after Windows was made smaller.</b><p>A sentence that was true in a dry run and false there. It says what happened now.</p></div>
         <div class="sector remapped"><span class="addr"><span>v4</span><i>remapped</i></span><b>Updates to my start-up files changed nothing.</b><p>The packages installed and my drive kept the old files. Fixed, and tested inside a running AurOS.</p></div>
-        <div class="sector remapped"><span class="addr"><span>site</span><i>remapped</i></span><b>This website said two restarts and a required USB stick.</b><p>It&rsquo;s one restart, and no stick.</p></div>
+        <div class="sector remapped"><span class="addr"><span>site</span><i>remapped</i></span><b>This website said two restarts and a required USB stick.</b><p>It&rsquo;s one restart, and no stick, on a PC preflight accepts.</p></div>
       </div>
     </div>
   </section>

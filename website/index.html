@@ -208,7 +208,7 @@
               <img src="assets/renders/welcome-1366.webp" srcset="assets/renders/welcome-1366.webp 1366w, assets/renders/welcome-2732.webp 2732w" sizes="(max-width: 960px) 92vw, 62vw" width="1366" height="768" loading="lazy" decoding="async" alt="AurOS’s first start, as src/aurshell/welcome.c paints it: ‘AurOS is on this computer. Have a look around. Nothing has been decided yet. Right now, switching this computer on still starts Windows. That stays true until you press Yes.’ Buttons: Yes, it all works · Let me look first · No, go back to Windows.">
             </picture>
           </div>
-          <figcaption class="source r-cap"><span class="r-cap-a">Steps and sentences: <a href="https://github.com/ComputerDude771/auros-from-scratch/blob/HEAD/src/aurscreen/screen.c">src/aurscreen/screen.c</a>, <a href="https://github.com/ComputerDude771/auros-from-scratch/blob/HEAD/src/aurstage/install.c">src/aurstage/install.c</a>. Set in DejaVu Sans, like the real one.</span><span class="r-cap-b">Then it starts AurOS and asks one question. <a href="https://github.com/ComputerDude771/auros-from-scratch/blob/HEAD/src/aurshell/welcome.c">src/aurshell/welcome.c</a>, rendered.</span></figcaption>
+          <figcaption class="source r-cap"><span class="r-cap-a">Steps and sentences: <a href="https://github.com/aarohkandy/auros/blob/main/src/aurscreen/screen.c">src/aurscreen/screen.c</a>, <a href="https://github.com/aarohkandy/auros/blob/main/src/aurstage/install.c">src/aurstage/install.c</a>. Set in DejaVu Sans, like the real one.</span><span class="r-cap-b">Then it starts AurOS and asks one question. <a href="https://github.com/aarohkandy/auros/blob/main/src/aurshell/welcome.c">src/aurshell/welcome.c</a>, rendered.</span></figcaption>
         </figure>
         <div class="disk" aria-label="The drive, to scale">
           <div class="disk-bar" id="disk">
@@ -240,7 +240,7 @@
 
     <div class="cut" id="cut">
       <p class="cut-line" data-source="docs/results/powercut.txt website/assets/data/facts.json">The power was cut at <b class="num">18</b> named instants: <b class="num">13</b> while installing, <b class="num">5</b> while putting Windows back. <b class="num">138</b> checks. <b class="num">0</b> failed.</p>
-      <p class="source cut-src" data-source="docs/results/powercut.txt">After every cut the test asks whether Windows comes back whole: the table, the EFI partition, Windows at its full size. After the cuts during the install it also compares the <span class="num">7</span> files in Windows with what they were. <span class="mono">sudo sh tools/powercuttest.sh</span> · transcript: <a href="https://github.com/ComputerDude771/auros-from-scratch/blob/HEAD/docs/results/powercut.txt">docs/results/powercut.txt</a>. Simulated machine (QEMU + OVMF), one firmware, one virtual disk, and run with the earlier design that starts the installer from a memory stick; the download needs no stick.</p>
+      <p class="source cut-src" data-source="docs/results/powercut.txt">After every cut the test asks whether Windows comes back whole: the table, the EFI partition, Windows at its full size. After the cuts during the install it also compares the <span class="num">7</span> files in Windows with what they were. <span class="mono">sudo sh tools/powercuttest.sh</span> · transcript: <a href="https://github.com/aarohkandy/auros/blob/main/docs/results/powercut.txt">docs/results/powercut.txt</a>. Simulated machine (QEMU + OVMF), one firmware, one virtual disk, and run with the earlier design that starts the installer from a memory stick; the download needs no stick.</p>
       <div class="timeline" role="group" aria-label="The 18 instants, in order. Choose one to read what the test checked.">
         <div class="scope" aria-hidden="true">
           <svg id="scope" preserveAspectRatio="none"></svg>
@@ -521,7 +521,7 @@ name: example-school
 policy: managed</pre>
         </div>
         <p class="source">Validated and compiled in your browser by <span class="mono">recipes/lib/recipe.mjs</span>, the same code that turns a recipe into the profile <span class="mono">build/forge</span> builds.</p>
-        <noscript><p class="lede">The configurator runs <span class="mono">recipes/lib/recipe.mjs</span> in your browser, so it needs JavaScript. The recipe format is in the source: <a href="https://github.com/ComputerDude771/auros-from-scratch/tree/HEAD/recipes">recipes/</a>.</p></noscript>
+        <noscript><p class="lede">The configurator runs <span class="mono">recipes/lib/recipe.mjs</span> in your browser, so it needs JavaScript. The recipe format is in the source: <a href="https://github.com/aarohkandy/auros/tree/main/recipes">recipes/</a>.</p></noscript>
       </div>
     </div>
   </div>
@@ -556,7 +556,7 @@ policy: managed</pre>
     </div>
     <nav class="foot-links" aria-label="More">
       <div><p class="mono f-h">Look closer</p><a href="desktop.html">Click around AurOS</a><a href="wallpaper.html">Press your own wallpaper</a><a href="guide.html">The one-page guide</a><a href="safety.html">Safety</a></div>
-      <div><p class="mono f-h">Source</p><a href="https://github.com/ComputerDude771/auros-from-scratch">GitHub</a><a href="https://github.com/ComputerDude771/auros-from-scratch/tree/HEAD/docs">Docs</a><a href="https://github.com/ComputerDude771/auros-from-scratch/tree/HEAD/docs/results">Every test transcript</a></div>
+      <div><p class="mono f-h">Source</p><a href="https://github.com/aarohkandy/auros">GitHub</a><a href="https://github.com/aarohkandy/auros/tree/main/docs">Docs</a><a href="https://github.com/aarohkandy/auros/tree/main/docs/results">Every test transcript</a></div>
       <div><p class="mono f-h">Other directions</p><a href="archive/drive/">The page is the drive</a></div>
     </nav>
   </div>

@@ -49,7 +49,7 @@ they are built to be wary of.
 
 - **Avast / AVG** show *"Suspicious file detected"*, upload the file
   to their Threat Labs, then *"This needs a closer look"* and block it
-  "for a few hours". Either wait for their verdict, or open Avast →
+  "for a few hours" <!-- auros-allow: Avast's own words, quoted; not our estimate -->. Either wait for their verdict, or open Avast →
   *Menu* → *Settings* → *General* → *Exceptions* → *Add exception* and
   add the downloaded file. Download it again afterwards if Avast moved
   it to the Virus Chest.
@@ -134,7 +134,7 @@ To remove AurOS and give Windows all of its drive back:
   Windows starts. **Do not switch it off while the text is still
   moving.**
 - or, if AurOS itself does not start: in AurOS's start-up menu (the list
-  that appears for three seconds when AurOS starts), choose **Put Windows
+  that appears for three seconds when AurOS starts <!-- auros-allow: set timeout=3 in rootfs/usr/lib/auros/grub.cfg.in -->), choose **Put Windows
   back (remove AurOS)**, then **Yes**.
 
 Everything saved inside AurOS goes with it; copy what you want to keep
