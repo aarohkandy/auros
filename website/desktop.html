@@ -125,8 +125,8 @@
             <p>AurOS&rsquo;s shell is a C program that draws every pixel itself and hands the frame to the graphics hardware. This page is HTML pretending to be that. The layout (&ldquo;Everything in a row&rdquo;, the one the desktop image ships with), the words, the colours and the wallpapers come from the source; the apps inside are stand-ins.</p>
           </div>
           <div>
-            <h3>The screenshots are older than the theme</h3>
-            <p>The real screendumps elsewhere on this site were taken before Nocturne was redrawn from teal to brass. This model uses the theme files as they are today, so it is closer to what an install now looks like than those pictures are.</p>
+            <h3>The pictures are closer than the model</h3>
+            <p>The desktop pictures on the <a href="index.html#desktop">front page</a> are painted by the shell&rsquo;s own drawing code (<span class="mono">src/aurshell</span>) from today&rsquo;s theme files. This model is HTML imitating that code, so where the two differ, the pictures are right.</p>
           </div>
         </div>
       </div>
@@ -142,8 +142,8 @@
         <a class="brand" href="index.html"><span class="glyph" aria-hidden="true">&#9670;</span>AurOS</a>
         <p class="small" style="margin-top:.9rem">
           A Linux desktop for the Windows PC you already have. Pre-release:
-          installed and put back many times on simulated machines under real
-          firmware; not yet proven on a real PC&rsquo;s disk.
+          installed and put back many times on simulated machines (QEMU with
+          OVMF firmware); not yet installed on a real PC.
         </p>
       </div>
       <nav aria-labelledby="f-see">
@@ -157,9 +157,9 @@
       <nav aria-labelledby="f-decide">
         <h2 id="f-decide">Before you decide</h2>
         <ul>
-          <li><a href="safety.html">What a PC needs</a></li>
-          <li><a href="index.html#restart">How it works</a></li>
-          <li><a href="safety.html">Bad sectors I know about</a></li>
+          <li><a href="safety.html">What can go wrong</a></li>
+          <li><a href="index.html#restart">How it installs</a></li>
+          <li><a href="index.html#wayback">Putting Windows back</a></li>
           <li><a href="guide.html">A one-page guide to print</a></li>
         </ul>
       </nav>
@@ -167,7 +167,7 @@
         <h2 id="f-proj">The project</h2>
         <ul>
           <li><a href="index.html#download">Download (test build)</a></li>
-                    <li><a href="https://github.com/ComputerDude771/auros-from-scratch">Source code</a></li>
+          <li><a href="https://github.com/ComputerDude771/auros-from-scratch">Source code</a></li>
         </ul>
       </nav>
     </div>
@@ -176,8 +176,8 @@
       <div>
         <p>
           Coloured by two AurOS theme files, <code>nocturne.theme</code> and
-          <code>sandstone.theme</code>, copied value for value. Set in whatever
-          fonts your computer already has. No analytics, no cookies, no
+          <code>sandstone.theme</code>, copied value for value. Set in Archivo,
+          Atkinson Hyperlegible and Martian Mono, served from this site. No analytics, no cookies, no
           advertising, and no request to any server but this one. If you press
           the Nocturne/Sandstone switch, this browser remembers the choice in
           its own storage; nothing is sent.

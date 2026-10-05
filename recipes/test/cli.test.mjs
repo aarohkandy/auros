@@ -17,6 +17,18 @@ const run = (...args) => {
 const file = (name, text) => { const p = join(TMP, name); writeFileSync(p, text); return p }
 
 describe('validate', () => {
+  test('a recipe cannot write control sequences to the reviewer\'s terminal through an error message', () => {
+    // Found by the adversarial review. Refusals quote the offending text, and the CLI printed it raw:
+    // a recipe in a pull request could clear the screen of whoever ran validate on it, retitle the
+    // window, or hide the refusal with an escape sequence or a right-to-left override.
+    const evil = '\u001b[2J\u001b]0;all good\u0007\u202eok'
+    for (const text of [`schema: 1\nlanguage: "${evil.replace(/\u001b/g, '\\u001b').replace(/\u0007/g, '\\u0007').replace(/\u202e/g, '\\u202e')}"\n`, `schema: 1\n${evil}: x\n`]) {
+      const r = run('validate', file('esc.yaml', text))
+      assert.equal(r.code, 1, r.err)
+      assert.doesNotMatch(r.out + r.err, /[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/, JSON.stringify(r.err))
+      assert.match(r.err, /\\u\{?0*1b/i, 'the escape should be shown, made visible, not dropped')
+    }
+  })
   test('0 for the examples', () => {
     const r = run('validate', ...EXAMPLES.map((n) => join(RECIPES, 'examples', `${n}.yaml`)))
     assert.equal(r.code, 0, r.err)

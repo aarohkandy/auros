@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AurOS — your old PC isn’t finished</title>
-<meta name="description" content="AurOS checks first, then turns a 2012–2018 Windows PC into a fast, patched Linux desktop in one restart, with your files already there. Until you say it works, Windows is still there.">
+<meta name="description" content="AurOS checks first, then turns a 2012–2018 Windows PC into a Linux desktop that keeps itself patched, in one restart, with your files already there. Until you say it works, Windows is still there.">
 <meta name="theme-color" content="#05070a">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%2305070A'/%3E%3Cpath%20d='M16%206L26%2016L16%2026L6%2016Z'%20fill='%23C89B4A'/%3E%3C/svg%3E">
 <link rel="preload" href="assets/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
@@ -47,7 +47,7 @@
     <div class="hero-copy">
       <div class="wrap"><div class="inner">
         <h1 id="h1">Your old PC isn’t finished.</h1>
-        <p class="lede">Download one file. It restarts once and comes back as a fast, patched desktop, with your files already on it. Until you say it works, Windows is still there.</p>
+        <p class="lede">Download one file. It restarts once and comes back as a desktop that keeps itself patched, with your files already on it. Until you say it works, Windows is still there.</p>
         <div class="cta">
           <a class="btn btn-brass" href="#download"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1v9m0 0L4.5 6.5M8 10l3.5-3.5M2 13.5h12" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Download for Windows</a>
           <a class="btn" href="#orgs">For schools &amp; nonprofits</a>
@@ -219,8 +219,8 @@
             <span class="d-head" id="d-head" aria-hidden="true"></span>
           </div>
           <div class="disk-key">
-            <span><i class="k-win"></i>Windows <b class="num" id="d-win">237.3</b> GiB</span>
-            <span><i class="k-aur"></i>AurOS <b class="num" id="d-aur">0</b> GiB</span>
+            <span><i class="k-win"></i>Windows <b class="num" id="d-win">61.2</b> GiB</span>
+            <span><i class="k-aur"></i>AurOS <b class="num" id="d-aur">176.1</b> GiB</span>
             <span class="disk-note" data-source="tools/screentest.sh src/aurstage/install.c">Illustration, to scale: a 256&nbsp;GB drive. Windows is shrunk to the smallest size <span class="mono">ntfsresize</span> allows (61.2&nbsp;GiB in the test fixture) and AurOS gets everything that frees. Recovery stays where it was.</span>
           </div>
         </div>
@@ -240,7 +240,7 @@
 
     <div class="cut" id="cut">
       <p class="cut-line" data-source="docs/results/powercut.txt website/assets/data/facts.json">The power was cut at <b class="num">18</b> named instants: <b class="num">13</b> while installing, <b class="num">5</b> while putting Windows back. <b class="num">138</b> checks. <b class="num">0</b> failed.</p>
-      <p class="source cut-src">Every cut is followed by the same question: are the <span class="num">7</span> files in Windows exactly what they were, and does Windows come back? <span class="mono">sudo sh tools/powercuttest.sh</span> · transcript: <a href="https://github.com/ComputerDude771/auros-from-scratch/blob/HEAD/docs/results/powercut.txt">docs/results/powercut.txt</a>. Simulated machine (QEMU + OVMF); one firmware, one virtual disk.</p>
+      <p class="source cut-src" data-source="docs/results/powercut.txt">After every cut the test asks whether Windows comes back whole: the table, the EFI partition, Windows at its full size. After the cuts during the install it also compares the <span class="num">7</span> files in Windows with what they were. <span class="mono">sudo sh tools/powercuttest.sh</span> · transcript: <a href="https://github.com/ComputerDude771/auros-from-scratch/blob/HEAD/docs/results/powercut.txt">docs/results/powercut.txt</a>. Simulated machine (QEMU + OVMF), one firmware, one virtual disk, and run with the earlier design that starts the installer from a memory stick; the download needs no stick.</p>
       <div class="timeline" role="group" aria-label="The 18 instants, in order. Choose one to read what the test checked.">
         <div class="scope" aria-hidden="true">
           <svg id="scope" preserveAspectRatio="none"></svg>
@@ -270,15 +270,7 @@
       </div>
       <div class="transcript" id="transcript" aria-live="polite">
         <div class="tr-head mono"><span>docs/results/powercut.txt</span><span id="tr-name">── shrink-end</span></div>
-        <pre class="tr-body" id="tr-body">    the machine stops dead at shrink-end                       ok
-    after the cut: every file in Windows is still exactly what it was ok
-    and Windows can be put back                                ok
-    after shrink-end: the table is valid again                 ok
-    after shrink-end: the three original partitions are back   ok
-    after shrink-end: Windows is its full size again           ok
-    after shrink-end: the EFI partition is byte-for-byte what it was ok
-    after shrink-end: the Windows FILESYSTEM is its full size again ok
-    after shrink-end: and the installer says so itself         ok</pre>
+        <div class="tr-body" id="tr-body"><span class="ln"><span>the machine stops dead at shrink-end</span><span class="ok">ok</span></span><span class="ln"><span>after the cut: every file in Windows is still exactly what it was</span><span class="ok">ok</span></span><span class="ln"><span>and Windows can be put back</span><span class="ok">ok</span></span><span class="ln"><span>after shrink-end: the table is valid again</span><span class="ok">ok</span></span><span class="ln"><span>after shrink-end: the three original partitions are back</span><span class="ok">ok</span></span><span class="ln"><span>after shrink-end: Windows is its full size again</span><span class="ok">ok</span></span><span class="ln"><span>after shrink-end: the EFI partition is byte-for-byte what it was</span><span class="ok">ok</span></span><span class="ln"><span>after shrink-end: the Windows FILESYSTEM is its full size again</span><span class="ok">ok</span></span><span class="ln"><span>after shrink-end: and the installer says so itself</span><span class="ok">ok</span></span></div>
       </div>
     </div>
 
@@ -342,7 +334,7 @@
     <div class="sec-head">
       <p class="kicker"><b>04</b> The desktop</p>
       <h2 id="desk-h">Six looks. Six ways to work.</h2>
-      <p class="lede">Every picture here is drawn by the desktop’s own code at 1366&nbsp;×&nbsp;768, the screen most of these laptops have. Nothing is mocked up. <a href="desktop.html">Click around it in your browser</a>.</p>
+      <p class="lede">Every picture here is drawn by the desktop’s own code at 1366&nbsp;×&nbsp;768, a common laptop screen of those years. Nothing is mocked up. <a href="desktop.html">Click around it in your browser</a>.</p>
     </div>
     <div class="gallery" id="gallery">
       <figure class="g-stage">
@@ -520,10 +512,11 @@
         <div class="plan" id="plan" aria-live="polite">
           <div class="plan-col keep"><p class="plan-n"><b id="n-keep">–</b><span class="mono">on these machines</span></p><ul id="l-keep"></ul></div>
           <div class="plan-col gone"><p class="plan-n"><b id="n-gone">–</b><span class="mono">taken out of the standard desktop</span></p><ul id="l-gone"></ul></div>
+          <p class="plan-refused" id="plan-refused" hidden></p>
         </div>
         <div class="file">
           <div class="file-h mono"><span>example-school/recipe.yaml <span class="dim">· comments left out</span></span><span class="ill">ILLUSTRATION</span></div>
-          <pre class="yaml" id="yaml" aria-live="polite">schema: 1
+          <pre class="yaml" id="yaml" tabindex="0" aria-label="The recipe file">schema: 1
 name: example-school
 policy: managed</pre>
         </div>
@@ -537,7 +530,7 @@ policy: managed</pre>
 <!-- ── 6. status ────────────────────────────────────────────────────── -->
 <section class="status" aria-label="Status">
   <div class="wrap">
-    <p class="status-line"><span class="dot" aria-hidden="true"></span><span><b>Pre-release.</b> Tested on simulated machines and on real Windows in CI. Real PCs installed so far: <b class="num zero" data-source="lathe/hardware/compat.tsv">0</b>.</span> <a href="safety.html">What can go wrong, and what doesn’t come across</a></p>
+    <p class="status-line"><span><span class="dot" aria-hidden="true"></span><b>Pre-release.</b> Tested on simulated machines and on real Windows in CI. Real PCs installed so far: <b class="num zero" data-source="lathe/hardware/compat.tsv">0</b>.</span> <a href="safety.html">What can go wrong, and what doesn’t come across</a></p>
   </div>
 </section>
 
@@ -558,6 +551,7 @@ policy: managed</pre>
       <p class="lede">One file for Windows. It checks your PC first and changes nothing until you say so. It is <strong>not signed yet</strong>, so Windows will warn you before it opens.</p>
       <a class="btn btn-brass" href="https://github.com/ComputerDude771/auros-from-scratch/raw/image-desktop/AurOS-Installer-test.exe"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1v9m0 0L4.5 6.5M8 10l3.5-3.5M2 13.5h12" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>AurOS-Installer-test.exe <span class="tag">test build</span></a>
       <p class="sha mono" data-source="HANDOFF-TRIAGE.md">SHA-256 ef903efd9cdeb10e15e52b3ce9e4eac83788f3396ac9f029ed04f2cfca1c5891</p>
+      <p class="source sha-how">To check it, in PowerShell: <span class="mono">Get-FileHash .\AurOS-Installer-test.exe</span></p>
       <p class="source">Before you run it, read <a href="safety.html">what can go wrong</a> and back up anything you cannot lose.</p>
     </div>
     <nav class="foot-links" aria-label="More">

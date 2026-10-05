@@ -214,14 +214,17 @@
       var it = facts.powercut.list[i];
       trName.textContent = "── " + it.name;
       trBody.textContent = "";
+      // one row per check: the sentence, and the transcript's verdict in
+      // its own column, so a narrow screen wraps the sentence, not the ok
       it.checks.forEach(function (c) {
+        var row = document.createElement("span");
+        row.className = "ln";
         var line = document.createElement("span");
-        var pad = c[0].length < 58 ? new Array(59 - c[0].length).join(" ") : " ";
-        line.textContent = "    " + c[0] + pad;
+        line.textContent = c[0];
         var ok = document.createElement("span");
         ok.className = c[1] === "ok" ? "ok" : "fail";
         ok.textContent = c[1];
-        trBody.appendChild(line); trBody.appendChild(ok); trBody.appendChild(document.createTextNode("\n"));
+        row.appendChild(line); row.appendChild(ok); trBody.appendChild(row);
       });
       Array.prototype.forEach.call(tl.querySelectorAll("button"), function (b, j) {
         b.setAttribute("aria-pressed", j === i ? "true" : "false");
@@ -288,7 +291,13 @@
       box.classList.add("done");
     };
     var write = function (el, h) {
-      $(".p-hash", el).textContent = h.match(/.{1,16}/g).join(" ");
+      // two lines of two groups of 16; a narrow screen breaks only between groups
+      var ph = $(".p-hash", el); ph.textContent = "";
+      h.match(/.{1,16}/g).forEach(function (g, i) {
+        var sp = document.createElement("span"); sp.textContent = g; ph.appendChild(sp);
+        if (i === 1) ph.appendChild(document.createElement("br"));
+        else if (i < 3) ph.appendChild(document.createTextNode(" "));
+      });
       var pre = $(".p-art", el);
       art(pre, h, pre.textContent.split("\n").pop());
     };

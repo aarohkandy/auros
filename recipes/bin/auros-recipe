@@ -23,7 +23,12 @@ const USAGE = `usage:
   auros-recipe compile  <recipe.yaml> [-o profiles/<name>.profile]
   auros-recipe explain  <recipe.yaml>`
 
-function fail (code, msg) { process.stderr.write(msg.endsWith('\n') ? msg : msg + '\n'); process.exit(code) }
+// Refusals quote the recipe's own text, and a recipe arrives in somebody else's pull request. Control
+// characters and bidirectional overrides are printed as visible \u{..} escapes, never sent to the
+// reviewer's terminal, where they could clear it, retitle it or reorder what it shows.
+const visible = (s) => String(s).replace(/[\u0000-\u0008\u000b-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/g, (c) => `\\u{${c.codePointAt(0).toString(16)}}`)
+const say = (stream, msg) => stream.write(visible(msg.endsWith('\n') ? msg : msg + '\n'))
+function fail (code, msg) { say(process.stderr, msg); process.exit(code) }
 
 function load (file) {
   let text
@@ -48,10 +53,10 @@ if (cmd === 'validate') {
   let refused = 0
   for (const file of args) {
     const { recipe, refusal } = load(file)
-    if (refusal) { console.error(refusal); refused++; continue }
+    if (refusal) { say(process.stderr, refusal); refused++; continue }
     const v = validate(recipe)
-    if (v.ok) console.log(`${file}: ok`)
-    else { console.error(report(file, v.errors)); refused++ }
+    if (v.ok) say(process.stdout, `${file}: ok`)
+    else { say(process.stderr, report(file, v.errors)); refused++ }
   }
   process.exit(refused ? 1 : 0)
 }

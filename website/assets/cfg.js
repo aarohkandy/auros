@@ -59,7 +59,9 @@ if (form) {
   }
 
   const esc = (t) => t.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
-  const yamlEl = $("#yaml"), keepEl = $("#l-keep"), goneEl = $("#l-gone"), nKeep = $("#n-keep"), nGone = $("#n-gone"), says = $("#f-says");
+  const yamlEl = $("#yaml"), keepEl = $("#l-keep"), goneEl = $("#l-gone"), nKeep = $("#n-keep"), nGone = $("#n-gone"), says = $("#f-says"),
+    refusedEl = $("#plan-refused"), plan = $("#plan");
+  const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
   let before = new Set();
 
   const build = () => {
@@ -95,15 +97,25 @@ if (form) {
     try { yaml = emitYaml(r); } catch (e) { yaml = ""; }
     const lines = yaml.split("\n").filter((l, i) => !(l.startsWith("#") && i > 0)).join("\n").replace(/\n{2,}/g, "\n").trim();
     const v = validate(r);
+    // One block per line with a hanging indent: a long line wraps under
+    // its own text instead of back at the left edge, where it would read
+    // as a new key.
+    const row = (inner, n) => '<span class="ln" style="--in:' + n + 'ch">' + inner + "</span>";
     let html = lines.split("\n").map((l) => {
-      if (l.startsWith("#")) return '<span class="c">' + esc(l) + "</span>";
-      const m = l.match(/^(\s*)([a-z_]+):(.*)$/);
-      return m ? m[1] + '<span class="k">' + m[2] + "</span>:" + esc(m[3]) : esc(l);
-    }).join("\n");
+      const n = l.match(/^\s*/)[0].length, t = l.slice(n);
+      if (t.startsWith("#")) return row('<span class="c">' + esc(t) + "</span>", n);
+      const m = t.match(/^([a-z_]+):(.*)$/);
+      return row(m ? '<span class="k">' + m[1] + "</span>:" + esc(m[2]) : esc(t), n);
+    }).join("");
     if (!v.ok) {
-      html += "\n\n" + v.errors.map((e) => '<span class="err"># refused: ' + esc((e.path ? e.path + ": " : "") + e.message) + "</span>").join("\n");
+      html += row("&nbsp;", 0) + v.errors.map((e) => row('<span class="err"># refused: ' + esc((e.path ? e.path + ": " : "") + e.message) + "</span>", 0)).join("");
     }
     yamlEl.innerHTML = html;
+    // a refusal is the answer, so it is said where the lists were, not
+    // only at the bottom of a scrolled file
+    refusedEl.hidden = v.ok;
+    plan.classList.toggle("refused", !v.ok);
+    refusedEl.textContent = v.ok ? "" : "Refused, and nothing is built: " + v.errors.map((e) => e.message).join(" ");
 
     keepEl.textContent = ""; goneEl.textContent = "";
     if (!v.ok) { nKeep.textContent = "–"; nGone.textContent = "–"; return; }
@@ -111,12 +123,12 @@ if (form) {
     const now = new Set();
     for (const i of report.installed) {
       const li = document.createElement("li");
-      li.textContent = i.item;
+      li.textContent = cap(i.item);
       keepEl.appendChild(li);
     }
     for (const i of report.removed) {
       const li = document.createElement("li");
-      li.innerHTML = esc(i.item) + " <small>" + esc(i.packages.join(" ")) + "</small>";
+      li.innerHTML = esc(cap(i.item)) + " <small>" + esc(i.packages.join(" ")) + "</small>";
       now.add(i.item);
       if (before.size && !before.has(i.item)) li.className = "new";
       goneEl.appendChild(li);

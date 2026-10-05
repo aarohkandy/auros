@@ -1,0 +1,46 @@
+# ./verify on every push: the recipe suites and their prove-red, every
+# profile through `forge resolve`, the honesty gate and its corpus, the
+# compat lint, bash -n and shellcheck on every script, and the fast C
+# unit tests. The QEMU end-to-end tests are not here (they need a built
+# image, ~1.5 h and ~10 GB; tools/e2e-all.sh runs them) -- verify says
+# SKIP for each of them by name.
+#
+# Ubuntu 24.04 pinned, not -latest (lathe/DECISIONS.md D23): the engine
+# builds noble images, and the C tests link against noble's wayland.
+name: verify
+
+on:
+  push:
+    paths-ignore:
+      - 'lathe/**'
+      - 'docs/**'
+      - '**/*.md'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: toolchain
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends \
+            build-essential pkg-config shellcheck \
+            libwayland-dev libwayland-bin wayland-protocols libxkbcommon-dev \
+            libdbus-1-dev libglib2.0-bin dbus libdrm-dev weston \
+            fonts-dejavu-core
+      - name: ./verify
+        run: ./verify

@@ -860,6 +860,9 @@ const SHELL_UNSAFE = /["$`\\]/
 const INVISIBLE = /[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁩﻿]/
 
 function nearest (word, choices, n = 3) {
+  // The search is quadratic in the word's length. No name here is longer than 40 characters, so a
+  // word of more than 64 is near none of them, and is not searched (a 1 MB timezone took minutes).
+  if (String(word).length > 64) return []
   const w = String(word).toLowerCase()
   const dist = (a, b) => {
     const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)])

@@ -318,6 +318,19 @@ describe('field rules', () => {
       assert.doesNotMatch(nested.message, /native code|function /, nested.message)
     }
   })
+  test('a huge value is refused quickly: the did-you-mean search is not a denial of service', () => {
+    // Found by the adversarial review: the nearest-name search is quadratic in the value's length,
+    // and a 20 kB timezone took four seconds of a browser tab against the zone list.
+    for (const k of ['timezone', 'language', 'keyboard', 'theme', 'policy', 'name']) {
+      const r = minimal(); r[k] = 'Q'.repeat(1_000_000)
+      const t = Date.now()
+      assert.equal(validate(r).ok, false, k)
+      assert.ok(Date.now() - t < 1000, `${k}: ${Date.now() - t} ms`)
+    }
+    const r = minimal(); r['Q'.repeat(1_000_000)] = 1
+    const t = Date.now(); validate(r)
+    assert.ok(Date.now() - t < 1000, `a huge key: ${Date.now() - t} ms`)
+  })
   test('validate never throws, whatever it is given', () => {
     const r = example('example-school')
     const junk = [null, 0, '', [], {}, true, { a: { b: { c: 1 } } }, [1, 2]]

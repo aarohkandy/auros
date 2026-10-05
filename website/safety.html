@@ -56,7 +56,7 @@
     <p class="s-intro">The installer checks before it changes anything, and refuses rather than guess. These are its own words, from <span class="mono">src/aurstage/install.c</span>.</p>
     <div class="rows" role="table" aria-label="What can go wrong and what AurOS does">
       <div class="row head" role="row"><span role="columnheader">If</span><span role="columnheader">AurOS says, and does</span></div>
-      <div class="row" role="row"><span role="cell">The power goes in the middle</span><span role="cell">Cut on purpose at <b class="num" data-source="docs/results/powercut.txt website/assets/data/facts.json">18</b> named instants in testing; Windows came back with every file identical, <b class="num" data-source="docs/results/powercut.txt">138</b> of <b class="num" data-source="docs/results/powercut.txt">138</b> checks. On a simulated disk: a real drive that lies about having flushed its cache is a property of that drive, and is not tested.</span></div>
+      <div class="row" role="row"><span role="cell">The power goes in the middle</span><span role="cell">Cut on purpose at <b class="num" data-source="docs/results/powercut.txt website/assets/data/facts.json">18</b> named instants in testing, and Windows came back from every one: <b class="num" data-source="docs/results/powercut.txt">138</b> of <b class="num" data-source="docs/results/powercut.txt">138</b> checks. On a simulated disk, with the earlier design that starts from a memory stick: a real drive that lies about having flushed its cache is a property of that drive, and is not tested.</span></div>
       <div class="row" role="row"><span role="cell">Windows was not shut down properly, or is hibernated (Fast Startup)</span><span role="cell"><q>AurOS cannot tell whether this Windows drive was closed down properly.</q> <q>Start Windows, shut it down from the Start menu, and try again.</q> Nothing is changed.</span></div>
       <div class="row" role="row"><span role="cell">The drive is failing</span><span role="cell"><q>Copy your files onto a USB stick today and have the drive replaced.</q> It reads every sector of the space it would use before it uses it.</span></div>
       <div class="row" role="row"><span role="cell">The drive is encrypted by other software</span><span role="cell"><q>That has to be turned off and the drive decrypted first.</q></span></div>
@@ -71,7 +71,7 @@
     <p class="s-intro">True for every move from Windows, not only this one. The list AurOS shows after the first start is the same list, from <span class="mono">src/ferry/ferry-report</span>.</p>
     <ul class="bare">
       <li><span>Windows programs</span><span>They were built for Windows and do not run here. Not Office, not Photoshop, not the program that came with the printer. Use the web version or a Linux one.</span></li>
-      <li><span>Saved passwords and cookies in Chrome and Edge</span><span>Locked to your Windows sign-in. AurOS can ask for your old Windows password to unlock them; otherwise sign in to the browser and let it sync.</span></li>
+      <li><span>Saved passwords and cookies in Chrome and Edge</span><span>Locked to your Windows sign-in, and AurOS cannot unlock them yet. Sign in to the browser again and let it sync.</span></li>
       <li><span>Windows Credential Manager entries, remote desktop and app tokens</span><span>Encrypted to your Windows login and unrecoverable offline.</span></li>
       <li><span>Wi-Fi passwords</span><span>Not yet: the network names come across, the passwords have to be typed once.</span></li>
       <li><span>OneDrive files that are online-only</span><span>They live on the server, not the disk. Download them in OneDrive first.</span></li>
@@ -84,7 +84,7 @@
 
   <section class="s-sec wrap" aria-labelledby="yes-h">
     <h2 id="yes-h">What does</h2>
-    <p class="s-intro s-does">Your Documents, Pictures, Music, Videos, Desktop and Downloads. The whole Firefox profile, saved passwords included. Your wallpaper, keyboard layout, language and time zone. The Windows drive is only ever read, never written, while that happens.</p>
+    <p class="s-intro s-does">Your Documents, Pictures, Music, Videos, Desktop and Downloads. The whole Firefox profile, saved passwords included (the test build ships GNOME Web, not Firefox, so the profile waits until Firefox is installed). Your wallpaper, keyboard layout, language and time zone. The Windows drive is only ever read, never written, while that happens.</p>
     <p class="source">Sources: <span class="mono">src/ferry/ferry-common.sh</span>, <span class="mono">docs/FERRY.md</span>, <span class="mono">docs/results/choicesboot.txt</span>, <span class="mono">HANDOFF-TRIAGE.md</span>.</p>
   </section>
 </main>
