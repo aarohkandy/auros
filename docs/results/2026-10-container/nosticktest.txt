@@ -3,3 +3,18 @@ $ sh tools/nosticktest.sh
 
 Does it install AurOS with no memory stick, and leave Windows intact?
 
+  a 3 GiB machine: ESP, a 1 GiB Windows with 7 files, WinRE at the end
+  and a 334 MiB AurOS image, which is going to live inside Windows
+    AurBridge (no stick) arms the machine                        ok
+    ...and wrote the image's manifest beside it                  ok
+    ...and what she chose, on the EFI partition for first boot   ok
+    ...and a journal that says the image is on Windows           ok
+    the image is inside Windows (9 files there now)              ok
+
+  refusals, with the disk untouched (so the read-only mount wrote nothing)
+    no image in the AurOS folder: refused                        ok
+    ...and the disk is byte-for-byte unchanged                   ok
+    a damaged image in the AurOS folder: refused                 ok
+    ...and the disk is byte-for-byte unchanged                   ok
+
+  and then installing, for real, with no stick
