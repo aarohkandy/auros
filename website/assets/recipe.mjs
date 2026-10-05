@@ -179,6 +179,68 @@ const KEYBOARDS = table({
   Thai: { layout: 'th', variant: '', script: 'Thai' },
 })
 
+// Time zones: every Area/Location name in Ubuntu 24.04's tzdata (/usr/share/zoneinfo, without the
+// tzdata-legacy package the image does not install), plus UTC. build/forge links /etc/localtime to the
+// zone's file and carries on if there is none, so a zone that was merely SHAPED like one — a typo, or
+// an old name like Asia/Calcutta — gave a machine on UTC that said nothing. options.test.mjs checks
+// every name here against the tzdata of the machine running the tests.
+const ZONE_AREAS = {
+  Africa: 'Abidjan Accra Addis_Ababa Algiers Asmara Bamako Bangui Banjul Bissau Blantyre Brazzaville ' +
+    'Bujumbura Cairo Casablanca Ceuta Conakry Dakar Dar_es_Salaam Djibouti Douala El_Aaiun Freetown ' +
+    'Gaborone Harare Johannesburg Juba Kampala Khartoum Kigali Kinshasa Lagos Libreville Lome Luanda ' +
+    'Lubumbashi Lusaka Malabo Maputo Maseru Mbabane Mogadishu Monrovia Nairobi Ndjamena Niamey ' +
+    'Nouakchott Ouagadougou Porto-Novo Sao_Tome Timbuktu Tripoli Tunis Windhoek',
+  America: 'Adak Anchorage Anguilla Antigua Araguaina Argentina/Buenos_Aires Argentina/Catamarca ' +
+    'Argentina/Cordoba Argentina/Jujuy Argentina/La_Rioja Argentina/Mendoza Argentina/Rio_Gallegos ' +
+    'Argentina/Salta Argentina/San_Juan Argentina/San_Luis Argentina/Tucuman Argentina/Ushuaia Aruba ' +
+    'Asuncion Atikokan Atka Bahia Bahia_Banderas Barbados Belem Belize Blanc-Sablon Boa_Vista Bogota ' +
+    'Boise Cambridge_Bay Campo_Grande Cancun Caracas Cayenne Cayman Chicago Chihuahua Ciudad_Juarez ' +
+    'Coral_Harbour Costa_Rica Coyhaique Creston Cuiaba Curacao Danmarkshavn Dawson Dawson_Creek ' +
+    'Denver Detroit Dominica Edmonton Eirunepe El_Salvador Ensenada Fort_Nelson Fortaleza Glace_Bay ' +
+    'Goose_Bay Grand_Turk Grenada Guadeloupe Guatemala Guayaquil Guyana Halifax Havana Hermosillo ' +
+    'Indiana/Indianapolis Indiana/Knox Indiana/Marengo Indiana/Petersburg Indiana/Tell_City ' +
+    'Indiana/Vevay Indiana/Vincennes Indiana/Winamac Inuvik Iqaluit Jamaica Juneau ' +
+    'Kentucky/Louisville Kentucky/Monticello Kralendijk La_Paz Lima Los_Angeles Lower_Princes Maceio ' +
+    'Managua Manaus Marigot Martinique Matamoros Mazatlan Menominee Merida Metlakatla Mexico_City ' +
+    'Miquelon Moncton Monterrey Montevideo Montreal Montserrat Nassau New_York Nipigon Nome Noronha ' +
+    'North_Dakota/Beulah North_Dakota/Center North_Dakota/New_Salem Nuuk Ojinaga Panama Pangnirtung ' +
+    'Paramaribo Phoenix Port-au-Prince Port_of_Spain Porto_Acre Porto_Velho Puerto_Rico Punta_Arenas ' +
+    'Rainy_River Rankin_Inlet Recife Regina Resolute Rio_Branco Santa_Isabel Santarem Santiago ' +
+    'Santo_Domingo Sao_Paulo Scoresbysund Shiprock Sitka St_Barthelemy St_Johns St_Kitts St_Lucia ' +
+    'St_Thomas St_Vincent Swift_Current Tegucigalpa Thule Thunder_Bay Tijuana Toronto Tortola ' +
+    'Vancouver Virgin Whitehorse Winnipeg Yakutat Yellowknife',
+  Antarctica: 'Casey Davis DumontDUrville Macquarie Mawson McMurdo Palmer Rothera Syowa Troll Vostok',
+  Arctic: 'Longyearbyen',
+  Asia: 'Aden Almaty Amman Anadyr Aqtau Aqtobe Ashgabat Atyrau Baghdad Bahrain Baku Bangkok Barnaul ' +
+    'Beirut Bishkek Brunei Chita Choibalsan Chongqing Colombo Damascus Dhaka Dili Dubai Dushanbe ' +
+    'Famagusta Gaza Harbin Hebron Ho_Chi_Minh Hong_Kong Hovd Irkutsk Istanbul Jakarta Jayapura ' +
+    'Jerusalem Kabul Kamchatka Karachi Kashgar Kathmandu Khandyga Kolkata Krasnoyarsk Kuala_Lumpur ' +
+    'Kuching Kuwait Macau Magadan Makassar Manila Muscat Nicosia Novokuznetsk Novosibirsk Omsk Oral ' +
+    'Phnom_Penh Pontianak Pyongyang Qatar Qostanay Qyzylorda Riyadh Sakhalin Samarkand Seoul Shanghai ' +
+    'Singapore Srednekolymsk Taipei Tashkent Tbilisi Tehran Tel_Aviv Thimphu Tokyo Tomsk Ulaanbaatar ' +
+    'Urumqi Ust-Nera Vientiane Vladivostok Yakutsk Yangon Yekaterinburg Yerevan',
+  Atlantic: 'Azores Bermuda Canary Cape_Verde Faroe Jan_Mayen Madeira Reykjavik South_Georgia St_Helena ' +
+    'Stanley',
+  Australia: 'Adelaide Brisbane Broken_Hill Canberra Currie Darwin Eucla Hobart Lindeman Lord_Howe Melbourne ' +
+    'Perth Sydney Yancowinna',
+  Etc: 'GMT GMT+0 GMT+1 GMT+10 GMT+11 GMT+12 GMT+2 GMT+3 GMT+4 GMT+5 GMT+6 GMT+7 GMT+8 GMT+9 GMT-0 GMT-1 ' +
+    'GMT-10 GMT-11 GMT-12 GMT-13 GMT-14 GMT-2 GMT-3 GMT-4 GMT-5 GMT-6 GMT-7 GMT-8 GMT-9 GMT0 ' +
+    'Greenwich UCT UTC Universal Zulu',
+  Europe: 'Amsterdam Andorra Astrakhan Athens Belfast Belgrade Berlin Bratislava Brussels Bucharest ' +
+    'Budapest Busingen Chisinau Copenhagen Dublin Gibraltar Guernsey Helsinki Isle_of_Man Istanbul ' +
+    'Jersey Kaliningrad Kirov Kyiv Lisbon Ljubljana London Luxembourg Madrid Malta Mariehamn Minsk ' +
+    'Monaco Moscow Nicosia Oslo Paris Podgorica Prague Riga Rome Samara San_Marino Sarajevo Saratov ' +
+    'Simferopol Skopje Sofia Stockholm Tallinn Tirane Tiraspol Ulyanovsk Vaduz Vatican Vienna Vilnius ' +
+    'Volgograd Warsaw Zagreb Zurich',
+  Indian: 'Antananarivo Chagos Christmas Cocos Comoro Kerguelen Mahe Maldives Mauritius Mayotte Reunion',
+  Pacific: 'Apia Auckland Bougainville Chatham Chuuk Easter Efate Fakaofo Fiji Funafuti Galapagos Gambier ' +
+    'Guadalcanal Guam Honolulu Johnston Kanton Kiritimati Kosrae Kwajalein Majuro Marquesas Midway ' +
+    'Nauru Niue Norfolk Noumea Pago_Pago Palau Pitcairn Pohnpei Port_Moresby Rarotonga Saipan Samoa ' +
+    'Tahiti Tarawa Tongatapu Wake Wallis Yap',
+}
+const ZONES = Object.freeze(['UTC', ...Object.entries(ZONE_AREAS).flatMap(([area, s]) => s.split(' ').map((l) => `${area}/${l}`))].sort())
+const ZONE_SET = new Set(ZONES)
+
 const TOGGLES = table({
   'Windows key + Spacebar': 'grp:win_space_toggle',
   'Alt + Shift': 'grp:alt_shift_toggle',
@@ -296,7 +358,7 @@ const FILES_SUPPORT = Object.freeze(['shared-mime-info', 'desktop-file-utils', '
 const deepFreeze = (o) => { for (const v of Object.values(o)) if (v && typeof v === 'object') deepFreeze(v); return Object.freeze(o) }
 export const OPTIONS = deepFreeze({
   policies: POLICIES, themes: THEMES, layouts: LAYOUTS, languages: LANGUAGES, keyboards: KEYBOARDS,
-  toggles: TOGGLES, apps: APPS, defaultApps: DEFAULT_APPS, refusedApps: REFUSED_APPS,
+  toggles: TOGGLES, zones: ZONES, apps: APPS, defaultApps: DEFAULT_APPS, refusedApps: REFUSED_APPS,
   capabilities: CAPABILITIES, groups: GROUPS, absentGroups: ABSENT_GROUPS, filesSupport: FILES_SUPPORT,
 })
 
@@ -958,7 +1020,10 @@ export function validate (recipe) {
     if (typeof tz !== 'string') err('timezone', '"timezone" must be text, like Asia/Kolkata.')
     else if (/^(?:auto|local|geoip|automatic)$/i.test(tz)) err('timezone', `"${tz}" is refused. A machine that guesses its own zone makes two builds of one recipe into two different computers. Name the zone, like Asia/Kolkata.`)
     else if (/^(?:UTC|GMT)?[+-]\d/.test(tz)) err('timezone', `"${tz}" is an offset, which is wrong for half of every year wherever clocks change. Name the zone, like Europe/London.`)
-    else if (!(tz === 'UTC' || /^[A-Z][A-Za-z]+(?:[_-][A-Za-z]+)*(?:\/[A-Z][A-Za-z0-9]*(?:[_+-][A-Za-z0-9]+)*){1,2}$/.test(tz))) err('timezone', `"${tz}" is not a zone name. Write it the way the zone database does, like Asia/Kolkata or America/Los_Angeles.`)
+    else if (!ZONE_SET.has(tz)) {
+      const near = nearest(tz, ZONES)
+      err('timezone', `"${tz}" is not a zone name this image has. Write it the way the zone database does, like Asia/Kolkata or America/Los_Angeles.${near.length ? ` Did you mean ${quoteList(near)}?` : ''} A zone the machine does not have leaves its clock on UTC without a word.`)
+    }
   }
 
   // policy (read early: many rules depend on it)
