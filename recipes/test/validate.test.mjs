@@ -173,6 +173,15 @@ describe('field rules', () => {
     for (const tz of ['auto', 'local', 'GeoIP', '+05:30', 'UTC+1', 'GMT-5', 'kolkata', 'Asia/Kolkata; reboot']) refused((r) => { r.timezone = tz }, 'timezone')
     for (const tz of ['UTC', 'Asia/Kolkata', 'America/Los_Angeles', 'America/Argentina/Buenos_Aires', 'Etc/GMT+5']) assert.ok(check((r) => { r.timezone = tz }).ok, tz)
   })
+  test('timezone: a zone the image has, not just one shaped like a zone', () => {
+    // Found by the adversarial review. build/forge links /etc/localtime to /usr/share/zoneinfo/<zone>
+    // with `|| true`, so a zone that does not exist leaves a dangling link and a machine on UTC that
+    // says nothing. Europe/Londn (a typo), Mars/Olympus_Mons and Asia/Calcutta — an old name that
+    // Ubuntu 24.04 moved to tzdata-legacy, which the image does not install — all validated.
+    for (const tz of ['Europe/Londn', 'Mars/Olympus_Mons', 'Asia/Calcutta', 'US/Eastern', 'Europe/London/Extra']) refused((r) => { r.timezone = tz }, 'timezone', /not a zone/)
+    const typo = refused((r) => { r.timezone = 'Europe/Londn' }, 'timezone')
+    assert.match(typo.message, /Europe\/London/)
+  })
   test('apps: known, non-empty, no duplicates; refused names explain themselves', () => {
     refused((r) => { r.apps = [] }, 'apps', /no programs/)
     refused((r) => { r.apps = ['Files', 'Files'] }, 'apps', /twice/)

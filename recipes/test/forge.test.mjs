@@ -11,7 +11,8 @@
 // profile loader — inheritance, its checks — and must agree with what the compiler wrote.
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync, readdirSync, statSync, writeFileSync, rmSync } from 'node:fs'
+import { readFileSync, readdirSync, statSync, writeFileSync, rmSync, mkdtempSync, mkdirSync, cpSync, symlinkSync, existsSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { execFileSync, spawnSync } from 'node:child_process'
 import { compile, validate, BASE } from '../lib/recipe.mjs'
@@ -150,6 +151,31 @@ describe('build/forge resolve agrees with the compiler', () => {
     let exists = true
     try { statSync(join(ROOT, 'work', 'forge', 'example-kiosk')) } catch { exists = false }
     assert.equal(exists, false)
+  })
+  test('resolve touches nothing even when the profile is refused: a running build\'s work tree is left alone', () => {
+    // Found by the adversarial review. load_profile sets RFS to work/forge/<profile_id>/rootfs BEFORE
+    // its checks, and forge's EXIT trap runs chroot_done on whatever RFS is. resolve cleared RFS only
+    // on success — so a profile refused by those checks (here, an empty default_user) sent resolve
+    // into rm -f <rootfs>/etc/resolv.conf and <rootfs>/usr/sbin/policy-rc.d, and lazy unmounts of
+    // its proc, sys and dev: the work tree of a build of that profile_id, possibly running now.
+    // Run in a scratch copy of the layout, so the real work/ is never at risk from this test.
+    const d = mkdtempSync(join(tmpdir(), 'auros-resolve-'))
+    try {
+      mkdirSync(join(d, 'build'))
+      cpSync(FORGE, join(d, 'build', 'forge'))
+      symlinkSync(join(ROOT, 'profiles'), join(d, 'profiles'))
+      const rfs = join(d, 'work', 'forge', 'resolve-probe', 'rootfs')
+      mkdirSync(join(rfs, 'etc'), { recursive: true }); mkdirSync(join(rfs, 'usr', 'sbin'), { recursive: true })
+      writeFileSync(join(rfs, 'etc', 'resolv.conf'), 'nameserver 192.0.2.1\n')
+      writeFileSync(join(rfs, 'usr', 'sbin', 'policy-rc.d'), '#!/bin/sh\nexit 101\n')
+      const bad = join(d, 'resolve-probe.profile')
+      writeFileSync(bad, 'inherit="desktop"\nprofile_id="resolve-probe"\ndefault_user=""\n')
+      const r = spawnSync('bash', [join(d, 'build', 'forge'), 'resolve', bad], { encoding: 'utf8' })
+      assert.notEqual(r.status, 0, 'the profile should be refused')
+      assert.match(r.stderr, /default_user/)
+      assert.ok(existsSync(join(rfs, 'etc', 'resolv.conf')), 'resolve deleted a work tree\'s etc/resolv.conf')
+      assert.ok(existsSync(join(rfs, 'usr', 'sbin', 'policy-rc.d')), 'resolve deleted a work tree\'s policy-rc.d')
+    } finally { rmSync(d, { recursive: true, force: true }) }
   })
   test('the minimal test recipe resolves too, from a file outside profiles/', () => {
     // load_profile takes a path as well as a name; inherit="desktop" still resolves to profiles/.

@@ -82,7 +82,8 @@ if (form) {
     r.prune = { keep_only_the_apps_above: true };
     if (picked.includes("@printing")) r.prune.also_keep = ["printing"];
     r.policy = policy;
-    if (policy === "kiosk" && apps.length > 1) r.kiosk = { starts: apps.includes("Firefox") ? "Firefox" : apps[0] };
+    // (no kiosk: block: recipe.mjs refuses it -- the locked shell picks the
+    // program a kiosk starts, and a recipe cannot yet say otherwise)
     if ($("#f-pin").checked) r.pin = ["firefox"];
     return r;
   };

@@ -60,7 +60,7 @@ const MUTATIONS = [
     file: LIB, find: "  const hardware = BASE.packages_hardware.filter((p) => !capDropped.includes(p))", to: '  const hardware = [...BASE.packages_hardware]',
     test: 'recipes/test/compile.test.mjs', catcher: /every package the report says was removed is absent/ },
   { id: 'M12', why: 'policy: locked stops restricting which programs can be opened',
-    file: LIB, find: "  if (policy === 'locked' || policy === 'kiosk') {\n    const first", to: "  if (policy === 'kiosk') {\n    const first",
+    file: LIB, find: "  if (r.policy !== 'locked' && r.policy !== 'kiosk') return ''", to: "  if (r.policy !== 'kiosk') return ''",
     test: 'recipes/test/compile.test.mjs', catcher: /locked allows only its programs/ },
   { id: 'M13', why: 'the forge key collector counts a variable mentioned only in a comment as read',
     file: 'recipes/test/forge.test.mjs', find: '    if (/^\\s*#/.test(line)) continue\n', to: '',

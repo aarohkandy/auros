@@ -1,0 +1,6 @@
+$ sh tools/matrixtest.sh
+# started 2026-10-05T00:14:45Z
+
+Which computers would AurOS touch, and which would it refuse?
+
+  ordinary machines

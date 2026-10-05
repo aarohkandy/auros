@@ -27,6 +27,7 @@
     "uniform float uTime;",
     "uniform float uRidge;",   // the waterline, 0..1 from the bottom
     "uniform float uGrain;",
+    "uniform float uFov;",     // horizontal field of view: wider on a portrait screen
 
     "float h2(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}",
     "float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);",
@@ -83,7 +84,7 @@
     "vec3 sky(vec2 uv,vec2 p,float hz,float t,float j,bool stars){",
     "  float y=uv.y-hz;",
     "  vec3 col=mix(vec3(.020,.034,.046),vec3(.006,.009,.018),pow(clamp(y/(1.-hz),0.,1.),.5));",
-    "  vec3 rd=normalize(vec3(p.x*.9,y*1.05+.012,1.));",
+    "  vec3 rd=normalize(vec3(p.x*uFov,y*1.05+.012,1.));",
     "  vec3 a=aurora(rd,t*.6,j);",
     "  a+=vec3(.035,.15,.10)*exp(-max(y,0.)*5.5)*(.55+.45*fbm3(vec2(p.x*1.2,t*.01)));",   // the glow it throws on the low sky: the mountains cut black against it
     "  a*=.9+.1*sin(t*.07);",
@@ -198,10 +199,11 @@
     var uRes = gl.getUniformLocation(prog, "uRes"),
         uTime = gl.getUniformLocation(prog, "uTime"),
         uRidge = gl.getUniformLocation(prog, "uRidge"),
-        uGrain = gl.getUniformLocation(prog, "uGrain");
+        uGrain = gl.getUniformLocation(prog, "uGrain"),
+        uFov = gl.getUniformLocation(prog, "uFov");
 
     var small = Math.min(window.innerWidth, window.innerHeight) < 700;
-    var scale = opts.scale || (small ? 0.5 : 0.62);
+    var scale = opts.scale || (small ? 0.66 : 0.62);
     var t0 = opts.time != null ? opts.time : 40 + Math.random() * 400;
     var running = false, raf = 0, last = 0, visible = true, drew = false;
 
@@ -223,6 +225,7 @@
       gl.uniform1f(uTime, t);
       gl.uniform1f(uRidge, ridgeY());
       gl.uniform1f(uGrain, opts.grain != null ? opts.grain : 0.028);
+      gl.uniform1f(uFov, canvas.width / canvas.height < 0.8 ? 1.9 : 0.9);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       if (!drew) { drew = true; if (opts.onFirstFrame) opts.onFirstFrame(); }
     }

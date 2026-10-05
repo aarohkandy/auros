@@ -134,6 +134,13 @@ describe('names, checked against the machine that will read them (where it exist
     // The canary: LATHE's names, which are wrong, must fail this same check.
     for (const bad of ['in:mar-inscript', 'in:hin-inscript', 'in:ben-inscript']) assert.ok(!variants.has(bad), bad)
   })
+  test('every zone the form accepts is one this machine\'s tzdata has', { skip: !existsSync('/usr/share/zoneinfo/zone1970.tab') && 'no tzdata on this machine' }, () => {
+    assert.ok(OPTIONS.zones.length > 300, `only ${OPTIONS.zones.length} zones`)
+    for (const tz of OPTIONS.zones) assert.ok(existsSync(join('/usr/share/zoneinfo', tz)), `${tz} is not in /usr/share/zoneinfo`)
+    // and every zone tzdata assigns to a country is offered
+    const tab = readFileSync('/usr/share/zoneinfo/zone1970.tab', 'utf8').split('\n').filter((l) => l && !l.startsWith('#')).map((l) => l.split('\t')[2])
+    for (const tz of tab) assert.ok(OPTIONS.zones.includes(tz), `${tz} (zone1970.tab) is not offered`)
+  })
   test('every example\'s timezone exists', { skip: !existsSync('/usr/share/zoneinfo') && 'no zoneinfo on this machine' }, () => {
     for (const n of EXAMPLES) {
       const tz = example(n).timezone
