@@ -150,21 +150,55 @@ describe('one thing broken, verify red', () => {
 })
 
 describe('a node --test inside a node --test runs nothing and says it passed', () => {
-  test('FOUND HERE, REPRODUCED: without `unset NODE_TEST_CONTEXT`, a broken recipe suite reports PASS', () => {
-    // This file runs under `node --test`, which sets NODE_TEST_CONTEXT for its children. verify's
-    // own `node --test` calls inherit it, run zero tests and exit 0. The first version of this
-    // meta-test passed its "a recipe test fails" case for that reason alone.
+  test('THE TRAP ITSELF, REPRODUCED: node --test inside node --test runs nothing and exits 0', () => {
+    // This file runs under `node --test`, which sets NODE_TEST_CONTEXT for its children. A child
+    // `node --test` that inherits it prints "run() is being called recursively", runs ZERO tests and
+    // exits 0 — even over a test that fails. The first version of this meta-test passed its "a
+    // recipe test fails" case for that reason alone. Shown here directly, against a failing test
+    // file, so the demonstration does not depend on what verify does about it.
     assert.ok(process.env.NODE_TEST_CONTEXT, 'this test only means something when run by node --test')
-    const d = sandbox()
-    const p = join(d, 'recipes', 'lib', 'recipe.mjs')
-    writeFileSync(p, readFileSync(p, 'utf8').replace("  if ('screen_off_minutes' in desk) set(", '  if (false) set('))
-    const v = join(d, 'verify')
-    const text = readFileSync(v, 'utf8')
-    assert.match(text, /^unset NODE_TEST_CONTEXT$/m)
-    writeFileSync(v, text.replace(/^unset NODE_TEST_CONTEXT$/m, ': unset removed'))
-    const r = verify(d, 'recipes')
-    assert.equal(r.code, 0, 'expected the recursion trap to hide the failure (that is what is being demonstrated)')
-    assert.match(r.out, /recursively/)
+    const d = join(TMP, `trap-${seq++}`)
+    mkdirSync(d)
+    writeFileSync(join(d, 'red.test.mjs'), "import { test } from 'node:test'\ntest('red', () => { throw new Error('red') })\n")
+    const r = spawnSync(process.execPath, ['--test', 'red.test.mjs'], { cwd: d, env: process.env, encoding: 'utf8' })
+    const out = (r.stdout ?? '') + (r.stderr ?? '')
+    if (r.status !== 0) {
+      // A node that no longer has the trap. Then there is nothing to demonstrate here — and the
+      // guards below must still hold, so this is recorded, not passed vacuously.
+      assert.doesNotMatch(out, /recursively/, `node exited ${r.status} but still reports recursion:\n${out}`)
+      return
+    }
+    assert.match(out, /recursively/, `node --test exited 0 over a failing test without the recursion message:\n${out}`)
+  })
+  test('and verify is red over it TWICE: `unset NODE_TEST_CONTEXT`, and node_suite refusing a run in which nothing passed', () => {
+    // Two independent guards. Each is removed in turn; the other must still turn verify red.
+    const broken = () => {
+      const d = sandbox()
+      const p = join(d, 'recipes', 'lib', 'recipe.mjs')
+      writeFileSync(p, readFileSync(p, 'utf8').replace("  if ('screen_off_minutes' in desk) set(", '  if (false) set('))
+      return d
+    }
+    // 1. without the unset: node runs nothing (when the trap exists), and node_suite says so
+    {
+      const d = broken()
+      const v = join(d, 'verify')
+      const text = readFileSync(v, 'utf8')
+      assert.match(text, /^unset NODE_TEST_CONTEXT$/m)
+      writeFileSync(v, text.replace(/^unset NODE_TEST_CONTEXT$/m, ': unset removed'))
+      const r = verify(d, 'recipes')
+      red(r, 'recipes:')
+      if (/recursively/.test(r.out)) assert.match(r.out, /no test passed/, 'the trap hid the tests and node_suite did not say so')
+    }
+    // 2. without node_suite's checks (plain node --test), the unset alone still lets the failure through
+    {
+      const d = broken()
+      const v = join(d, 'verify')
+      const text = readFileSync(v, 'utf8')
+      const plain = text.replace(/^node_suite \(\) \{$/m, 'node_suite () { node --test --test-reporter=dot "$@"; return; }\nnode_suite_checked () {')
+      assert.notEqual(plain, text, 'node_suite moved; update this test')
+      writeFileSync(v, plain)
+      red(verify(d, 'recipes'), 'recipes:')
+    }
   })
 })
 
