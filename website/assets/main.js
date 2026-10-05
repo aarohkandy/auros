@@ -267,8 +267,8 @@
       var b = "assets/renders/" + name;
       var pic = document.createElement("picture");
       pic.className = "g-img";
-      pic.innerHTML = '<source type="image/avif" srcset="' + b + '-1366.avif 1366w, ' + b + '-2732.avif 2732w" sizes="(max-width: 960px) 100vw, 72vw">' +
-        '<img src="' + b + '-1366.webp" srcset="' + b + '-683.webp 683w, ' + b + '-1366.webp 1366w, ' + b + '-2732.webp 2732w" sizes="(max-width: 960px) 100vw, 72vw" width="1366" height="768" decoding="async" alt="">';
+      pic.innerHTML = '<source type="image/avif" srcset="' + b + '-1366.avif 1366w, ' + b + '-2732.avif 2732w" sizes="(max-width: 960px) 100vw, 92vw">' +
+        '<img src="' + b + '-1366.webp" srcset="' + b + '-683.webp 683w, ' + b + '-1366.webp 1366w, ' + b + '-2732.webp 2732w" sizes="(max-width: 960px) 100vw, 92vw" width="1366" height="768" decoding="async" alt="">';
       var img = $("img", pic);
       img.alt = "The AurOS desktop: " + btn.textContent + (isTheme ? " look, Everything in a row layout." : " layout, Nocturne look, three programs open.");
       var swap = function () {

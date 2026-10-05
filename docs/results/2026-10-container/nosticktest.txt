@@ -60,3 +60,9 @@ Does it install AurOS with no memory stick, and leave Windows intact?
     ...and EFI variables could be written: AurOS's entry in, the installer's out ok
 
   a Secured-core PC, whose firmware does not trust the key shim is signed with
+    its firmware refuses shim (so this check matters)            ok
+    AurBridge refuses it at the first check                      ok
+    ...saying: Allow Microsoft 3rd Party UEFI CA                 ok
+    ...having written nothing: no files, no variables, the disk unchanged ok
+
+  a 2023-keys-only PC, whose firmware does not trust the key shim is signed with

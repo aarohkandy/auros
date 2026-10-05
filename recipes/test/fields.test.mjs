@@ -17,10 +17,22 @@ import { compile, validate, FIELDS } from '../lib/recipe.mjs'
 import { EXAMPLES, example, clone, assignments } from './helpers.mjs'
 import { PROBES } from './probes.mjs'
 
+// Values the engine reads as SETS, compared as sets. An order that changes in the profile and is
+// thrown away by the machine is a comment by another name. Found by the adversarial review:
+// `kiosk.starts` reordered allowed_apps and nothing else — and src/aurshell/apps.c reads
+// allowed_apps only as a membership test (allowed()), then sorts the programs by its own rank_of()
+// (a browser first) and the kiosk starts index 0 of THAT order. apt, locale-gen and the package
+// lists are no different: order is not an instruction any of them takes.
+const SET_VALUED = ['allowed_apps', 'packages_apps', 'packages_files', 'packages_hardware', 'packages_extra', 'extra_locales']
+const asMachine = (values) => {
+  const out = { ...values }
+  for (const k of SET_VALUED) if (k in out) out[k] = out[k].split(/[\s,]+/).filter(Boolean).sort().join(' ')
+  return out
+}
 const build = (r) => {
   const v = validate(r)
   if (!v.ok) return { refused: v.errors }
-  return { values: assignments(compile(r).profile) }
+  return { values: asMachine(assignments(compile(r).profile)) }
 }
 const diff = (x, y) => [...new Set([...Object.keys(x), ...Object.keys(y)])].filter((k) => x[k] !== y[k])
 

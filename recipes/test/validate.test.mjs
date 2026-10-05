@@ -4,7 +4,7 @@
 // be accepted. A validator that refused everything would otherwise pass this whole file.
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
-import { validate, parseYaml, OPTIONS, FIELDS, RESERVED_NAMES } from '../lib/recipe.mjs'
+import { validate, compile, parseYaml, OPTIONS, FIELDS, RESERVED_NAMES } from '../lib/recipe.mjs'
 import { EXAMPLES, example, minimal, clone } from './helpers.mjs'
 
 /** Apply `change` to a fresh minimal recipe and return the validation. */
@@ -254,6 +254,51 @@ describe('field rules', () => {
     assert.match(top.message, /"language"/)
     const nested = refused((r) => { r.prune.also_remvoe = ['bluetooth'] }, 'prune.also_remvoe', /not a field/)
     assert.match(nested.message, /"also_remove"/)
+  })
+  test('what validate accepts, compile writes: no free text passes one and stops the other', () => {
+    // Found by the adversarial review: display_name: "A\nB" (a quoted \n, or a | block) validated,
+    // and compile then threw "refusing to write profile_name". validate is the promise; a recipe it
+    // calls fine must compile.
+    const texts = ['A\nB', 'A\n', '\nA', 'A\r\nB', "St Mary's", 'A;B|C&D<E>(F)#G!H~I%J', 'A B', 'A B', 'Ünïcödé 学校']
+    for (const t of texts) {
+      const r = minimal(); r.organisation.display_name = t
+      if (validate(r).ok) assert.doesNotThrow(() => compile(r), JSON.stringify(t))
+    }
+    refused((r) => { r.organisation.display_name = 'Line one\nLine two' }, 'organisation.display_name', /one line/)
+    assert.ok(check((r) => { r.for = `${r.for}\nAnd a second line.` }).ok, 'for: is a paragraph and may span lines')
+  })
+  test('a word every JavaScript object answers to is not an option (constructor, toString, __proto__)', () => {
+    // Found by the adversarial review: the option tables were plain objects, so `LANGUAGES[L]` was
+    // truthy for L = "constructor". `policy: constructor` validated and compiled to
+    // kiosk_mode="undefined" and allow_*="undefined", which build/forge's yesno() reads as YES — a
+    // fully open machine from a recipe validate called fine. `theme: valueOf` validated and would
+    // have died in stage 5; `switch_scripts_with: constructor` wrote the text of Object's source
+    // into /etc/default/keyboard.
+    const words = ['constructor', 'toString', 'valueOf', 'hasOwnProperty', '__proto__', '__defineGetter__']
+    const at = {
+      language: (r, w) => { r.language = w },
+      other_languages: (r, w) => { r.other_languages = [w] },
+      keyboard: (r, w) => { r.keyboard = w },
+      second_script: (r, w) => { r.second_script = w; r.switch_scripts_with = 'Alt + Shift' },
+      switch_scripts_with: (r, w) => { r.second_script = 'Russian'; r.switch_scripts_with = w },
+      policy: (r, w) => { r.policy = w },
+      apps: (r, w) => { r.apps = ['Files', w] },
+      'prune.also_keep': (r, w) => { r.prune.also_keep = [w] },
+      'prune.also_remove': (r, w) => { r.prune = { keep_only_the_apps_above: false, also_remove: [w] } },
+      'desktop.layout': (r, w) => { r.policy = 'open'; r.desktop = { layout: w } },
+      theme: (r, w) => { r.theme = w },
+    }
+    for (const w of words) {
+      for (const [path, change] of Object.entries(at)) {
+        const hit = refused((r) => change(r, w), path)
+        assert.doesNotMatch(hit.message, /native code|function |undefined/, `${path} = ${w}: ${hit.message}`)
+      }
+      // and as a key, at the top and inside a block
+      const top = refused((r) => { Object.defineProperty(r, w, { value: 1, enumerable: true }) }, w)
+      assert.doesNotMatch(top.message, /native code|function /, top.message)
+      const nested = refused((r) => { Object.defineProperty(r.organisation, w, { value: 1, enumerable: true }) }, `organisation.${w}`)
+      assert.doesNotMatch(nested.message, /native code|function /, nested.message)
+    }
   })
   test('validate never throws, whatever it is given', () => {
     const r = example('example-school')

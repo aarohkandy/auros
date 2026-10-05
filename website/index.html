@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AurOS — your old PC isn’t finished</title>
-<meta name="description" content="AurOS turns a 2012–2018 Windows PC into a fast, patched Linux desktop in one restart, with your files already there. Until you say it works, Windows is still there.">
+<meta name="description" content="AurOS checks first, then turns a 2012–2018 Windows PC into a fast, patched Linux desktop in one restart, with your files already there. Until you say it works, Windows is still there.">
 <meta name="theme-color" content="#05070a">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%2305070A'/%3E%3Cpath%20d='M16%206L26%2016L16%2026L6%2016Z'%20fill='%23C89B4A'/%3E%3C/svg%3E">
 <link rel="preload" href="assets/fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
@@ -19,7 +19,7 @@
   <div class="wrap">
     <a class="mark" href="./" aria-label="AurOS, home"><i aria-hidden="true"></i>AurOS</a>
     <nav class="nav" aria-label="Sections">
-      <a href="#restart">One restart</a>
+      <a href="#restart">The restart</a>
       <a href="#wayback">The way back</a>
       <a href="#desktop">The desktop</a>
       <a href="#orgs">Schools &amp; nonprofits</a>
@@ -183,9 +183,13 @@
     <div class="restart-stage">
       <div class="wrap restart-grid">
         <header class="restart-head">
-          <p class="kicker"><b>02</b> One restart</p>
+          <p class="kicker"><b>02</b> The restart</p>
           <h2 id="restart-h">It restarts once.</h2>
           <p class="lede">This is the screen it shows while it works, rebuilt from <span class="mono">src/aurscreen</span>, saying what the installer says.</p>
+          <p class="fine">It checks first. If Windows was hibernated, or the firmware is set to start only Windows, it stops before changing anything and says what to change.</p>
+          <ol class="sr" aria-label="The seven steps the restart screen shows">
+            <li>Checking this computer</li><li>Saving the way back to Windows</li><li>Making room on the Windows drive</li><li>Copying AurOS</li><li>Setting up how it starts</li><li>Checking AurOS works here</li><li>Finishing</li>
+          </ol>
           <p class="r-step" aria-hidden="true"><span class="num" id="r-n">1</span><span class="of">/ 7</span><span id="r-label">Checking this computer</span></p>
         </header>
         <figure class="r-screen">
@@ -234,10 +238,10 @@
     </div>
 
     <div class="cut" id="cut">
-      <p class="cut-line" data-source="docs/results/powercut.txt">The power was cut at <b class="num">18</b> named instants: <b class="num">13</b> while installing, <b class="num">5</b> while putting Windows back. <b class="num">138</b> checks. <b class="num">0</b> failed.</p>
+      <p class="cut-line" data-source="docs/results/powercut.txt website/assets/data/facts.json">The power was cut at <b class="num">18</b> named instants: <b class="num">13</b> while installing, <b class="num">5</b> while putting Windows back. <b class="num">138</b> checks. <b class="num">0</b> failed.</p>
       <p class="source cut-src">Every cut is followed by the same question: are the <span class="num">7</span> files in Windows exactly what they were, and does Windows come back? <span class="mono">sudo sh tools/powercuttest.sh</span> · transcript: <a href="https://github.com/ComputerDude771/auros-from-scratch/blob/HEAD/docs/results/powercut.txt">docs/results/powercut.txt</a>. Simulated machine (QEMU + OVMF); one firmware, one virtual disk.</p>
       <div class="timeline" role="group" aria-label="The 18 instants, in order. Choose one to read what the test checked.">
-        <div class="tl-phase"><span>Installing</span><span>Putting Windows back</span></div>
+        <div class="tl-phase" aria-hidden="true"><span>Installing</span><span><i class="long">Putting Windows back</i><i class="short">Put back</i></span></div>
         <ol class="tl" id="tl">
             <li class="tick install" data-i="0"><button type="button" aria-pressed="false"><span class="t-name">gate</span></button></li>
             <li class="tick install" data-i="1"><button type="button" aria-pressed="false"><span class="t-name">capture-mid</span></button></li>
@@ -354,8 +358,8 @@
       <figure class="g-stage" role="tabpanel" aria-live="polite">
         <div class="g-frame">
           <picture class="g-img on">
-            <source type="image/avif" srcset="assets/renders/theme-nocturne-1366.avif 1366w, assets/renders/theme-nocturne-2732.avif 2732w" sizes="(max-width: 960px) 100vw, 72vw">
-            <img src="assets/renders/theme-nocturne-1366.webp" srcset="assets/renders/theme-nocturne-683.webp 683w, assets/renders/theme-nocturne-1366.webp 1366w, assets/renders/theme-nocturne-2732.webp 2732w" sizes="(max-width: 960px) 100vw, 72vw" width="1366" height="768" loading="lazy" decoding="async" alt="The AurOS desktop in the Nocturne look, Everything in a row layout: ‘What would you like to do?’ with Internet, Email, Photos, My Files, Writing and Music.">
+            <source type="image/avif" srcset="assets/renders/theme-nocturne-1366.avif 1366w, assets/renders/theme-nocturne-2732.avif 2732w" sizes="(max-width: 960px) 100vw, 92vw">
+            <img src="assets/renders/theme-nocturne-1366.webp" srcset="assets/renders/theme-nocturne-683.webp 683w, assets/renders/theme-nocturne-1366.webp 1366w, assets/renders/theme-nocturne-2732.webp 2732w" sizes="(max-width: 960px) 100vw, 92vw" width="1366" height="768" loading="lazy" decoding="async" alt="The AurOS desktop in the Nocturne look, Everything in a row layout: ‘What would you like to do?’ with Internet, Email, Photos, My Files, Writing and Music.">
           </picture>
         </div>
         <figcaption class="g-cap"><span class="g-name" id="g-name">Nocturne</span><span class="g-desc" id="g-desc">The default: dark, calm, gold accent.</span><span class="source" id="g-src">themes/nocturne.theme · shells/rail.shell · rendered by website/tools/render-shell.c through src/aurshell</span></figcaption>
@@ -407,7 +411,7 @@ policy: managed</pre>
           <div class="plan-col gone"><p class="mono plan-h">Taken out <b id="n-gone" class="num">–</b></p><ul id="l-gone"></ul></div>
         </div>
         <p class="source">Validated and compiled in your browser by <span class="mono">recipes/lib/recipe.mjs</span>, the same code that turns a recipe into the profile <span class="mono">build/forge</span> builds.</p>
-        <noscript><p class="source">The configurator needs JavaScript. Without it: write to us and we will build the recipe with you.</p></noscript>
+        <noscript><p class="lede">The configurator runs <span class="mono">recipes/lib/recipe.mjs</span> in your browser, so it needs JavaScript. The recipe format is in the source: <a href="https://github.com/ComputerDude771/auros-from-scratch/tree/HEAD/recipes">recipes/</a>.</p></noscript>
       </div>
     </div>
   </div>
@@ -422,6 +426,14 @@ policy: managed</pre>
 
 </main>
 <footer class="foot" id="download">
+  <div class="foot-sky" aria-hidden="true">
+    <picture>
+      <source type="image/avif" media="(max-width: 860px)" srcset="assets/sky/still-portrait.avif">
+      <source type="image/webp" media="(max-width: 860px)" srcset="assets/sky/still-portrait.webp">
+      <source type="image/avif" srcset="assets/sky/still-1600.avif">
+      <img src="assets/sky/still-1600.webp" alt="" width="1600" height="1000" loading="lazy" decoding="async">
+    </picture>
+  </div>
   <div class="wrap foot-grid">
     <div class="dl">
       <p class="kicker"><b>06</b> Download</p>

@@ -100,6 +100,22 @@ describe('refuses everything outside the subset, with the line', () => {
     ['an empty list item', 'a:\n  -\n', /empty list item/, 2],
     ['a block scalar with keep (+)', 'a: >+\n  x\n', /not supported/, 1],
     ['an empty document', '# only a comment\n', /empty/, 1],
+    // Found by the adversarial review. A JavaScript object treats the key __proto__ as its prototype:
+    // `__proto__: 1` vanished without a word, and `organisation:\n  __proto__:\n    display_name: X`
+    // gave an organisation with no display_name of its own that validate and compile still read X
+    // from — a value no emitted copy of the recipe would show a reviewer.
+    ['a __proto__ key', 'a: 1\n__proto__: 1\n', /__proto__/, 2],
+    ['a __proto__ key inside a block', 'a:\n  __proto__:\n    b: 1\n', /__proto__/, 2],
+    ['a __proto__ key in a one-line map', 'a: {__proto__: 1}\n', /__proto__/, 1],
+    ['a __proto__ key in a list item', 'a:\n  - __proto__: 1\n', /__proto__/, 2],
+    // YAML 1.2's core schema reads True/TRUE/False/FALSE as booleans, as YAML 1.1 does; this reader
+    // read them as words. A word two readers disagree about must not reach a build.
+    ['unquoted True', 'a: True\n', /ambiguous/, 1],
+    ['unquoted FALSE', 'a: FALSE\n', /ambiguous/, 1],
+    ['unquoted True in a one-line list', 'a: [x, True]\n', /ambiguous/, 1],
+    // Absurd nesting is a YamlError with a line, not a stack overflow (which the CLI reported with
+    // exit 1, "refused", when it is the tool that failed).
+    ['nesting deeper than any recipe', Array.from({ length: 5000 }, (_, i) => ' '.repeat(i) + 'k:').join('\n') + '\n' + ' '.repeat(5000) + 'v: 1\n', /deep/, 17],
   ]
   for (const [name, text, re, line] of cases) test(`refuses ${name}`, () => refuses(text, re, line))
 
