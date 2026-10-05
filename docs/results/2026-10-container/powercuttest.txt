@@ -59,3 +59,67 @@ If the power goes at the worst possible instant, does Windows come back?
   ── boot-mid
     the machine stops dead at boot-mid                         ok
     after the cut: every file in Windows is still exactly what it was ok
+    and Windows can be put back                                ok
+    after boot-mid: the table is valid again                   ok
+    after boot-mid: the three original partitions are back     ok
+    after boot-mid: Windows is its full size again             ok
+    after boot-mid: the EFI partition is byte-for-byte what it was ok
+    after boot-mid: the Windows FILESYSTEM is its full size again ok
+    after boot-mid: and the installer says so itself           ok
+
+  ── boot-end
+    the machine stops dead at boot-end                         ok
+    after the cut: every file in Windows is still exactly what it was ok
+    and Windows can be put back                                ok
+    after boot-end: the table is valid again                   ok
+    after boot-end: the three original partitions are back     ok
+    after boot-end: Windows is its full size again             ok
+    after boot-end: the EFI partition is byte-for-byte what it was ok
+    after boot-end: the Windows FILESYSTEM is its full size again ok
+    after boot-end: and the installer says so itself           ok
+
+  ── commit-array
+    the machine stops dead at commit-array                     ok
+    after the cut: every file in Windows is still exactly what it was ok
+    and Windows can be put back                                ok
+    after commit-array: the table is valid again               ok
+    after commit-array: the three original partitions are back ok
+    after commit-array: Windows is its full size again         ok
+    after commit-array: the EFI partition is byte-for-byte what it was ok
+    after commit-array: the Windows FILESYSTEM is its full size again ok
+    after commit-array: and the installer says so itself       ok
+
+  ── commit-sector
+    the machine stops dead at commit-sector                    ok
+    after the cut: every file in Windows is still exactly what it was ok
+    and Windows can be put back                                ok
+    after commit-sector: the table is valid again              ok
+    after commit-sector: the three original partitions are back ok
+    after commit-sector: Windows is its full size again        ok
+    after commit-sector: the EFI partition is byte-for-byte what it was ok
+    after commit-sector: the Windows FILESYSTEM is its full size again ok
+    after commit-sector: and the installer says so itself      ok
+
+  ── commit-backup
+    the machine stops dead at commit-backup                    ok
+    after the cut: every file in Windows is still exactly what it was ok
+    and Windows can be put back                                ok
+    after commit-backup: the table is valid again              ok
+    after commit-backup: the three original partitions are back ok
+    after commit-backup: Windows is its full size again        ok
+    after commit-backup: the EFI partition is byte-for-byte what it was ok
+    after commit-backup: the Windows FILESYSTEM is its full size again ok
+    after commit-backup: and the installer says so itself      ok
+
+  ── boot-entry
+    the machine stops dead at boot-entry                       ok
+    after the cut: every file in Windows is still exactly what it was ok
+    and Windows can be put back                                ok
+    after boot-entry: the table is valid again                 ok
+    after boot-entry: the three original partitions are back   ok
+    after boot-entry: Windows is its full size again           ok
+    after boot-entry: the EFI partition is byte-for-byte what it was ok
+    after boot-entry: the Windows FILESYSTEM is its full size again ok
+    after boot-entry: and the installer says so itself         ok
+
+  ── settle-end
