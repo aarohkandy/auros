@@ -4,3 +4,4 @@ $ sh tools/matrixtest.sh
 Which computers would AurOS touch, and which would it refuse?
 
   ordinary machines
+    512-byte blocks, 100 MiB EFI, WinRE at the end       ok
