@@ -1,0 +1,29 @@
+$ ./build/staging
+# started 2026-10-04T23:22:29Z
+
+[38;2;125;211;192m▸[0m laying out the initramfs
+
+[38;2;125;211;192m▸[0m the staging init
+[38;2;110;120;134m   init 1.1M[0m
+[38;2;110;120;134m   aurscreen 884K, with DejaVu Sans[0m
+
+[38;2;125;211;192m▸[0m the programs it shells out to
+[38;2;110;120;134m   modprobe[0m
+[38;2;110;120;134m   ntfsresize[0m
+[38;2;110;120;134m   ntfsinfo[0m
+[38;2;110;120;134m   e2fsck[0m
+[38;2;110;120;134m   resize2fs[0m
+
+[38;2;125;211;192m▸[0m their libraries
+[38;2;110;120;134m   10 libraries[0m
+
+[38;2;125;211;192m▸[0m modules
+[38;2;110;120;134m   393 modules, 11M[0m
+
+[38;2;125;211;192m▸[0m packing
+
+[38;2;125;211;192m::[0m /home/user/auros/out/auros-staging.img  (15M, kernel 6.8.0-146-generic)
+[38;2;110;120;134m   boot it with: aurstage.dry   (look and change nothing)[0m
+[38;2;110;120;134m            or:  aurstage.root=/dev/vda3   (hand over to that system)[0m
+exit=0
+seconds=9

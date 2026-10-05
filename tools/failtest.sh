@@ -24,12 +24,14 @@
 #   sh tools/failtest.sh                 # needs out/auros-<profile>.img
 #   IMG=path/to.img sh tools/failtest.sh
 #
-# It does NOT copy the image -- they are several gigabytes. It adds a
-# drop-in that makes the shell fail, boots with -snapshot so the guest
-# writes nothing back, and removes the drop-in again on the way out,
-# including if it is interrupted. Nothing it adds is a permission or a
-# binary; if it is killed at the worst possible moment, `rm` the file
-# it names and the image is as it was.
+# It works on a COPY of the image (sparse, so about 3.3 GB of real
+# blocks for the desktop one), adds a drop-in that makes the shell fail
+# to the copy, and boots the copy with -snapshot. It used to mount the
+# image in out/ itself, add the drop-in, and remove it afterwards: the
+# file was the same afterwards, the bytes were not (journal, inode
+# times, the allocator), so every run changed the artifact the other
+# end-to-end tests read and build/all publishes -- found by
+# tools/e2e-all.sh, which hashes out/ before and after a run.
 set -u
 cd "$(dirname "$0")/.."
 
@@ -48,6 +50,7 @@ done
 WORK=$(mktemp -d)
 LOOP=""
 MNT="$WORK/mnt"
+SRCIMG="$IMG"
 
 cleanup() {
     set +e
@@ -66,6 +69,9 @@ trap cleanup EXIT INT TERM
 
 echo "when the desktop does not start, does she see words?"
 echo
+
+IMG="$WORK/disk.img"
+cp --sparse=always "$SRCIMG" "$IMG" || { echo "could not copy $SRCIMG"; exit 2; }
 
 OFF=$(sgdisk -i 2 "$IMG" | sed -n 's/^First sector: \([0-9]*\).*/\1/p')
 [ -n "$OFF" ] || { echo "cannot read the partition table of $IMG"; exit 2; }
@@ -101,7 +107,7 @@ ExecStart=/bin/false
 EOL
 sync
 umount "$MNT"; losetup -d "$LOOP"; LOOP=""
-echo "  the desktop in this image is now set to fail on purpose"
+echo "  the desktop in a copy of this image is now set to fail on purpose"
 
 cp /usr/share/OVMF/OVMF_VARS_4M.fd "$WORK/vars.fd"
 qemu-system-x86_64 -machine q35,accel=tcg -m 2048 -smp "$(nproc)" \
