@@ -26,9 +26,13 @@ theme="slate"
 shell_archetype="rail"
 
 # ── what an organisation actually needs on the machine ─────────────
+# Mail is geary, not thunderbird: on noble `thunderbird` is a
+# transitional package for the snap, and this build purges snapd, so it
+# installed nothing (found 2026-10-05; recipes/lib/recipe.mjs refuses it
+# for the same reason).
 packages_apps="libreoffice-writer libreoffice-calc libreoffice-impress
                libreoffice-gtk4
-               thunderbird
+               geary
                evince
                simple-scan
                remmina remmina-plugin-rdp

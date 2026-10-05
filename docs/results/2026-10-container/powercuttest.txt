@@ -11,3 +11,7 @@ If the power goes at the worst possible instant, does Windows come back?
   the power goes during the install
 
   ── gate
+    the machine stops dead at gate                             ok
+    the disk is byte-for-byte untouched                        ok
+
+  ── capture-mid

@@ -52,8 +52,8 @@ The owner asked for the best parts of both codebases in one finished product. Th
 
 ## Known, not fixed
 
-- `office.profile` installs `thunderbird`, which on Ubuntu 24.04 is a snap stub (the build purges
-  snapd) — that profile ships without mail. The recipe compiler refuses Thunderbird for this reason.
+- Fixed: `office.profile` installed `thunderbird`, a snap stub on Ubuntu 24.04 (the build purges
+  snapd), so it shipped without mail; it now installs `geary` (`apt-get -s` resolves it on noble). Not yet rebuilt.
 - Profile keys `update_channel`, `enrollment_url`, `telemetry`, `auto_login` are written to
   `policy.conf` and read by nothing; `wallpaper_style` is not read at all. Pinned by tests so the
   list cannot grow silently.
