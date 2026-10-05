@@ -1,63 +1,8 @@
 $ sh tools/stagetest.sh
-# started 2026-10-04T23:27:36Z
+# started 2026-10-05T01:41:29Z
 
 Does the staging environment leave the disk alone?
 
   building a synthetic machine
 
   look and do not touch
-    it finds the Windows volume                              ok
-    ...and the disk is byte-for-byte unchanged               ok
-
-  handing over to the installed system
-    the installed system runs, same boot                     ok
-    ...and the disk is byte-for-byte unchanged               ok
-
-  and when something is wrong
-    no root named: it says so and stops                      ok
-    ...and the disk is byte-for-byte unchanged               ok
-    a root that is not there: it says so                     ok
-    ...and the disk is byte-for-byte unchanged               ok
-
-  the dry run, all the way through
-    a healthy machine: it says it could be converted         FAIL
-      expected to see: This computer could be converted
-        aurstage: aurstage-report v1 verdict=no-room record=none free_mib=1018 need_gb=1
-        aurstage: nothing on this computer has been changed
-        [   24.130757] ACPI: PM: Preparing to enter system sleep state S5
-        [   24.131960] reboot: Power down
-    ...and the disk is byte-for-byte unchanged               ok
-    too small to be worth converting: refused                ok
-    ...and the disk is byte-for-byte unchanged               ok
-
-  and the states a resize must never start from
-    BitLocker: refused, and told how to turn it off          ok
-    ...and the disk is byte-for-byte unchanged               ok
-    somebody else's encryption: refused by name              ok
-    ...and the disk is byte-for-byte unchanged               ok
-    nothing that looks like Windows: it says so              ok
-    ...and the disk is byte-for-byte unchanged               ok
-
-  is this still the machine the installer was prepared for?
-    the right machine: it recognises it                      ok
-    ...and the disk is byte-for-byte unchanged               ok
-    another machine's record: refused                        ok
-    ...and the disk is byte-for-byte unchanged               ok
-    Windows has moved since: refused                         ok
-    ...and the disk is byte-for-byte unchanged               ok
-    Windows is a different size since: refused               ok
-    ...and the disk is byte-for-byte unchanged               ok
-    armed four days ago: refused as stale                    ok
-    ...and the disk is byte-for-byte unchanged               ok
-    the disk is divided up differently now: refused          ok
-    ...and the disk is byte-for-byte unchanged               ok
-
-  and when it cannot see a disk at all
-    no disk it can see: it says what hardware is there       ok
-    ...and the disk is byte-for-byte unchanged               ok
-
-1 of 32 wrong.
-The staging environment is where the one restart lands. If it
-writes to the disk before it is supposed to, there is no way back.
-exit=1
-seconds=760

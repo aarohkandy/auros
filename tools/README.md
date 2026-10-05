@@ -585,3 +585,18 @@ sudo sh tools/powercuttest.sh
 fault-injection flag, and refuses to pack a fault-injection one that
 does not — the check is on the linked binary, because what ships is the
 binary.
+
+## Running everything in a fresh container
+
+Added 2026-10-05 for the container test pass (`docs/results/2026-10-container/`):
+
+```sh
+sudo sh tools/container-deps.sh          # the apt packages the build and every test use
+sh tools/unit-all.sh OUTDIR              # every C unit test above, one transcript each
+sh tools/logrun.sh OUTDIR NAME CMD...    # one command, its transcript, exit= and seconds=
+sudo sh tools/e2e-all.sh OUTDIR [TEST..] # the QEMU tests in order, out/ hashed before and after
+```
+
+`e2e-all.sh` fails the run if anything in `out/` changed while it ran.
+`wlhostile` takes `WLHOSTILE_CASE_TIMEOUT` (seconds per case, default
+60); a case that does not finish in time is killed and counted as failed.
