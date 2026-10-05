@@ -1,5 +1,5 @@
 $ ./build/staging
-# started 2026-10-04T23:22:29Z
+# started 2026-10-05T01:40:11Z
 
 [38;2;125;211;192m▸[0m laying out the initramfs
 
@@ -26,4 +26,4 @@ $ ./build/staging
 [38;2;110;120;134m   boot it with: aurstage.dry   (look and change nothing)[0m
 [38;2;110;120;134m            or:  aurstage.root=/dev/vda3   (hand over to that system)[0m
 exit=0
-seconds=9
+seconds=10
