@@ -20,7 +20,7 @@ python3 python3-cryptography
 libwayland-dev wayland-protocols libxkbcommon-dev libdbus-1-dev libdrm-dev libglib2.0-bin dbus
 weston
 grub-common
-curl ca-certificates expect
+curl ca-certificates expect gawk mawk
 "
 #  qemu-system-x86, ovmf      every end-to-end test (TCG when there is no /dev/kvm)
 #  gdisk                      sgdisk: every synthetic disk and the GPT tests
@@ -36,6 +36,7 @@ curl ca-certificates expect
 #  weston                     weston-simple-shm / weston-terminal clients for wltest/wlstress
 #  grub-common                grub-editenv on the host (putback/firstboot fixtures)
 #  expect                     interactive serial checks in the QEMU tests
+#  gawk, mawk                 theme-test runs the theme engine under both awks
 #
 # Not installed: wine. Only build/aurbridge's optional "selftest under
 # wine" note uses it, and the project's own rule is that Wine is not

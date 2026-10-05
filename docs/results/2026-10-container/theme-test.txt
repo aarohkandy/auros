@@ -1,5 +1,5 @@
 $ sh tools/theme-test.sh
-# started 2026-10-04T23:17:37Z
+# started 2026-10-05T02:44:26Z
 colour algebra (against a fixture, not a shipped theme)
   ok    @accent|0x@                        0x7DD3C0
   ok    @accent|hex@                       7DD3C0
@@ -23,8 +23,8 @@ every template x every theme
   ok    synthwave    all templates resolve
 
 mawk and gawk agree
-  skipped: need both mawk and gawk installed
+  ok    identical output  (e2d3c097302fcc91c44d4cbe0b7fdcf5  -)
 
-72 checks passed
+73 checks passed
 exit=0
-seconds=1
+seconds=2
