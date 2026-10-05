@@ -15,3 +15,8 @@ If the power goes at the worst possible instant, does Windows come back?
     the disk is byte-for-byte untouched                        ok
 
   ── capture-mid
+    the machine stops dead at capture-mid                      ok
+    the disk is byte-for-byte untouched                        ok
+    a half-written saved copy is refused                       ok
+
+  ── shrink-begin
