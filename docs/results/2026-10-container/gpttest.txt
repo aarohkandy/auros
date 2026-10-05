@@ -1,5 +1,5 @@
 $ sh tools/gpttest.sh
-# started 2026-10-04T23:27:21Z
+# started 2026-10-05T03:08:06Z
 
 Does the partition table survive being read and written back?
 

@@ -27,19 +27,20 @@ flowchart LR
 
 **Proven in this repository, by tests that fail when the thing they check is broken.** Everything
 below ran in a cloud container (Ubuntu 24.04, QEMU without KVM, OVMF with Microsoft's keys and Secure
-Boot on). Transcripts: [`docs/results/2026-10-container/`](docs/results/2026-10-container/).
+Boot on). Summary and transcripts: [`docs/results/2026-10-container/SUMMARY.md`](docs/results/2026-10-container/SUMMARY.md).
 
 | What | Evidence |
 |---|---|
 | Install, start AurOS, put Windows back twice, every Windows file identical | `installtest` 37/37 |
 | The same with no memory stick | `nosticktest` 45/45 |
 | Firmware alone starts the installed AurOS, Secure Boot enforced | `loadertest` 18/18 |
-| Power cut at each of 18 named instants of install and restore; Windows comes back | `powercuttest` (see transcript) |
+| Power cut at each of 18 named instants of install and restore; Windows comes back | `powercuttest` 138/138 |
 | Ten machine shapes (4Kn, OEM ESP, MBR, BIOS, BitLocker, hibernated, two Windows, no room…) accepted or refused correctly | `matrixtest` 10/10 |
 | The real image's first boot, its question, and the answer carried out in firmware variables | `firstboottest` 32/32, `choicesboottest` 9/9 |
 | "Put Windows back" from the button in AurOS to the restore | `putbacktest` 16/16 |
 | Kernel, grub and shim security updates keep it booting | `bootupdatetest` 27/27, `bootchaintest` 72/72 |
 | A desktop that cannot start says so in words | `failtest` |
+| The dry run, refusals, and the disk byte-for-byte unchanged after each | `stagetest` 34/34 |
 | Recipes, honesty gate, compat lint, every script's syntax, the fast C unit tests | `./verify` — 27 passed, 0 failed |
 
 **Not proven: a real PC.** Zero real machines have been installed (`hardware/compat.tsv` has no

@@ -1,5 +1,5 @@
 $ sh tools/bootupdatetest.sh
-# started 2026-10-05T00:44:37Z
+# started 2026-10-05T02:56:50Z
 
 After a kernel, grub and shim update, does AurOS still start with Secure Boot on?
 
@@ -39,4 +39,4 @@ After a kernel, grub and shim update, does AurOS still start with Secure Boot on
 
 bootupdatetest: 27/27
 exit=0
-seconds=536
+seconds=484

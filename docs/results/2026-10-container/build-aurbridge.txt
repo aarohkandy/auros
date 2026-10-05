@@ -1,5 +1,5 @@
 $ ./build/aurbridge
-# started 2026-10-05T01:41:01Z
+# started 2026-10-05T03:09:26Z
 [38;2;110;120;134m   shared: format.c inflate.c phases.c preflight.c report.c sbdb.c[0m
 [38;2;110;120;134m   windows: fix_win.c plat_win.c[0m
 [38;2;110;120;134m   simulated: pf_sim.c plat_sim.c simmain.c[0m
@@ -30,4 +30,4 @@ $ ./build/aurbridge
 
 [38;2;125;211;192m::[0m /home/user/auros/out/aurbridge.exe, /home/user/auros/out/aurbridge-wizard.exe
 exit=0
-seconds=21
+seconds=22

@@ -25,8 +25,9 @@ The owner asked for the best parts of both codebases in one finished product. Th
    `forge resolve`. Three example recipes compiled to `profiles/example-*.profile` with a drift test.
 2. **Tested everything that can be tested without a real PC** in a cloud container: toolchain
    (`tools/container-deps.sh`), every C unit test (`tools/unit-all.sh`), the image built from
-   scratch, and every QEMU end-to-end test (`tools/e2e-all.sh`). Results and red-proofs:
-   `docs/results/2026-10-container/` (`SUMMARY.md`, `red/`).
+   scratch, and every QEMU end-to-end test (`tools/e2e-all.sh`) — all green, `out/` unchanged by
+   the run. Eight bugs fixed on the way, one a product bug a person would have seen (a refusal
+   that rounded the space needed *down*). `docs/results/2026-10-container/SUMMARY.md`, `red/`.
 3. **Adversarial review, three rounds** — the recipe/gate port (10 defects, among them a policy value
    that compiled to a fully open machine and a kiosk field that changed nothing), the test harness
    (an orphaned compositor client spinning forever), and the website (claims that were not true:

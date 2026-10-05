@@ -1,5 +1,5 @@
 $ sh tools/exetest.sh
-# started 2026-10-04T23:23:37Z
+# started 2026-10-05T03:09:54Z
 
 Is it one file, and does it carry what it says it does?
 
@@ -39,4 +39,4 @@ Is it one file, and does it carry what it says it does?
 17 checks: the installer carries the staging environment, signing
 does not disturb it, and a download resumes rather than starting again.
 exit=0
-seconds=63
+seconds=64

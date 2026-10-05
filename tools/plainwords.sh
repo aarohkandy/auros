@@ -224,6 +224,13 @@ if [ -f src/aurbridge/wizard.c ]; then
             # "name.dll" literal is skipped; a sentence that mentions a
             # .dll still has every word in it checked.
             case "$lit" in L\"*[!\ ].dll\") case "$lit" in *\ *) ;; *) continue ;; esac ;; esac
+            # Windows' own button label, quoted verbatim in the Secure
+            # Boot card's "the way there" sketch (sb_figure). She has to
+            # find a button with exactly these words on it; renaming it
+            # would send her looking for one that does not exist. Only
+            # this exact literal is skipped -- any sentence of ours that
+            # says "firmware" is still caught.
+            [ "$lit" = 'L"UEFI Firmware Settings"' ] && continue
             hit=$(printf '%s' "$lit" | tr 'A-Z' 'a-z' | grep -oE "$PAT" | head -1)
             [ -n "$hit" ] && printf 'HIT\t%s:%s\t%s\t%s\n' "src/aurbridge/wizard.c" "$n" "$hit" "$lit"
         done

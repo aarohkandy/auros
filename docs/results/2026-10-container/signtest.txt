@@ -1,5 +1,5 @@
 $ sh tools/signtest.sh
-# started 2026-10-04T23:23:13Z
+# started 2026-10-05T03:11:24Z
 
 Is the thing a stranger double-clicks actually signed?
 
@@ -28,4 +28,4 @@ Is the thing a stranger double-clicks actually signed?
 12 checks: it signs, it verifies what it signed, a changed byte
 breaks it, and a release with no key does not get built.
 exit=0
-seconds=24
+seconds=22

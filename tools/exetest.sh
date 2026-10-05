@@ -107,22 +107,34 @@ fi
 # ── the release gates ───────────────────────────────────────────────
 echo
 echo "  and what a release is not allowed to be"
+# IN A COPY OF THE TREE. build/aurbridge writes to <its tree>/out, and
+# these three builds used to be the real one: each run replaced the
+# installer in out/ -- the file the other tests read and the one that
+# gets published -- with whatever a refused release build had left
+# behind. Found by tools/e2e-all.sh hashing out/. The staging files are
+# read from the real out/, by absolute path, and nothing is written there.
+RT="$TMP/tree"; mkdir -p "$RT"; cp -r build src tools "$RT/"
+for v in KERNEL:auros-staging-vmlinuz INITRD:auros-staging.img \
+         SHIM:auros-staging-shimx64.efi GRUB:auros-staging-grubx64.efi \
+         MOKMGR:auros-staging-mmx64.efi; do
+    [ -f "out/${v#*:}" ] && export "AUROS_STAGING_${v%%:*}=$PWD/out/${v#*:}"
+done
 O=$( AUROS_RELEASE=1 AUROS_STAGING_KERNEL=/nonexistent \
-     AUROS_STAGING_INITRD=/nonexistent sh build/aurbridge 2>&1 || true )
+     AUROS_STAGING_INITRD=/nonexistent sh "$RT/build/aurbridge" 2>&1 || true )
 case "$O" in
   *"carries no staging"*)
     ok "a release with nothing inside it is refused" ;;
   *) bad "a release with nothing inside it is refused" \
          "$(printf '%s' "$O" | tail -3)" ;;
 esac
-O=$( AUROS_RELEASE=1 sh build/aurbridge 2>&1 || true )
+O=$( AUROS_RELEASE=1 sh "$RT/build/aurbridge" 2>&1 || true )
 case "$O" in
   *"no AUROS_IMAGE_URL"*)
     ok "a release that cannot say where the image is, too" ;;
   *) bad "a release that cannot say where the image is, too" \
          "$(printf '%s' "$O" | tail -3)" ;;
 esac
-O=$( AUROS_RELEASE=1 AUROS_IMAGE_URL=http://x/y.img sh build/aurbridge 2>&1 || true )
+O=$( AUROS_RELEASE=1 AUROS_IMAGE_URL=http://x/y.img sh "$RT/build/aurbridge" 2>&1 || true )
 case "$O" in
   *"AUROS_IMAGE_SHA256 is not"*)
     ok "and one that cannot say what it should be" ;;

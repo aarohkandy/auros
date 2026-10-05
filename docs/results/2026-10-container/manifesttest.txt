@@ -1,5 +1,5 @@
 $ sh tools/manifesttest.sh out/aurbridge-wizard.exe
-# started 2026-10-04T23:23:37Z
+# started 2026-10-05T03:11:46Z
 
 Will Windows start the wizard at all?
 
@@ -15,4 +15,4 @@ Will Windows start the wizard at all?
 
   9 checks, all ok
 exit=0
-seconds=0
+seconds=1

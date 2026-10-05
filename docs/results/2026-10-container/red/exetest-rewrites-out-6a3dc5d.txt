@@ -1,0 +1,8 @@
+# tools/exetest.sh as imported (6a3dc5d), run at 03:07:02Z: out/ hashes before (e2e chain 2's after-file) vs after it ran
+7,8c7,8
+< 027272a727d0b811a460ab0ea11247fcb7ee74cb15de385617e65ffd203ca7e7  aurbridge-wizard.exe
+< 4eed1378604ecdf80db34efc44e83f6706fac4c67340243a6afa9f39a7d97709  aurbridge.exe
+---
+> 0c7894309c2bab702ac56eed9c1feb35ac36ab26e175cd544822bb6bbff1f88d  aurbridge-wizard.exe
+> 7b57ea9baf7079544bb3341f740713c8e934fa8222487a4e5bfbe8bc0b67d525  aurbridge.exe
+exit=1
