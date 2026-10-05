@@ -16,13 +16,16 @@
     var c = $("#sky");
     if (!c || !window.AurOSAurora) return;
     window.AurOSAurora.start(c, {
+      force: /[?&]gl=force\b/.test(location.search),
       reduce: !motion || /[?&]still\b/.test(location.search),
       onFirstFrame: function () { c.classList.add("on"); }
     });
   }
   // after the hero text and the still have painted
-  if (document.readyState === "complete") setTimeout(startSky, 200);
-  else window.addEventListener("load", function () { setTimeout(startSky, 200); });
+  var idle = function (f) { (window.requestIdleCallback || setTimeout)(f, { timeout: 2500 }); };
+  var later = function () { setTimeout(function () { idle(startSky); }, 600); };
+  if (document.readyState === "complete") later();
+  else window.addEventListener("load", later);
 
   /* ── the laptop: push in ───────────────────────────────────────── */
   var hero = $(".hero"), rig = $("#rig"), copy = $(".hero-copy"), cue = $(".scroll-cue"), sky = $(".sky");
@@ -359,7 +362,7 @@
       gallery.style.setProperty("--pool", "rgba(" + hue.join(",") + "," + (0.05 + lum * 0.16).toFixed(3) + ")");
     };
     var pick = function (btn) {
-      Array.prototype.forEach.call(tabs, function (t) { t.setAttribute("aria-selected", t === btn ? "true" : "false"); t.tabIndex = t === btn ? 0 : -1; });
+      Array.prototype.forEach.call(tabs, function (t) { t.setAttribute("aria-pressed", t === btn ? "true" : "false"); });
       var name = btn.getAttribute("data-img"), isTheme = name.indexOf("theme-") === 0;
       var b = "assets/renders/" + name;
       var pic = document.createElement("picture");
@@ -385,7 +388,6 @@
     };
     light("23,26,29");
     Array.prototype.forEach.call(tabs, function (t, i) {
-      t.tabIndex = t.getAttribute("aria-selected") === "true" ? 0 : -1;
       t.addEventListener("click", function () { pick(t); });
       t.addEventListener("keydown", function (e) {
         var d = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : e.key === "ArrowUp" || e.key === "ArrowLeft" ? -1 : 0;

@@ -180,6 +180,15 @@
     } catch (e) { gl = null; }
     if (!gl) return null;
 
+    // A software rasteriser (SwiftShader, llvmpipe: a machine with no
+    // working GPU driver, which describes many of the PCs this is for)
+    // would spend whole seconds per frame here. The still is the same
+    // picture; keep it.
+    if (!opts.force) {
+      var dbg = gl.getExtension("WEBGL_debug_renderer_info");
+      var ren = dbg ? String(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)) : "";
+      if (/swiftshader|llvmpipe|softpipe|software/i.test(ren)) return null;
+    }
     var prog = gl.createProgram();
     try {
       gl.attachShader(prog, compile(gl, gl.VERTEX_SHADER, VERT));

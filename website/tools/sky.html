@@ -8,7 +8,7 @@
 <script src="../assets/aurora.js"></script>
 <script>
 var q = new URLSearchParams(location.search);
-AurOSAurora.start(document.getElementById("c"), { still: true, time: +(q.get("t") || 120),
+AurOSAurora.start(document.getElementById("c"), { still: true, force: true, time: +(q.get("t") || 120),
   scale: +(q.get("scale") || 1), grain: +(q.get("grain") || 0.03),
   onFirstFrame: function () { document.body.setAttribute("data-ready", "1"); } });
 </script></body></html>
