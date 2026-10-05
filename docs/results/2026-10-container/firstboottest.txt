@@ -48,3 +48,11 @@ Could not get geometry of device (Inappropriate ioctl for device)    the other A
     aurfirst takes its own entry, not the other disk's           ok
     ...by the partition it names, found from inside the running system ok
     and the one-shot is re-armed to its own entry                ok
+    saying it works puts ITS entry first                         ok
+    and the other AurOS is still in the menu                     ok
+
+32 checks: the real image asks, the answer is carried out by
+root and not by the desktop, and it decides what the computer starts
+from then on -- in both directions.
+exit=0
+seconds=865

@@ -1,0 +1,9 @@
+$ sh tools/bootupdatetest.sh
+# started 2026-10-05T00:44:37Z
+
+After a kernel, grub and shim update, does AurOS still start with Secure Boot on?
+
+    the image's own shim-signed, grub-efi-amd64-signed and grub2-common ok
+    the EFI partition starts one shim behind                         ok
+
+  boot 1: AurOS, and a night of updates
