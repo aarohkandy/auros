@@ -38,9 +38,9 @@ const MUTATIONS = [
   { id: 'M4', why: 'a second layout is installed with no key that reaches it',
     file: LIB, find: '    kbOptions = TOGGLES[r.switch_scripts_with]\n', to: '',
     test: 'recipes/test/fields.test.mjs', catcher: /^switch_scripts_with$/ },
-  { id: 'M5', why: 'the kiosk ignores which program it was told to start',
-    file: LIB, find: "const first = policy === 'kiosk' ? (r.kiosk?.starts ?? appSet[0]) : null", to: "const first = policy === 'kiosk' ? appSet[0] : null",
-    test: 'recipes/test/fields.test.mjs', catcher: /^kiosk\.starts$/ },
+  { id: 'M5', why: 'a locked allow-list longer than the shell reads is accepted, and its last programs can never be opened',
+    file: LIB, find: '    if (list.length > ALLOW_LIST_MAX) err(', to: '    if (false) err(',
+    test: 'recipes/test/validate.test.mjs', catcher: /an allow-list longer than the shell reads is refused/ },
   { id: 'M6', why: 'free text with shell syntax gets past validation into a file bash sources',
     file: LIB, find: '    if (SHELL_UNSAFE.test(v)) {', to: '    if (false) {',
     test: 'recipes/test/validate.test.mjs', catcher: /free text cannot carry shell syntax/ },
@@ -68,6 +68,12 @@ const MUTATIONS = [
   { id: 'M14', why: 'a committed example profile no longer matches its recipe',
     file: 'recipes/examples/example-school.yaml', find: 'timezone: Asia/Kolkata', to: 'timezone: Asia/Calcutta',
     test: 'recipes/test/compile.test.mjs', catcher: /profiles\/example-school\.profile === compile/ },
+  { id: 'M15', why: 'the option tables answer to Object.prototype again: policy: constructor validates and compiles to allow_*="undefined"',
+    file: LIB, find: 'function table (o) { return Object.assign(Object.create(null), o) }', to: 'function table (o) { return o }',
+    test: 'recipes/test/validate.test.mjs', catcher: /every JavaScript object answers to is not an option/ },
+  { id: 'M16', why: 'the parser takes a __proto__ key as a prototype, and the key vanishes',
+    file: LIB, find: "    if (key === '__proto__') throw new YamlError(l.no, PROTO_KEY_WHY)\n", to: '',
+    test: 'recipes/test/parse.test.mjs', catcher: /^refuses a __proto__ key$/ },
 ]
 
 function scratch () {

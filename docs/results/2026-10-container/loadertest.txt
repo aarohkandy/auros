@@ -1,0 +1,13 @@
+$ sh tools/loadertest.sh
+# started 2026-10-05T00:12:23Z
+
+With the power off and the stick out, does it come back up in AurOS?
+
+  a 3 GiB machine: ESP, a 1 GiB Windows with 7 files, WinRE at the end
+  an AurOS image with a real signed boot chain in its 48 MiB EFI partition
+  and firmware that already has an "AurOS Installer" entry in it
+
+  the instrument
+    the variable-store reader still reads a store it did not write ok
+
+  the install

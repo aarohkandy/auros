@@ -13,7 +13,6 @@ const put = (path) => (r, v) => {
 const open = () => { const r = minimal(); r.policy = 'open'; return r }
 const twoScripts = () => { const r = minimal(); r.second_script = 'Russian'; r.switch_scripts_with = 'Alt + Shift'; return r }
 const notKeepOnly = () => { const r = minimal(); r.prune = { keep_only_the_apps_above: false }; return r }
-const kioskTwo = () => { const r = minimal(); r.policy = 'kiosk'; r.apps = ['Calculator', 'Firefox']; r.kiosk = { starts: 'Firefox' }; return r }
 const withDesktop = (base) => () => { const r = base(); r.desktop = { layout: 'tiles' }; return r }
 
 /**
@@ -47,7 +46,5 @@ export const PROBES = [
   { path: 'desktop.can_reach_a_terminal', base: minimal, a: true, b: false },
   { path: 'desktop.can_choose_wifi', base: minimal, a: true, b: false },
   { path: 'desktop.screen_off_minutes', base: minimal, a: 5, b: 15 },
-  { path: 'kiosk', base: kioskTwo, a: { starts: 'Firefox' }, b: { starts: 'Calculator' } },
-  { path: 'kiosk.starts', base: kioskTwo, a: 'Firefox', b: 'Calculator' },
   { path: 'theme', base: minimal, a: undefined, b: 'slate' },
 ].map((p) => ({ ...p, set: put(p.path) }))

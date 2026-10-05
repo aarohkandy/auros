@@ -118,11 +118,17 @@ describe('what a recipe compiles to', () => {
     assert.equal(p.keyboard_variant, '')
     assert.equal(p.keyboard_options, 'grp:alt_shift_toggle')
   })
-  test('a kiosk is the locked shell with only its programs, the starting one first', () => {
-    const p = a((r) => { r.policy = 'kiosk'; r.apps = ['Calculator', 'Firefox']; r.kiosk = { starts: 'Firefox' } })
+  test('a kiosk is the locked shell with only its programs; the report says which one starts is not the recipe\'s choice', () => {
+    // allowed_apps is a set to the shell (src/aurshell/apps.c allowed()), which orders the programs
+    // itself and starts the first. A recipe field that reordered this list reached the machine as
+    // nothing, so there is no such field; the report says what does decide.
+    const r = minimal(); r.policy = 'kiosk'; r.apps = ['Calculator', 'Firefox']
+    const { profile, report } = compile(r)
+    const p = assignments(profile)
+    assert.ok(report.notes.some((n) => /AurOS's choice, not this recipe's/.test(n)), JSON.stringify(report.notes))
     assert.equal(p.kiosk_mode, 'yes')
     assert.equal(p.shell_archetype, 'locked')
-    assert.equal(p.allowed_apps, 'firefox mate-calc')
+    assert.equal(p.allowed_apps, 'mate-calc firefox')
     for (const k of ['allow_user_install', 'allow_settings_change', 'allow_theme_change', 'allow_network_change', 'allow_tty']) assert.equal(p[k], 'no', k)
   })
   test('locked allows only its programs; open and managed allow everything installed', () => {

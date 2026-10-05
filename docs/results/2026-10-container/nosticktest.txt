@@ -66,3 +66,13 @@ Does it install AurOS with no memory stick, and leave Windows intact?
     ...having written nothing: no files, no variables, the disk unchanged ok
 
   a 2023-keys-only PC, whose firmware does not trust the key shim is signed with
+    its firmware refuses shim (so this check matters)            ok
+    AurBridge refuses it at the first check                      ok
+    ...saying: too old for this PC                               ok
+    ...having written nothing: no files, no variables, the disk unchanged ok
+
+45 checks: with no memory stick, it installs AurOS, starts it,
+puts Windows back from the copy on the disk, and every file in Windows
+is exactly what it was.
+exit=0
+seconds=1257

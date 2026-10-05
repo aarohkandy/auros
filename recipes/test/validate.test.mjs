@@ -185,7 +185,7 @@ describe('field rules', () => {
     assert.match(near.message, /Firefox/)
   })
   test('a program that installs software, on a machine whose person may not install, is refused', () => {
-    for (const p of ['managed', 'locked', 'kiosk']) refused((r) => { r.policy = p; r.apps = ['Firefox', 'Software Centre']; if (p === 'kiosk') r.kiosk = { starts: 'Firefox' } }, 'apps', /refuses/)
+    for (const p of ['managed', 'locked', 'kiosk']) refused((r) => { r.policy = p; r.apps = ['Firefox', 'Software Centre'] }, 'apps', /refuses/)
     refused((r) => { r.policy = 'open'; r.apps = ['Program Installer']; r.desktop = { can_install_apps: false } }, 'apps', /refuses/)
     assert.ok(check((r) => { r.policy = 'open'; r.apps = ['Firefox', 'Software Centre', 'Program Installer'] }).ok)
   })
@@ -214,17 +214,26 @@ describe('field rules', () => {
     refused((r) => { r.prune = { keep_only_the_apps_above: false, also_remove: ['systemd'] } }, 'prune.also_remove', /has no name here/)
     refused((r) => { r.apps = ['VLC Media Player']; r.prune = { keep_only_the_apps_above: false, also_remove: ['media players'] } }, 'prune.also_remove', /says both/)
   })
-  test('kiosk: keep-only, no desktop block, says what starts, at most nine buttons', () => {
+  test('kiosk: keep-only, no desktop block, at most nine buttons; which program starts is not the recipe\'s to say', () => {
     const kiosk = (r) => { r.policy = 'kiosk'; r.apps = ['Firefox'] }
     assert.ok(check(kiosk).ok)
     refused((r) => { kiosk(r); r.prune.keep_only_the_apps_above = false }, 'prune.keep_only_the_apps_above', /every program/)
     refused((r) => { kiosk(r); r.desktop = { layout: 'tiles' } }, 'desktop', /no desktop/)
-    refused((r) => { kiosk(r); r.apps = ['Firefox', 'Calculator'] }, 'kiosk.starts', /which one opens/)
-    refused((r) => { kiosk(r); r.apps = ['Firefox', 'Calculator']; r.kiosk = { starts: 'Files' } }, 'kiosk.starts', /one of the programs/)
-    refused((r) => { kiosk(r); r.kiosk = { starts: 'Firefox' } }, 'kiosk.starts', /changes nothing/)
-    refused((r) => { r.kiosk = { starts: 'Firefox' } }, 'kiosk', /only applies to policy: kiosk/)
-    refused((r) => { kiosk(r); r.apps = Object.keys(OPTIONS.apps).filter((a) => !OPTIONS.apps[a].door).slice(0, 10); r.kiosk = { starts: r.apps[0] } }, 'apps', /nine/)
-    assert.ok(check((r) => { kiosk(r); r.apps = ['Firefox', 'Calculator']; r.kiosk = { starts: 'Calculator' } }).ok)
+    // kiosk.starts reordered allowed_apps, which the shell reads as a set (fields.test.mjs, SET_VALUED).
+    refused((r) => { kiosk(r); r.apps = ['Firefox', 'Calculator']; r.kiosk = { starts: 'Calculator' } }, 'kiosk.starts', /chosen by AurOS, not by the recipe/)
+    refused((r) => { kiosk(r); r.kiosk = { starts: 'Firefox' } }, 'kiosk', /nothing for a kiosk block to say/)
+    refused((r) => { kiosk(r); r.apps = Object.keys(OPTIONS.apps).filter((a) => !OPTIONS.apps[a].door).slice(0, 10) }, 'apps', /nine/)
+    assert.ok(check((r) => { kiosk(r); r.apps = ['Firefox', 'Calculator'] }).ok, 'a kiosk with two programs no longer has to name one')
+  })
+  test('locked: an allow-list longer than the shell reads is refused, not truncated', () => {
+    // Found by the adversarial review. aurshell reads policy.conf through src/common/theme.c, which
+    // keeps 191 bytes of a value. Every program in the catalogue under policy: locked compiled to a
+    // 237-byte allowed_apps: the last few (mousepad, tuxpaint, klavaro, vlc) were installed and
+    // could never be opened, and validate, compile and the report all said they could.
+    const all = Object.keys(OPTIONS.apps).filter((a) => !OPTIONS.apps[a].door)
+    refused((r) => { r.policy = 'locked'; r.apps = all }, 'apps', /characters.*never be opened/)
+    assert.ok(check((r) => { r.policy = 'managed'; r.apps = all }).ok, 'the same programs under managed (no allow-list) are fine')
+    assert.ok(check((r) => { r.policy = 'locked'; r.apps = all.slice(0, 12) }).ok, 'a locked machine with a dozen programs is fine')
   })
   test('desktop: layouts by engine name, LATHE names answered with the nearest', () => {
     for (const [lathe, ours] of Object.entries({ windows: 'taskbar', mac: 'dock', simple: 'tiles', 'browser-first': 'dock' })) {

@@ -8,7 +8,7 @@ import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { BASE, OPTIONS, RESERVED_NAMES, GENERATED_MARK } from '../lib/recipe.mjs'
+import { BASE, OPTIONS, RESERVED_NAMES, GENERATED_MARK, ALLOW_LIST_MAX } from '../lib/recipe.mjs'
 import { ROOT, EXAMPLES, example, resolveProfile } from './helpers.mjs'
 
 const listDir = (d, ext) => readdirSync(join(ROOT, d)).filter((f) => f.endsWith(ext)).map((f) => f.slice(0, -ext.length)).sort()
@@ -82,6 +82,18 @@ describe('programs map onto what desktop.profile installs', () => {
   test('the shipped profiles a recipe may not overwrite are exactly the hand-written ones', () => {
     const hand = listDir('profiles', '.profile').filter((p) => readFileSync(join(ROOT, 'profiles', `${p}.profile`), 'utf8').split('\n')[0] !== GENERATED_MARK)
     assert.deepEqual([...RESERVED_NAMES].sort(), hand)
+  })
+})
+
+describe('the sizes the shell reads, read from the shell', () => {
+  test('ALLOW_LIST_MAX fits both src/common/theme.h THEME_VAL_LEN and src/aurshell/shell.h allowed_apps[]', () => {
+    const theme = readFileSync(join(ROOT, 'src', 'common', 'theme.h'), 'utf8')
+    const shell = readFileSync(join(ROOT, 'src', 'aurshell', 'shell.h'), 'utf8')
+    const val = /#define\s+THEME_VAL_LEN\s+(\d+)/.exec(theme)
+    const arr = /char\s+allowed_apps\[(\d+)\]/.exec(shell)
+    assert.ok(val && arr, 'could not find THEME_VAL_LEN or allowed_apps[] — the check must not pass by finding nothing')
+    const fits = Math.min(Number(val[1]), Number(arr[1])) - 1
+    assert.equal(ALLOW_LIST_MAX, fits, `the shell keeps ${fits} bytes of allowed_apps; recipe.mjs says ${ALLOW_LIST_MAX}`)
   })
 })
 
