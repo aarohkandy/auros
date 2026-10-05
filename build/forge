@@ -1843,6 +1843,15 @@ case "${1:-}" in
         # reach into the work tree of a build that is running right now.
         # recipes/ uses this to prove a compiled profile resolves to what
         # the recipe said (recipes/test/forge.test.mjs).
+        #
+        # The EXIT trap is dropped FIRST. load_profile sets RFS before its
+        # own checks, so a profile they refuse used to exit with RFS
+        # naming work/forge/<id>/rootfs, and the trap's chroot_done then
+        # deleted that tree's resolv.conf and policy-rc.d and unmounted
+        # its /proc, /sys and /dev -- under a build of that profile that
+        # might be running. resolve mounts nothing, so it has nothing to
+        # clean up.
+        trap - EXIT
         load_profile "${2:?usage: forge resolve PROFILE}"
         _chain="" _cur="$2"
         while [ -n "$_cur" ]; do
